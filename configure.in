@@ -1,0 +1,93 @@
+# $Id: configure.in,v 1.8 2007/05/22 08:31:43 sd Exp $
+
+# This file is part of Attila, a multi-targeted threaded interpreter
+# Copyright (c) 2007, UCD Dublin. All rights reserved.
+#
+# Attila is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# Attila is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+# ---------- Setup ----------
+
+# autoconf and automake magic
+AC_INIT(vm.c)
+AC_PREREQ(2.54)
+AC_CONFIG_AUX_DIR(config)
+VERSION=0.3
+AC_SUBST(VERSION)
+AM_PROG_CC_STDC
+AM_INIT_AUTOMAKE(attila,$VERSION)
+AM_CONFIG_HEADER(config.h)
+
+# announcements and standard places for the C pre-processor
+AC_DEFINE_UNQUOTED(ATTILA_ANNOUNCE,["Attila v.$VERSION: an abstract multi-target threaded interpreter"],[Program announcement])
+AC_DEFINE(ATTILA_COPYRIGHT,["Copyright (c) 2007, UCD Dublin. Distributed under the GNU GPL"],[Program copyright])
+AC_DEFINE(ATTILA_STANDARD_PRELUDE,["prelude.fs"],[Standard prelude])
+
+
+# ---------- Basic programs ----------
+
+# compilation and installation
+AC_PROG_CC
+CFLAGS='-g -O -DATTILA_STANDARD_INCLUDE_DIR=\"${pkgdatadir}\"'
+AC_PROG_INSTALL
+AC_C_INLINE
+
+# bootstrapping the primitives table
+AC_PROG_AWK
+AC_CHECK_PROG(SED,sed,`which sed`)
+test -z $SED && AC_MSG_ERROR([attila needs a version of sed to bootstrap the system])
+AC_CHECK_PROG(CAT,cat,`which cat`)
+test -z $CAT && AC_MSG_ERROR([attila needs a version of cat to bootstrap the system])
+AC_CHECK_PROG(EGREP,egrep,`which egrep`)
+test -z $EGREP && AC_MSG_ERROR([attila needs a version of egrep to bootstrap the system])
+AC_CHECK_PROG(WC,wc,`which wc`)
+test -z WC && AC_MSG_ERROR([attila needs a version of wc to bootstrap the system])
+AC_CHECK_PROG(PASTE,paste,`which paste`)
+test -z PASTE && AC_MSG_ERROR([attila needs a version of paste to bootstrap the system])
+BUILDBOOTSTRAP="sh build-bootstrap.sh"
+AC_SUBST(BUILDBOOTSTRAP)
+
+
+# ---------- Sizes, headers, functions and libraries ----------
+
+# standard C types
+AC_HEADER_STDC
+AC_TYPE_SIZE_T
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(unsigned char)
+AC_CHECK_SIZEOF(unsigned char *)
+
+# headers etc
+AC_CHECK_HEADER(setjmp.h,,AC_MSG_ERROR([attila needs setjmp.h]))
+AC_CHECK_FUNCS(setjmp longjmp)
+AC_CHECK_HEADER(limits.h,,AC_MSG_ERROR([attila needs limits.h]))
+
+# libc functions
+AC_CHECK_FUNCS(malloc calloc)
+AC_CHECK_FUNCS(bcopy bzero strlen strcpy strncpy strncmp strncasecmp toupper strspn strcspn)
+AC_CHECK_FUNCS(fgets printf sprintf sscanf)
+AC_CHECK_FUNCS(getopt)
+
+# GNU readline
+AC_CHECK_LIB(readline,readline,,AC_MSG_ERROR([attila needs the GNU readline library]))
+
+
+# ---------- Create files ----------
+
+AC_CONFIG_FILES([
+Makefile
+build-bootstrap.sh
+])
+AC_OUTPUT
+

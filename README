@@ -1,0 +1,61 @@
+Attila, an abstract multi-targeted threaded interpreter
+=======================================================
+
+Attila is a threaded interpretive language (TIL) in the spirit of
+Forth and its derivatives such as Gforth. Unlike Gforth, Attila is
+designed to be minimal and extensible, targetable at small
+(microcontroller-scale) devices and simple enough to use for teaching
+the internals of TIL compilers -- the core fits into 30k (excluding
+the dynamically-linked C library). As far as possible the system is
+bootstrapped, with non-essential features being provided as TIL source
+code and compiled as required.
+
+Attila is also intended as a portable target for other, higher-level
+language tools, and as a way to explore novel approaches to language
+design.
+
+
+History
+-------
+
+Attila evolved as a personal project looking at the possibilities for
+using high-level languages on small-footprint devices. TILs are an
+obvious candidate, and some work has been done in the past: however,
+projects such as PICForth tend to be non-standard and not all that
+well-supported, while the Unix-standard Gforth, whilst an excellent
+system, is very large and complex. It therefore seemed sensible to
+build a simple, re-targetable extensible TIL from the ground up.
+
+An important source of information has been R.G. Loeliger's book
+"Threaded interpretive languages" (Basic Books, 1981), which describes
+a TIL written for the Z80 processor. Although both Z80s and
+assembler-based solutions in general are not suitable for the current
+context, the book is an inspiration as to what can be done in a small
+memory footprint as well as describing some of the technical steps
+needed to implement an inner interpreter in particular.
+
+
+Installation
+------------
+
+The basic way:
+
+> ./configure
+> make all
+> make install
+
+For the complicated way, see INSTALL.
+
+
+Usage
+-----
+
+Consult the documentation for a full description of th language
+implemented and the features Attila offers. Consult a good book on
+Forth for a programmer's introduction -- Leo Brodie's "Starting Forth"
+is probably still the best, and is available on-line at
+http://www.amresearch.com/starting_forth/index.html
+
+
+$Date: 2007/02/09 12:54:37 $
+
