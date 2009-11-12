@@ -1,0 +1,157 @@
+#!/usr/bin/perl
+
+# $Id$
+# primgen -- generate Attila primitives from pseudocode specifications
+# Inspired by the vmgen(1) tool of GForth
+
+# This file is part of Attila, a retargetable threaded interpreter
+# Copyright (c) 2007--2009, Simon Dobson <simon.dobson@computer.org>.
+# All rights reserved.
+#
+# Attila is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# Attila is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+use strict;
+use List::Util;
+
+# Declaration parser
+sub parseDeclaration {
+    my $line;
+    my ($word, $prim, @in, @out, $pronounce, $doc, $code);
+    my ($ins, $outs, @docs, @codes);
+
+    # chew \-comments and whitespace
+    do {
+	$line = <PRIMS>;
+    } while($line and 
+	    (($line =~ /^\s*$/) or
+	     ($line =~ /^\\/)));
+
+    # check for main spec line of the form:
+    #   wordname [primname] ( stackbefore -- stackafter ) ["pronunciation"]
+    # where each entry in the stack comment takes the form:
+    #   a      cell popped off/pushed onto the stack
+    # and [primname] and ["pronunciation"] are optional fields holding
+    # the name assigned to the primitive at the C level and a clue
+    # to the pronunciation of the word respectively.
+    # For example: 
+    #   DUP ( a -- a a ) "dupe"
+    if($line =~ /^([^\s]+)(\s+(\w+))?\s+\(([\w\s]+)*--([\w\s]+)*\)(\s+"([^"]+)")?/) {
+	$word = $1;
+	$prim = $3;   $prim = primName($word) unless($prim);
+	$ins = $4;
+	$outs = $5;
+	$pronounce = $6;
+
+	# split the stack parameters
+	$ins =~ s/^\s+//;   $ins =~ s/\s+$//;   @in = split(/\s+/, $ins);
+	$outs =~ s/^\s+//;   $outs =~ s/\s+$//;   @out = split(/\s+/, $outs);
+
+	# check for documentation string, and then
+	# read the code for the primitive
+	if(($line = <PRIMS>) =~ /^"/) {
+	    if($line =~ /^"(.*)"$/) {
+		$doc = $1;
+	    } else {
+		do {
+		    chomp $line;
+		    push @docs, $line;
+		} until(($line = <PRIMS>) =~ /"$/);
+		push @docs, $line;
+		$doc = join("\n", @docs);
+		$doc =~ s/^"//;   $doc =~ s/"$//;
+	    }
+	} else {
+	    push @codes, $1;
+	}
+	while(!(($line = <PRIMS>) =~ /^\s*$/)) {
+	    push @codes, $line;
+	}
+	$code = join("", @codes);
+
+	# generate the primitive's code
+	return generatePrimitive($word, $prim, \@in, \@out, $pronounce, $doc, $code);
+    } else {
+	return undef;
+    }
+}
+
+
+# Primitive name generator -- very primitive...
+my $unique = 0;
+sub primName {
+    my $word = shift; # unused in this version 
+    $unique++;
+    return "prim$unique";
+}
+
+
+# Remove any duplicate instances of a string in a list
+sub uniquify {
+    my %keys = ();
+    my $n;
+    foreach $n (@_) {
+	$keys{$n} = 1;
+    }
+    return keys(%keys);
+}
+ 
+
+# Code generator
+sub generatePrimitive {
+    my ($word, $prim, $in, $out, $pronounce, $doc, $code) = @_;
+    my (@names, $decl, $pop, $push, $summary);
+
+    # parameter declarations
+    @names = uniquify (@$in, @$out);
+    $decl = join("\n", (map { "CELL $_;"} @names));
+
+    # parameter pops and pushes
+    $pop = join("\n", (map { "POP_CELL($_);" } @$in));
+    $push = join("\n", (map { "PUSH_CELL($_);" } @$out));
+
+    # summary string
+    $summary = $word . " ( " . (join(" ", @$in)) . " -- " . (join (" ", @$out)) . " )"; 
+
+    # fill in primitive template
+    print <<EOT;
+// $summary
+void
+$prim() {
+$decl
+$pop
+$code
+$push
+NEXT
+}
+
+
+EOT
+
+    # return the summary string for reporting
+    return $summary;
+}
+
+
+# Main program
+my ($fn, $w);
+while($fn = shift) {
+    open PRIMS, "<$fn" or die "Can't open primitives file $fn";
+    print stderr "$fn:\n";
+    do {
+	$w = parseDeclaration();
+	print stderr "$w\n" if($w);
+    } while($w);
+}
+
