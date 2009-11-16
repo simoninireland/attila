@@ -50,7 +50,25 @@
 # where parameters maps the list of before names to C variables of type CELL;
 # code is the literal code for the primitive; results pushes the after names
 # onto the stack; and next ends the primitive. The C code can thus refer to
-# parameters and results by name, with primgen taking care of the stack accesses.
+# parameters and results by name, with primgen taking care of the stack
+# accesses.
+#
+# Some C compilers are sticky about declarations in the middle of functions,
+# so primitives should be coded with any declarations at the front of their
+# code followed by a blank line. primgen will separate these declarations
+# into the parameters section before any generated code. The corrolary to
+# this is that code, in general, shouldn't have blank lines in it.
+#
+# Some sets of primitives need support code, headers etc. primgen recognises
+# literal C text bracketed, i.e.:
+#
+# C:
+# #include <stdlib.h>
+#
+# #define VERSION "0.1"
+# ;C
+#
+# which will be emitted directly into the C file. 
 
 use strict;
 use List::Util;
@@ -70,7 +88,7 @@ my ($declarations, $functions);
 # Declaration parser
 sub parsePrimitives {
     my ($line, $rc);
-    my ($word, $prim, @in, @out, $pronounce, $code, $f, $summary);
+    my ($word, $prim, @in, @out, $pronounce, $decl, $code, $f, $summary);
     my ($ins, $outs);
 
     # process each primitive or declaration
@@ -91,18 +109,25 @@ sub parsePrimitives {
 	    $ins =~ s/^\s+//;   $ins =~ s/\s+$//;   @in = split(/\s+/, $ins);
 	    $outs =~ s/^\s+//;   $outs =~ s/\s+$//;   @out = split(/\s+/, $outs);
 
-	    # read the code for the primitive
-	    $code = "";
+	    # read the code and/or declarations for the primitive
+	    $code = $decl = "";
 	  codeline: while($line = <PRIMS>) {
 	      if($line =~ /^;PRIMITIVE/) {
+		  # we're done
 		  last codeline;
-	      } else {
+	      } elsif(($line =~ /^\s*$/) && !$decl) {
+		  # if this is the first blank line, what came before
+		  # is declarations
+		  $decl = $code;   $code = "";
+	      } else{
+		  # code
 		  $code .= $line;
 	      }
 	  }
+	    $code =~ s/^\s*$//mg;
 	    
 	    # generate and record the primitive's code
-	    ($f, $summary) = generatePrimitive($word, $pronounce, $prim, \@in, \@out, $code);
+	    ($f, $summary) = generatePrimitive($word, $pronounce, $prim, \@in, \@out, $decl, $code);
 	    $functions .= $f;
 	    print "$summary\n" if($verbose);
 	} elsif($line =~ /^C:/) {
@@ -145,12 +170,13 @@ sub uniquify {
 
 # Code generator
 sub generatePrimitive {
-    my ($word, $pronounce, $prim, $in, $out, $code) = @_;
-    my (@names, $decl, $pop, $push, $f, $summary);
+    my ($word, $pronounce, $prim, $in, $out, $decl, $code) = @_;
+    my (@names, $alldecl, $pop, $push, $f, $summary);
 
     # parameter declarations
     @names = uniquify (@$in, @$out);
-    $decl = join("\n", (map { "CELL $_;"} @names));
+    $alldecl = join("\n", (map { "CELL $_;"} @names));
+    $alldecl .= "\n$decl" if($decl);
 
     # parameter pops and pushes
     $pop = join("\n", (map { "$_ = POP_CELL();" } @$in));
@@ -163,7 +189,7 @@ sub generatePrimitive {
     $f = "// $summary
 VOID
 $prim() {
-$decl
+$alldecl
 $pop
 $code
 $push
