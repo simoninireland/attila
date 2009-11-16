@@ -43,7 +43,7 @@ DAMAGE.
 <!--}}}-->
 
 <!--PRE-HEAD-END-->
-<title> My TiddlyWiki - a reusable non-linear personal web notebook </title>
+<title> Attila - a re-targetable threaded interpreter </title>
 <style id="styleArea" type="text/css">
 #saveTest {display:none;}
 #messageArea {display:none;}
@@ -511,7 +511,138 @@ Also see [[AdvancedOptions]]</pre>
 </div>
 <!--POST-SHADOWAREA-->
 <div id="storeArea">
+<div title="Bootstrapping" modifier="sd" created="200911151832" modified="200911151847" tags="bootstrapping compiler" changecount="5">
+<pre>!Bootstrapping
 
+System-oriented languages (such as C, and Attila) can be used to create compilers or interpreters, including for themselves: it is commonplace for C compilers to be written in C, for example. There are a number of advantages to this, not least being that, if you think your language is great for building tools, you'll want to use its features when building it. This begs the question of how one gets the //first// tool, since one doesn't have a tool to work with.
+
+''Bootstrapping'' is the process by which a tool is initially created, which can then be used to re-create later versions of the tool using itself. In the case of Attila, this means that most of the system is written as Attila source code which can be edited and then run through the [[cross-compiler|CrossCompiler]] to generate a new system. Since most of the system is written in Attila, once one knows the language one can understand how the compiler is constructed and edit and re-create it cleanly.
+
+Of course one can only use Attila to create a tool when one //has// Attila in the first place.
+
+!!Attila's bootstrapping process
+
+Attila's [[installation|installation]] goes through the following procedure:
+
+# Create an initial [[virtual machine|VirtualMachine]] consisting of [[primitives|Primitives]] needed for the language, coded in C and using a basic memory model
+# Include a [[colon-definition compiler|ColonDefinitions]] and other elements as C
+# Once this system is up and running,
+## Load the [[cross compiler|CrossCompiler]]
+## Create a second virtual machine with C primitives
+## Compile the colon-definition compiler and other tools using the cross-compiler running on the bootstrapped system
+## Create a final Attila system
+# Run the cross-compilation process on the final system to make it re-build itself, to ensure the final system is &quot;fertile&quot;
+# Discard  the bootstrap system
+
+The bootstrap system contains far more C code than the final system and so is a lot less easy to understand and change: but this doesn't matter, since once we have a final system we can minimise the use of C and use Attila for everything.
+
+!!primgen
+
+primgen is a Perl script that generates a bootstrap virtual machine.
+
+
+
+  
+
+</pre>
+</div>
+<div title="Copyright" modifier="sd" created="200911151816" modified="200911151817" changecount="3">
+<pre>!Copyright
+
+Copyright (c) 2007 -- 2009, [[Simon Dobson|mailto:simon.dobson@computer.org]]. All rights reserved.
+
+Attila is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+
+Attila is distributed in the hope that it will be useful, but ''WITHOUT ANY WARRANTY''; without even the implied warranty of ''MERCHANTABILITY'' or ''FITNESS FOR A PARTICULAR PURPOSE''.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+</pre>
+</div>
+<div title="DefaultTiddlers" modifier="sd" created="200911151809" modified="200911151810" changecount="2">
+<pre>[[Home]]</pre>
+</div>
+<div title="Home" modifier="sd" created="200911151810" modified="200911151814" changecount="3">
+<pre>!Attila: a re-targetable threaded interpreter
+
+Attila is a compiler system for threaded interpretive languages such as Forth. It is intended as a vehicle for experimenting with language design, and especially as a portable target for novel languages for sensor networks and other embedded distributed systems.
+
+* Support //small devices//, specifically the microcontroller-scale devices used in sensor networks
+* Be //highly portable// to different target platforms and memory models
+* To //support experimentation// into different programming approaches and language styles
+* As far as possible, be //bootstrapped// so that most of the language is written in the language itself, and cross-compiled. Minimise the number of primitives needing C for their implementation
+
+
+
+</pre>
+</div>
+<div title="Installation" modifier="sd" created="200911151836" modified="200911151844" tags="installation" changecount="4">
+<pre>!Downloading and installation
+
+Attila is written in portable C using GNU autotools. It should compile and install on any modern Unix system without problems.
+
+!!From a binary distribution
+
+!!From source code
+
+&gt; wget http://www.attila-language.org/download/attila-latest.tar.gz
+&gt; tar xfz attila-latest.tar.gz
+&gt; cd attila
+&gt; ./configure
+&gt; make
+&gt; sudo make install
+
+!!From Subversion
+
+To install the latest code, including experimental tools, you need both Subversion and GNU autotools to be installed.
+
+&gt; svn checkout http://www.attila-language.org/attila/trunk attila
+&gt; cd attila
+&gt; aclocal
+&gt; autoconf
+&gt; mkdir config
+&gt; automake -a
+&gt; ./configure
+&gt; make
+&gt; sudo make install
+
+
+</pre>
+</div>
+<div title="MainMenu" modifier="sd" created="200911151809" modified="200911151841" changecount="4">
+<pre>[[Home]]
+* [[Downloading and installing|Installation]]
+* Documentation
+* Contributing to Attila
+
+[[Vocabulary]]
+* The ANS-Forth standard
+* Core words
+* Additional vocabularies
+
+[[Internals]]
+* Threaded interpreters
+* Bootstrapping
+* Memory
+* Cross-compilation
+
+Legalities
+* [[Copyright]]
+* Acknowledgements
+
+</pre>
+</div>
+<div title="SiteSubtitle" modifier="sd" created="200911151807" changecount="1">
+<pre>a re-targetable threaded interpreter</pre>
+</div>
+<div title="SiteTitle" modifier="sd" created="200911151807" changecount="1">
+<pre>Attila</pre>
+</div>
+<div title="VirtualMachine" modifier="sd" created="200911151848" tags="compiler [[virtual machine]]" changecount="1">
+<pre>!Virtual machine
+
+The Attila virtual machine...</pre>
+</div>
 </div>
 <!--POST-STOREAREA-->
 <!--POST-BODY-START-->
