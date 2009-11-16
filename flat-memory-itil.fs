@@ -20,7 +20,7 @@
 \ An indirect threaded interpreter with a flat memory model. This
 \ is the "normal" Forth model as found in figForth etc.
 \
-\ ALl data -- headers, code and data -- are placed linearly in memory
+\ All data -- headers, code and data -- are placed linearly in memory
 \ in a single pre-allocated block. Each word is laid out as follows:
 \
 \           name     name of word           len bytes
@@ -35,9 +35,14 @@
 \ The xt field is the execution token for the word, used to represent
 \ it compiled.
 \
-\ (The reason for the slightly bizarre name layout is to allow us to
-\ convert xt's into word names, for ease of debugging. This isn't available
-\ in other memory models, and so shouldn't be relied upon.)
+\ If the layout seems a little bizarre, there's a reason. We use the
+\ cfa as the xt to minimise the amount of calculation needed to execute
+\ a word: everything we need at run-time is at a fixed offset after
+\ the xt. We put the stuff we need at compile time before the xt, with the
+\ link field and name length at a constant position relative to the xt.
+\ In this memory model we can get the name from the xt: this isn't the
+\ case in all models, so applications shouldn't rely on the existence
+\ of >NAME.
 
 \ ---------- Memory and compilation primitives ----------
 
@@ -83,62 +88,43 @@ PRIMITIVE: USER user_variable_address ( n -- addr )
 
 \ Run the virtual machine interpretation loop. This is simple, infinite,
 \ single-threaded loop to get things going
+\ sd: we use the code for EXECUTE, which introduces some overhead by
+\ using the data steack at every cycle. We might want to re-factor
 PRIMITIVE: (:) docolon ( -- ) " bracket colon"
     XT xt;
-    PRIMITIVE prim;
+
     do {
 	// grab the next instruction
-	xt = (*ip);
+	xt = (*ip++);
 
-	// dispatch on the instruction
-	if(xt == NULL) {
-	    // NEXT, return from this word
-	    ip = POP_RETURN();
-	} else {
-	    prim = (*xt);   ip++;
-	    if(prim == docolon) {
-	        // another colon-definition, push the return address
-	        // and re-point the instruction pointer
-	        PUSH_RETURN(ip);
-	        ip = (XTPTR) (((BYTEPTR) xt) + 1 + size(CELL) * 2);
-	    } else {
-	        // a primitive, execute it
-	        (*prim)();
-	    }
+	// EXECUTE it
+	PUSH_CELL(xt);
+	execute();
     } while(1);
 ;PRIMITIVE
 	    
 \ Execute an xt from the stack
-PRIMITIVE: EXECUTE ( xt -- )
-    PUSH_RETURN(xt);
+PRIMITIVE: EXECUTE execute ( xt -- )
+    PRIMITIVE prim;
+
+    // dispatch on the instruction
+    if(xt == NULL) {
+        // NEXT, return from this word
+	ip = POP_RETURN();
+    } else {
+	prim = (*xt);
+	if(prim == docolon) {
+	    // another colon-definition, push the return address
+	    // and re-point the instruction pointer
+	    PUSH_RETURN(ip);
+	    ip = (XTPTR) (((BYTEPTR) xt) + 1 + size(CELL) * 2);
+	} else {
+	    // a primitive, execute it
+	    (*prim)();
+	}
+    }
 ;PRIMITIVE
 	    
-	    
-\ ---------- Word compilation ----------
-
-\ Start a word, compiling a header for it and setting it up for
-\ its code and data. The resulting header isn't complete, and needs
-\ to be finalised with a corresponding WORD) before use.
-: (WORD ( addr len -- xt )
-    LASTXT ,        \ the link pointer
-    DUP >R          \ the name
-    DO
-	DUP C@ C<
-	1+
-    LOOP
-    R> C,          \ the length of the name
-    TOP            \ ( xt )
-    [ ' (:) ] ,    \ the code field
-    INITIALISED C, \ the initial status
-    0 C, ;         \ the body pointer, to be patched
-
-\ Finish a word's compilation, patching its body pointer and setting
-\ its status to findable, and updating LAST.
-: WORD) ( xt -- )
-    DUP LAST !      \ LAST gets the xt
-    TOP OVER >BPA ! \ patch body address to current top
-    READY SWAP ! ;  \ patch status to ready and findable
-
 
 \ ---------- Navigating the header ----------
 
@@ -174,4 +160,31 @@ PRIMITIVE: EXECUTE ( xt -- )
 \ in the search list.
 : >LFA to_lfa ( xt -- lfa )
     1 CELLS - ;
+
+	    
+\ ---------- Word compilation ----------
+
+\ Start a word, compiling a header for it and setting it up for
+\ its code and data. The resulting header isn't complete, and needs
+\ to be finalised with a corresponding WORD) before use.
+: (WORD ( addr len cf -- xt )
+    >R DUP >R       \ the name
+    DO
+	DUP C@ C,
+	1+
+    LOOP
+    R> C,           \ the length of the name
+    LASTXT ,        \ the link pointer
+    TOP             \ ( xt )
+    R> ,            \ the code field
+    INITIALISED C,  \ the initial status
+    0 , ;           \ the body pointer, to be patched
+
+\ Finish a word's compilation, patching its body pointer and setting
+\ its status to findable, and updating LAST.
+: WORD) ( xt -- )
+    DUP LAST !              \ LAST gets the xt
+    HERE OVER >BFA !        \ patch body pointer to next free body address
+    READY SWAP >STATUS C! ; \ patch status to ready and findable
+
 
