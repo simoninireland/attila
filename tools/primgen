@@ -179,7 +179,7 @@ sub generatePrimitive {
     $alldecl .= "\n$decl" if($decl);
 
     # parameter pops and pushes
-    $pop = join("\n", (map { "$_ = POP_CELL();" } @$in));
+    $pop = join("\n", (map { "$_ = POP_CELL();" } (reverse @$in)));
     $push = join("\n", (map { "PUSH_CELL($_);" } @$out));
 
     # summary string
@@ -188,7 +188,7 @@ sub generatePrimitive {
     # fill in primitive template
     $f = "// $summary
 VOID
-$prim() {
+$prim( XT _xt ) {
 $alldecl
 $pop
 $code
@@ -213,7 +213,7 @@ sub generatePrimitiveFile {
     
     # generate the prototypes
     while(($word, $prim) = each(%primitive)) {
-	$prims .= "   DEFINE_PRIMITIVE(\"$word\", &$prim);\n";
+	$prims .= "   COMPILE_PRIMITIVE(\"$word\", &$prim);\n";
     }
 
     print C <<EOC
@@ -225,6 +225,11 @@ sub generatePrimitiveFile {
 $declarations
 
 $functions
+
+VOID
+init_primitives() {
+$prims
+}
 
 // Generated $timestamp
 EOC
