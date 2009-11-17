@@ -91,7 +91,7 @@ PRIMITIVE: R> ( -- addr )
 
 \ Copy the top item on the return stack to the data stack
 PRIMITIVE: R@ ( -- addr )
-    addr = PEEK_RETURN();
+    addr = (CELL) PEEK_RETURN();
 ;PRIMITIVE
 
 \ Move the top item on the data stack to the return stack
