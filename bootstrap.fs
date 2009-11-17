@@ -39,7 +39,6 @@
 C:
 #include "bootstrap.h"
 
-
 // ---------- Initialisation ----------
 
 BYTEPTR
@@ -50,52 +49,52 @@ init_memory( CELL len ) {
 
 // ---------- Assorted hacks to call underlying primitives from C level ----------
 
-VOID user_variable_address();    
+VOID user_variable_address( XT );    
 CELLPTR
 user_variable( int n ) {
     PUSH_CELL(n);
-    user_variable_address();
+    user_variable_address(NULL);
     return (CELLPTR) POP_CELL();
 }    
 
-VOID to_lfa();
+VOID to_lfa( XT );
 XTPTR
 xt_to_lfa( XT xt ) {
     PUSH_CELL(xt);
-    to_lfa();
+    to_lfa(NULL);
     return (XTPTR) POP_CELL();
 }
 
-VOID to_ha();
+VOID to_ha( XT );
 BYTEPTR
 xt_to_ha( XT xt ) {
     PUSH_CELL(xt);
-    to_ha();
+    to_ha(NULL);
     return (BYTEPTR) POP_CELL();
 }
 
-VOID ha_to();
+VOID ha_to( XT );
 XT
 ha_to_xt( BYTEPTR ha ) {
     PUSH_CELL(ha);
-    ha_to();
+    ha_to(NULL);
     return (XT) POP_CELL();
 }
 
-VOID to_body();
+VOID to_body( XT );
 CELLPTR
 xt_to_body( XT xt ) {
     PUSH_CELL(xt);
-    to_body();
+    to_body(NULL);
     return (CELLPTR) POP_CELL();
 }
 
 XT lastxt;
-VOID execute();
-VOID docolon();
+VOID execute( XT );
+VOID docolon( XT );
 
-VOID start_word();
-VOID to_status();
+VOID start_word( XT );
+VOID to_status( XT );
 VOID
 begin_colon_definition( char *name, PRIMITIVE prim, int status) {
     XT xt;
@@ -105,56 +104,54 @@ begin_colon_definition( char *name, PRIMITIVE prim, int status) {
     PUSH_CELL(name);
     PUSH_CELL(strlen(name));
     PUSH_CELL(prim);
-    start_word();
+    start_word(NULL);
     xt = (XT) POP_CELL();
 
     // set status
     PUSH_CELL(xt);
-    to_status();
+    to_status(NULL);
     addr = (BYTEPTR) POP_CELL();
     *addr = status;
 
     // store the xt
     lastxt = xt;
+    printf("%s %lx\n", name, xt);
 }
 
-VOID end_word();
 VOID
 end_colon_definition() {
-    PUSH_CELL(lastxt);
-    end_word();
 }
 
-VOID prim_compile_cell();
+VOID prim_compile_cell( XT );
 VOID
 compile_cell( CELL c ) {
     PUSH_CELL(c);
-    prim_compile_cell();
+    prim_compile_cell(NULL);
 }
 
-VOID prim_compile_char();
+VOID prim_compile_char( XT );
 VOID
 compile_byte( BYTE b ) {
     PUSH_CELL((CELL) b);
-    prim_compile_char();
+    prim_compile_char(NULL);
 }
 
-VOID prim_compile_string();
+VOID prim_compile_string( XT );
 VOID
 compile_string( char *str, int len ) {
     PUSH_CELL((CELL) str);
     PUSH_CELL((CELL) len);
-    prim_compile_string();
+    prim_compile_string(NULL);
 }
 
-VOID bracket_find();
+VOID bracket_find( XT );
 XT xt_of( char *name ) {
     XT xt;
         
     PUSH_CELL(name);
     PUSH_CELL((CELL) strlen(name));
     PUSH_CELL(xt_to_ha((XT) *(user_variable(USER_LAST))));
-    bracket_find();
+    bracket_find(NULL);
     xt = (XT) POP_CELL();
     if(xt == NULL) {
         printf("FAILED TO FIND %s\n", name);
@@ -170,14 +167,14 @@ compile_xt_of( char *name ) {
     compile_cell((CELL) xt);
 }
 
-VOID allot();
+VOID allot( XT );
 CELLPTR
 allocate_code_memory( int n ) {
     CELLPTR ptr;
 
     ptr = (CELLPTR) top;
     PUSH_CELL((CELL) n);
-    allot();
+    allot(NULL);
     return ptr;
 }
 
@@ -293,18 +290,23 @@ PRIMITIVE: >LFA to_lfa ( xt -- lfa )
 PRIMITIVE: >STATUS to_status ( -- addr )
     CELLPTR lfa;
 
-    to_lfa();
+    to_lfa(NULL);
     lfa = (CELLPTR) POP_CELL();
     addr = (CELL) (lfa + 1);
 ;PRIMITIVE
 
-\ Convert an xt to the body address
+\ Convert an xt to the body address, accounting for the indirect
+\ boy address that's stored for CREATEd words 
 PRIMITIVE: >BODY to_body ( -- addr ) " to body"
-    BYTEPTR body;
+    BYTEPTR st;
+    BYTE status;
 
-    to_status();
-    body = (BYTEPTR) POP_CELL();
-    addr = (CELL) (body + 1);
+    to_status(NULL);
+    st = (BYTEPTR) POP_CELL();
+    status = (BYTE) *st;
+    addr = (CELL) (st + 1);
+    if(status & STATUS_REDIRECTABLE)
+        addr += CELL_SIZE;
 ;PRIMITIVE
 
 \ Convert an xt to the name of the corresponding word
@@ -356,7 +358,7 @@ PRIMITIVE: EXECUTE execute ( xt -- )
             ip = (XTPTR) xt_to_body((XT) xt);
 	} else {
 	    // a primitive, execute it
-	    (*prim)();
+	    (*prim)(xt);
 	}
     }
 ;PRIMITIVE
@@ -365,15 +367,15 @@ PRIMITIVE: EXECUTE execute ( xt -- )
 \ single-threaded loop to get things going
 PRIMITIVE: (:) docolon ( -- ) " bracket colon"
     XT xt;
-
+	
     do {
 	// grab the next instruction
 	xt = (*((XTPTR) ip++));
 
 	// EXECUTE it
-	// DEBUG(xt);
+	//DEBUG(xt);
 	PUSH_CELL(xt);
-	execute();
+	execute(xt);
     } while(1);
 ;PRIMITIVE
 
@@ -382,11 +384,23 @@ PRIMITIVE: (VAR) dovar ( -- addr ) " bracket var"
     addr = (CELL) xt_to_body(*(ip - 1));
 ;PRIMITIVE
 
+\ For a re-directable word, grab the indirect body address and jump to it,
+\ pushing the real body address onto the stack first
+\ sd: should we combine this with (VAR) and switch on redirectability?
+PRIMITIVE: (DOES) ( -- body )
+    CELLPTR iba;
+	
+    body = (CELL) xt_to_body(_xt);
+    iba = (CELLPTR) ((CELLPTR) body - 1);
+    PUSH_RETURN(ip);
+    ip = (XT) *((CELLPTR *) iba);
+;PRIMITIVE
+
 
 \ ---------- Word compilation ----------
 
-\ Start a word, compiling a header	
-PRIMITIVE: (WORD start_word ( addr len cf -- xt )
+\ Compile a word header. Note that this has to work with an empty name
+PRIMITIVE: (HEADER,) start_word ( addr len cf -- xt )
     XT last;
 	
     xt = (XT) top;                                               // grab the xt	
@@ -398,10 +412,6 @@ PRIMITIVE: (WORD start_word ( addr len cf -- xt )
     *((CELLPTR) top) = (CELL) ((last == NULL) ? NULL : xt_to_ha(last));
     top += CELL_SIZE;
     *top++ = (BYTE) 0;                                          // the status field
-;PRIMITIVE
-
-\ Finish a word's compilation
-PRIMITIVE: WORD) end_word ( xt -- )
     *(user_variable(USER_LAST)) = xt;        // LAST gets the xt we just compiled
 ;PRIMITIVE
 
@@ -471,7 +481,7 @@ PRIMITIVE: PARSE-WORD ( -- )
   do {
     // fill the TIB if we need a line
     if(*offset == -1) {
-      fill_tib();
+      fill_tib(_xt);
 
       // check for an exhausted input source, and fail if we have one
       remaining = POP_CELL();
@@ -513,7 +523,7 @@ PRIMITIVE: CONSUME ( c -- )
 
   // fill the TIB if we need a line
   if(*offset == -1) {
-    fill_tib();
+    fill_tib(_xt);
 
     // check for an exhausted input source
     remaining = POP_CELL();
@@ -541,7 +551,7 @@ PRIMITIVE: PARSE ( c -- )
 
   // fill the TIB if we need a line
   if(*offset == -1) {
-    fill_tib();
+    fill_tib(_xt);
 
     // check for an exhausted input source, and fail if we have one
     remaining = POP_CELL();
