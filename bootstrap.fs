@@ -573,12 +573,10 @@ PRIMITIVE: PARSE ( c -- )
 \ Print the given string on the terminal
 PRIMITIVE: TYPE ( addr n -- )
   char *buf;
-  int len;
 	
   // copy string to null-terminated local buffer
-  buf = (CHARACTERPTR) calloc(sizeof(CHARACTER), n + 1);
-  strncpy(buf, (BYTEPTR) addr, len);
-  buf[len] = '\0';
+  buf = (CHARACTERPTR) malloc(n + 1);
+  memcpy(buf, (BYTEPTR) addr, n);   buf[n] = '\0';
 
   // print and tidy up
   printf("%s", buf);   fflush(stdout);
