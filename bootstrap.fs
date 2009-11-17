@@ -39,15 +39,12 @@
 C:
 #include "bootstrap.h"
 
-// The include path for source files
-char **include_path;
-int includes = 0;
 
 // ---------- Initialisation ----------
 
 BYTEPTR
 init_memory( CELL len ) {
-    return malloc(len);
+    return (BYTEPTR) malloc(len);
 }
 
 
@@ -109,7 +106,7 @@ begin_colon_definition( char *name, PRIMITIVE prim, int status) {
     PUSH_CELL(strlen(name));
     PUSH_CELL(prim);
     start_word();
-    xt = POP_CELL();
+    xt = (XT) POP_CELL();
 
     // set status
     PUSH_CELL(xt);
@@ -119,8 +116,6 @@ begin_colon_definition( char *name, PRIMITIVE prim, int status) {
 
     // store the xt
     lastxt = xt;
-
-    printf("%s %lx\n", name, xt);
 }
 
 VOID end_word();
@@ -158,9 +153,9 @@ XT xt_of( char *name ) {
         
     PUSH_CELL(name);
     PUSH_CELL((CELL) strlen(name));
-    PUSH_CELL(xt_to_ha(*(user_variable(USER_LAST))));
+    PUSH_CELL(xt_to_ha((XT) *(user_variable(USER_LAST))));
     bracket_find();
-    xt = POP_CELL();
+    xt = (XT) POP_CELL();
     if(xt == NULL) {
         printf("FAILED TO FIND %s\n", name);
         exit(1);
@@ -172,7 +167,7 @@ compile_xt_of( char *name ) {
     XT xt;
 
     xt = xt_of(name); 
-    compile_cell(xt);
+    compile_cell((CELL) xt);
 }
 
 VOID allot();
@@ -277,12 +272,12 @@ PRIMITIVE: >CFA ( xt -- xt )
 
 \ Convert an xt to a header address
 PRIMITIVE: >HA to_ha ( xt -- ha ) " to aitch ay"
-    ha = ((CELLPTR) xt + 1);
+    ha = (CELL) ((CELLPTR) xt + 1);
 ;PRIMITIVE
 
 \ Convert a header address to an xt
 PRIMITIVE: HA> ha_to ( ha -- xt ) " aitch ay to"
-    xt = ((CELLPTR) ha - 1);
+    xt = (CELL) ((CELLPTR) ha - 1);
 ;PRIMITIVE
 
 \ Convert an xt to a link field address
@@ -291,7 +286,7 @@ PRIMITIVE: >LFA to_lfa ( xt -- lfa )
 
     ptr = (BYTEPTR) xt;
     ptr += CELL_SIZE;
-    lfa = ptr + 1 + *ptr;
+    lfa = (CELL) (ptr + 1 + *ptr);
 ;PRIMITIVE
 
 \ Convert an xt to a status byte address.
@@ -300,7 +295,7 @@ PRIMITIVE: >STATUS to_status ( -- addr )
 
     to_lfa();
     lfa = (CELLPTR) POP_CELL();
-    addr = lfa + 1;
+    addr = (CELL) (lfa + 1);
 ;PRIMITIVE
 
 \ Convert an xt to the body address
@@ -308,8 +303,8 @@ PRIMITIVE: >BODY to_body ( -- addr ) " to body"
     BYTEPTR body;
 
     to_status();
-    body = POP_CELL();
-    addr = body + 1;
+    body = (BYTEPTR) POP_CELL();
+    addr = (CELL) (body + 1);
 ;PRIMITIVE
 
 \ Convert an xt to the name of the corresponding word
@@ -318,7 +313,7 @@ PRIMITIVE: >NAME to_name ( xt -- addr namelen)
 
     nla = (BYTEPTR) ((CELLPTR) xt + 1);
     namelen = (BYTE) *nla;
-    addr = nla + 1;
+    addr = (CELL) (nla + 1);
 ;PRIMITIVE
 
 
@@ -349,16 +344,16 @@ PRIMITIVE: EXECUTE execute ( xt -- )
     PRIMITIVE prim;
 
     // dispatch on the instruction
-    if(xt == NULL) {
+    if(xt == (XT) NULL) {
         // NEXT, return from this word
 	ip = POP_RETURN();
     } else {
-	prim = (*((CELLPTR) xt));
+	prim = (PRIMITIVE) (*((CELLPTR) xt));
 	if(prim == docolon) {
 	    // another colon-definition, push the return address
 	    // and re-point the instruction pointer
 	    PUSH_RETURN(ip);
-            ip = (XTPTR) xt_to_body(xt);
+            ip = (XTPTR) xt_to_body((XT) xt);
 	} else {
 	    // a primitive, execute it
 	    (*prim)();
@@ -376,7 +371,7 @@ PRIMITIVE: (:) docolon ( -- ) " bracket colon"
 	xt = (*((XTPTR) ip++));
 
 	// EXECUTE it
-	DEBUG(xt);
+	// DEBUG(xt);
 	PUSH_CELL(xt);
 	execute();
     } while(1);
@@ -384,7 +379,7 @@ PRIMITIVE: (:) docolon ( -- ) " bracket colon"
 
 \ The run-time behaviour of a variable, returning its body address
 PRIMITIVE: (VAR) dovar ( -- addr ) " bracket var"
-    addr = xt_to_body(*(ip - 1));
+    addr = (CELL) xt_to_body(*(ip - 1));
 ;PRIMITIVE
 
 
@@ -394,13 +389,13 @@ PRIMITIVE: (VAR) dovar ( -- addr ) " bracket var"
 PRIMITIVE: (WORD start_word ( addr len cf -- xt )
     XT last;
 	
-    xt = top;                                                   // grab the xt	
+    xt = (XT) top;                                               // grab the xt	
     *((CELLPTR) top) = cf;
     top += CELL_SIZE;
     *top++ = (BYTE) len;                                        // the counted-string name   
-    memcpy(top, addr, len);   top += len;
+    memcpy(top, (BYTEPTR) addr, len);   top += len;
     last = (XT) (*(user_variable(USER_LAST)));                  // the link pointer
-    *((CELLPTR) top) = (last == NULL) ? NULL : xt_to_ha(last);
+    *((CELLPTR) top) = (CELL) ((last == NULL) ? NULL : xt_to_ha(last));
     top += CELL_SIZE;
     *top++ = (BYTE) 0;                                          // the status field
 ;PRIMITIVE
@@ -575,14 +570,13 @@ PRIMITIVE: PARSE ( c -- )
     *offset = -1;
 ;PRIMITIVE
 
-
 \ Print the given string on the terminal
 PRIMITIVE: TYPE ( addr n -- )
   char *buf;
   int len;
 	
   // copy string to null-terminated local buffer
-  buf = (char *) calloc(sizeof(CHARACTER), n + 1);
+  buf = (CHARACTERPTR) calloc(sizeof(CHARACTER), n + 1);
   strncpy(buf, (BYTEPTR) addr, len);
   buf[len] = '\0';
 
@@ -591,13 +585,16 @@ PRIMITIVE: TYPE ( addr n -- )
   free(buf);
 ;PRIMITIVE
 
-
 \ Print a character on the terminal
 PRIMITIVE: EMIT ( c -- )
   printf("%c", (CHARACTER) c);
 ;PRIMITIVE
 
-
+\ Print the top number on the stack
+PRIMITIVE: . ( n -- )	
+    printf("%d", n);
+;PRIMITIVE
+	
 \ ---------- Compilation support ----------
 
 \ Convert a token to a number if possible, pushing the result
@@ -609,7 +606,7 @@ PRIMITIVE: NUMBER? ( addr n -- )
   int valid = 1;
   int base = *(user_variable(USER_BASE));
 
-  buf = (char *) malloc(n + 1);
+  buf = (CHARACTERPTR) malloc(n + 1);
   memcpy(buf, addr, n);   buf[n] = '\0';
 
   // convert number
@@ -640,9 +637,9 @@ PRIMITIVE: (FIND) bracket_find ( addr namelen ha -- xt ) " bracket find"
     XT x;
     CELLPTR link;
 	
-    xt = NULL;
-    while(ha != NULL) {
-        x = ha_to_xt(ha);
+    xt = (XT) NULL;
+    while(ha != (BYTEPTR) NULL) {
+        x = ha_to_xt((BYTEPTR) ha);
         tlen = (BYTE) *((BYTEPTR) ha);
 	taddr = (CHARACTERPTR) ha + 1;
 	if((namelen == tlen) &&
@@ -650,7 +647,7 @@ PRIMITIVE: (FIND) bracket_find ( addr namelen ha -- xt ) " bracket find"
 	    xt = x;   ha = NULL;
 	} else {
 	    link = xt_to_lfa(x);
-	    ha = *link;
+	    ha = (BYTEPTR) (*link);
 	}
     }
 ;PRIMITIVE	
@@ -671,18 +668,18 @@ PRIMITIVE: EXHAUSTED? ( -- eof )
 
 \ Open a file, returning a file handle or 0
 PRIMITIVE: FILE-OPEN ( addr namelen -- fh )
-  char *fn;
+  CHARACTERPTR fn;
 
-  fn = (char *) malloc(namelen + 1);
-  strncpy(fn, addr, namelen);   fn[namelen] = '\0';
+  fn = (CHARACTERPTR) malloc(namelen + 1);
+  strncpy(fn, (CHARACTERPTR) addr, namelen);   fn[namelen] = '\0';
   fh = (CELL) fopen(fn, "r");
   free(fn);
 ;PRIMITIVE
 
 \ Close a file
 PRIMITIVE: FILE-CLOSE ( fh -- )
-  if(fh != stdin)
-    fclose(fh);
+  if(((FILE *) fh) != stdin)
+    fclose((FILE *) fh);
 ;PRIMITIVE
 
 
@@ -695,8 +692,8 @@ PRIMITIVE: WARM ( -- )
     RETURN_STACK_RESET();  
 
     // reset user variables
-    *(user_variable(USER_STATE)) = STATE_INTERPRETING;
-    *(user_variable(USER_BASE)) = 10;
+    *(user_variable(USER_STATE)) = (CELL) STATE_INTERPRETING;
+    *(user_variable(USER_BASE)) = (CELL) 10;
       
     // point the ip at the executive and return
     ip = xt_to_body(*(user_variable(USER_EXECUTIVE)));
