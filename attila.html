@@ -511,6 +511,16 @@ Also see [[AdvancedOptions]]</pre>
 </div>
 <!--POST-SHADOWAREA-->
 <div id="storeArea">
+<div title="AboutThisDocumentation" modifier="sd" created="200911161013" modified="200911161016" changecount="2">
+<pre>!About this documentation
+
+You're looking at it! The Attila web site, http://www.attila-language.org, is implemented using [[TiddlyWiki|http://www.tiddlywiki.org]], which places an entire web site into a single interactive HTML file. If you save this file (File &gt;&gt; Save as...) to your machine, you have immediate local access to all the documentation for Attila.
+
+!!Tags in the documentation
+
+This manual contains brief descriptions of all words and sub-systems within Attila. Each word description is tagged with the name of the word set it is part of. Most of these word sets relate to the ANS Standard for Forth. If you want to see a word set, just click on the corresponding tag in the right-hand tags menu.
+</pre>
+</div>
 <div title="Bootstrapping" modifier="sd" created="200911151832" modified="200911151847" tags="bootstrapping compiler" changecount="5">
 <pre>!Bootstrapping
 
@@ -546,6 +556,55 @@ primgen is a Perl script that generates a bootstrap virtual machine.
 
 </pre>
 </div>
+<div title="ColonCompilerWords" modifier="sd" created="200911161105" modified="200911161112" tags="words compiler (:) EXECUTE : ; [ ]" changecount="4">
+<pre>!Colon-compiler words
+
+These words form the heart of the compiler, allowing new words to be defined. (The concepts behind colon-definitions is explained [[here|ColonDefinition]].)
+
+!!User-level words
+
+{{{:}}} ( &quot;word&quot; -- ) &quot;colon&quot;
+Start a [[colon-definition|ColonDefinition]], the main way of defining new words. The next word in the input stream is used to create the new word, and the system switches into [[compilation state|CompileInterpretState]].
+
+{{{;}}} ( -- ) &quot;semi colon&quot;
+End the current colon-definition and switch the system into [[interpretation state|CompileInterpretState]].
+
+{{{EXECUTE}}} ( xt -- )
+Execute the word represented by the xt on the stack.
+
+{{{[}}} ( -- ) &quot;open square&quot;
+Place the system into [[interpretation state|CompileInterpretState]]. Words read from the input stream will be executed.
+
+{{{]}}} ( -- ) &quot;close square&quot;
+Place the system into [[compilation state|CompileInterpretState]]. Words read from the input stream will be compiled into the dictionary. 
+
+!!Implementation words
+
+{{{(:)}}} ( -- ) &quot;bracket colon&quot;
+Execute the inner interpreter for the Attila system, running colon-definitions and primitives.
+</pre>
+</div>
+<div title="ColonDefinition" modifier="sd" created="200911161730" modified="200911161742" tags="compiler [[colon definition]]" changecount="2">
+<pre>!Colon definitions
+
+''Colon definitions'' are the most common way to create new [[words|Word]].
+
+By way of example, suppose we want to define a word that performs some simple calculation like calculating the area of a square given the length of one of its sides. A word to do this is given by:
+
+&gt; : SQUARE-AREA 
+&gt;     DUP * ;
+
+Let's examine this word by word. The colon {{{:}}} is the start of the colon definition. It creates a new word by parsing the next word in the input stream ({{{SQUARE-AREA}}}), and shifts the system into [[compilation state|CompileInterpretState]] to that subsequent words will be compiled to create the behaviour associated with {{{SQUARE-WORD}}} rather than happening immediately.
+
+The next words ({{{DUP}}} and {{{*}}}) are compiled as the &quot;body&quot; of {{{SQUARE_AREA}}}. The compiler then encounters the {{{;}}} word, which ends the colon definition: it shifts the system back into [[interpretation state|CompileInterpretState]] and wraps-up the definition of {{{SQUARE-AREA}}}.
+
+If you now enter some code using the new word, for example {{{10 SQUARE-AREA}}}, the system will interpret {{{10}}} (by putting it on the stack) and then interpret {{{SQUARE-AREA}}} by executing its behaviour {{{DUP *}}} to produce a result, again on the stack.
+
+The body of a colon definition -- its behaviour -- can use (pretty much) any word already defined. All words are created equal in this sense.
+
+More detailed information about the words in the colon compiler can be found [[here|ColonCompilerWords]].
+</pre>
+</div>
 <div title="Copyright" modifier="sd" created="200911151816" modified="200911151817" changecount="3">
 <pre>!Copyright
 
@@ -559,8 +618,58 @@ You should have received a copy of the GNU General Public License along with thi
 
 </pre>
 </div>
+<div title="CrossCompiler" modifier="sd" created="200911161003" modified="200911161011" tags="compiler cross-compiler [[virtual machine]]" changecount="4">
+<pre>!The Attila cross-compiler
+
+!!Terminology
+
+First we need some terminology.
+
+A ''compiler'' is a piece of code that converts ''source code'' (the code a programming writes) into either ''machine code'' (the code a machine can actually execute natively) or ''intermediate code'' (which is close to machine code but still needs some extra supporting software to execute). In a threaded interpreter this line is a little blurred, but the compiler still converts Attila source code into a form that's executable by the [[virtual machine|VirtualMachine]].
+
+A ''cross-compiler'' is a compiler that compiles code for a machine other than the one on which it runs. The machine the code will run on is called the ''target''; the machine the cross-compiler runs on is the ''host''. There's an obvious implication here, which is that the code produced by the cross-compiler can't actually be run at all on the host, since it's for a different machine.
+
+
+!!Using the cross-compiler
+
+!!Design and implementation
+
+!!!Overview
+
+!!!Targets and architectures
+
+!!!Use of word lists
+
+The cross-compiler maintains two word lists relating to the target, in addition to the words it has defined with reference to the host.
+
+Words that support compilation live in {{{CROSS}}}. This includes the colon-compiler, the {{{IMMEDIATE}}} words used to define control structures, and some other supporting words.
+
+Words that are intended to land on the target live in {{{TARGET}}}. Any word that the cross-compiler compiles for the target gets placed here (although not actually as code -- see later). So listing this word list ({{{TARGET .VOC}}}) will show the dictionary that will land on the target once it's built.
+
+</pre>
+</div>
 <div title="DefaultTiddlers" modifier="sd" created="200911151809" modified="200911151810" changecount="2">
 <pre>[[Home]]</pre>
+</div>
+<div title="FlatMemoryModel" modifier="sd" created="200911161048" modified="200911171247" tags="[[memory model]] compiler" changecount="7">
+<pre>!The flat memory model
+
+The flat memory model is the &quot;standard&quot; Forth memory model, in which all data lives in a single contiguous block that is statically managed as a dictionary.
+
+|!Access word    |!Field name |!Description                                     |!Size in bytes|
+|                         |name           |name of word                                   |namelen|
+|                         |namelen      |length of name                                 |1|
+|{{{&gt;LFA}}}         |link               |link to previous word in word list      |1 cell|
+|xt -&gt; {{{&gt;CFA}}} |cf                 |pointer to primitive code to execute |1 cell|
+|{{{&gt;STATUS}}}  |status          |status flags                                       |1|
+|{{{&gt;BODY}}}       |code           |the code of the word                         ||
+
+The execution token (xt) for a word is the address of its code field.
+
+If the above layout looks a little bizarre, there //are// reasons for the choices. Words will typically be executed more than they are searched for, so it makes sense to make execution fast. In this model, anything needed to execute the word comes //at or below// the xt in memory. The xt is the address of the primitive code used to execute a word, which can thus be looked-up quickly. The status and code for the word are at fixed offsets from the xt, and so can also be calculated quickly. Anything needed when searching for the word comes //above// the xt in memory. The link field and name length are again at fixed offsets from the xt for rapid lookup. The name is of variable length and comes first: its starting address can be calculated from the xt and the name length.
+
+The flat memory model provides a {{{&gt;NAME}}} word that returns the name of the word represented by an xt as a counted string. This isn't always available, and so should be avoided for applications: but it does simplify debugging somewhat.
+</pre>
 </div>
 <div title="Home" modifier="sd" created="200911151810" modified="200911151814" changecount="3">
 <pre>!Attila: a re-targetable threaded interpreter
@@ -609,10 +718,10 @@ To install the latest code, including experimental tools, you need both Subversi
 
 </pre>
 </div>
-<div title="MainMenu" modifier="sd" created="200911151809" modified="200911151841" changecount="4">
+<div title="MainMenu" modifier="sd" created="200911151809" modified="200911161012" changecount="6">
 <pre>[[Home]]
 * [[Downloading and installing|Installation]]
-* Documentation
+* [[Documentation|AboutThisDocumentation]]
 * Contributing to Attila
 
 [[Vocabulary]]
@@ -624,12 +733,16 @@ To install the latest code, including experimental tools, you need both Subversi
 * Threaded interpreters
 * Bootstrapping
 * Memory
-* Cross-compilation
+* [[Cross-compilation|CrossCompiler]]
 
 Legalities
 * [[Copyright]]
 * Acknowledgements
 
+</pre>
+</div>
+<div title="MemoryModels" modifier="sd" created="200911171247" modified="200911171248" tags="[[memory model]] architecture" changecount="2">
+<pre>* [[Flat, single block for all code and data|FlatMemoryModel]]
 </pre>
 </div>
 <div title="SiteSubtitle" modifier="sd" created="200911151807" changecount="1">
@@ -638,10 +751,108 @@ Legalities
 <div title="SiteTitle" modifier="sd" created="200911151807" changecount="1">
 <pre>Attila</pre>
 </div>
+<div title="StackComments" modifier="sd" created="200911171126" modified="200911171126" tags="notation comments" changecount="4">
+<pre>!The stack comment notation
+
+Attila uses a standard notation for describing words' effects on the data (and other) stacks. Each word has an associated stack comment that looks like this, for example:
+
+&gt; {{{SOME-CALCULATION}}} ( a b c -- d )
+
+The stack comment is the fragment in brackets. The comment has two parts, before and after the -- separator. Elements coming before the dashes denote values the word expects to be on the stack when it executes; elements after the separator denote values it leaves on the stack after its execution. The same name can appear on both sides, indicating a value copied across the execution of the word. In this example, {{{SOME-CALCULATION}}} expects three values on the stack and leaves a single, new value presumably calculated from those it consumed.
+
+Words that create words and expect a string in the input stream have this placed in their stack comment, for example:
+
+&gt; {{{CREATE}}} ( &quot;name&quot; -- )
+
+which expects, and consumes, a word from the input stream. Both kinds of elements can appear together, for example:
+
+&gt; {{{USER}}} ( offset &quot;name&quot; -- )
+
+which takes a value on the stack //and// a word from the input stream.
+</pre>
+</div>
+<div title="StartWords" modifier="sd" created="200911171109" modified="200911171115" tags="words WARM COLD" changecount="2">
+<pre>!Start-up and shutdown words
+
+{{{COLD}}} ( -- )
+Start the system from scratch. This is typically the first word called when the system has initialised its memory and dictionary. A typical behaviour on an interactive system is to load an initial profile and then warm-start using {{{WARM}}}.
+
+{{{WARM}}} ( -- )
+Warm-start the system after an error. A typical behaviour on an interactive system is to clear the stacks and then start the interactive outer executive (although this would be different on an embedded system). The executive that will be re-started is held in the user variable {{{EXECUTIVE}}}.
+</pre>
+</div>
+<div title="UserVariableWords" modifier="sd" created="200911171119" modified="200911171130" tags="words USER USERVAR STATE EXECUTIVE BASE LAST TIB OFFSET INPUTSOURCE" changecount="2">
+<pre>!Creating and accessing user variables
+
+User variables are [[per-engine|Engine]] variables, accessed as normal. They can be created (with care) by applications that need them.
+
+{{{USER}}} ( offset &quot;name&quot; -- )
+Create a new user variable with the given name, at the given offset in the user area. When executed the user variable will return its address.
+
+The following user variables are available in interactive systems (embedded systems typically have less):
+
+|!Name                    |!Function|
+|{{{STATE}}}            |Current compilation/interpretation state|
+|{{{EXECUTIVE}}}   |xt of the outer (interactive) executive|
+|{{{BASE}}}              |Current input number base|
+|{{{BASE}}}              |Current input number base|
+|{{{LAST}}}              |xt of the last word defined|
+|{{{TIB}}}                 |Address of the terminal input buffer|
+|{{{OFFSET}}}         |Current point within the TIB|
+|{{{INPUTSOURCE}}}    |Current source of character input|
+
+</pre>
+</div>
 <div title="VirtualMachine" modifier="sd" created="200911151848" tags="compiler [[virtual machine]]" changecount="1">
 <pre>!Virtual machine
 
 The Attila virtual machine...</pre>
+</div>
+<div title="Word" modifier="sd" created="200911161735" modified="200911161735" tags="compiler" changecount="2">
+<pre>!Words
+
+Programming in Attila consists of defining ''words'', small fragments of code. A word is rather like a procedure in a language such as C, but generally smaller and lighter-weight. Also unlike traditional compiled languages, essentially //everything// in Attila is a word, including the compiler itself, which is to a large extent written  in Attila. There are words whose purpose is to interact with the hardware, words to provide control structures, words to do calculations, and words to facilitate defining other words. This regularity simplifies understanding, once you get used to the idea. 
+
+A word generally consists of a name and a behaviour. Typing in the word's name when the system is in [[interpreting state|CompileInterpretState]] will cause the word's behaviour to be executed immediately. You can think of the set of words available as a vocabulary letting you instruct the computer to perform tasks.
+
+Most words are defined using [[colon definitions|ColonDefinition]].
+
+
+</pre>
+</div>
+<div title="WordHeaderAccessWords" modifier="sd" created="200911161103" modified="200911161729" tags="words compiler &gt;LFA &gt;CFA &gt;STATUS &gt;BODY" changecount="6">
+<pre>!Word header access words
+
+{{{&gt;LFA}}} ( xt -- lfa ) &quot;to ell eff ay&quot;
+Convert an xt into the address of the word's link field, which contains the xt of the word preceding the one identified by the xt in its word list (or zero if that word is first).
+
+{{{&gt;CFA}}} ( xt -- cfa ) &quot;to see eff ay&quot;
+Convert an xt to a code field address containing the address of the primitive code needed to execute this word.
+
+{{{&gt;STATUS}}} ( xt -- addr ) &quot;to status&quot;
+Convert an xt to the address of the word's status field.
+
+{{{&gt;BODY}}} ( xt -- addr ) &quot;to body&quot;
+Convert an xt to the address of the data body of the word.
+
+</pre>
+</div>
+<div title="WordStructure" modifier="sd" created="200911171247" modified="200911171251" tags="compiler architecture" changecount="3">
+<pre>!The logical structure of words
+
+All words in Attila have the same logical structure, bringing together the following fields:
+
+* A name
+* A code field containing a pointer to the primitive machine code needed to execute the word
+* A link to the previous word defined, to allow searching a chain of words
+* A body consisting of code and/or data
+
+This model can be made concrete in a number of different ways, and Attila supports a number of different memory models for representing words:
+
+&lt;&lt;tiddler MemoryModels&gt;&gt;
+
+(More to come.)
+</pre>
 </div>
 </div>
 <!--POST-STOREAREA-->
