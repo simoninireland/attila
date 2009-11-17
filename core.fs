@@ -76,23 +76,50 @@ PRIMITIVE: DEPTH ( -- d )
     d = DATA_STACK_DEPTH();
 ;PRIMITIVE
 
+\ Drop the top two stack items
+PRIMITIVE: 2DROP ( a b -- )
+;PRIMITIVE
+
+\ Duplicate the top two stack items
+PRIMITIVE: 2DUP ( a b -- a b a b )
+;PRIMITIVE
+
+\ Move the top item on the return stack to the data stack
+PRIMITIVE: R> ( -- addr )
+    addr = POP_RETURN();
+;PRIMITIVE
+
+\ Copy the top item on the return stack to the data stack
+PRIMITIVE: R@ ( -- addr )
+    addr = PEEK_RETURN();
+;PRIMITIVE
+
+\ Move the top item on the data stack to the return stack
+PRIMITIVE: >R ( addr -- )
+    PUSH_CELL(addr);
+;PRIMITIVE
+
 
 \ ---------- Literals ----------
 
 \ Push the next cell in the instruction stream as a literal
 PRIMITIVE: (LITERAL) ( -- l ) " bracket literal"
-    CELLPTR addr = POP_RETURN();
+    CELLPTR addr;
+
+    addr = (CELLPTR) ip;
     l = (*addr);
-    PUSH_RETURN(addr + 1);
+    ip++;
 ;PRIMITIVE
 
 \ Push a string in the code space onto the stack as a standard
 \ address-plus-count pair
-PRIMITIVE: (SLITERAL) ( -- addr n ) " ess bracket literal"
-    int len;
-    addr = POP_RETURN();
-    len = (*((BYTEPTR) addr));
-    PUSH_RETURN(((BYTEPTR) addr) + 1 + len)); 
+PRIMITIVE: (SLITERAL) ( -- s n ) " ess bracket literal"
+    BYTEPTR addr;
+
+    addr = (BYTEPTR) ip;
+    n = (CELL) *addr;
+    s = addr + 1;
+    ip = (XTPTR) ((BYTEPTR) ip + n + 1);
 ;PRIMITIVE
 
 
@@ -146,9 +173,11 @@ PRIMITIVE: /MOD ( n1 n2 -- r q ) " slash mod"
 \ Compute (n1*n2)/n3 and (n1*n2)%n3, where the multiplication
 \ term is held in double precision"
 PRIMITIVE: */MOD ( n1 n2 n3 -- r q ) " star slash mod"
-    DOUBLE_CELL i = (DOUBLE_CELL) (n1 * n2);
-    q = (CELL) (i / n3);
-    r = (CELL) (i % n3);
+    DOUBLE_CELL i;
+
+    i = (DOUBLE_CELL) (n1 * n2);
+    q = (CELL) (i / (DOUBLE_CELL) n3);
+    r = (CELL) (i % (DOUBLE_CELL) n3);
 ;PRIMITIVE
 
 \ Negate a number
@@ -245,14 +274,19 @@ PRIMITIVE: INVERT ( a -- b )
     b  = ~a;
 ;PRIMITIVE
 
+\ Logical negation -- kind of unnecessary, but makes code easier to read
+PRIMITIVE: NOT ( f -- nf )
+    nf = f ? FALSE : TRUE;
+;PRIMITIVE
+    
 \ Shift a left n bits, replacing the rightmost n bits with zeros
 PRIMITIVE: LSHIFT ( a n -- b ) " el shift"
-    b = a << n
+    b = a << n;
 ;PRIMITIVE
 
 \ Shift a right n bits, replacing the leftmost n bits with zeros
 PRIMITIVE: RSHIFT ( a n -- b ) " ar shift"
-    b = a >> n
+    b = a >> n;
 ;PRIMITIVE
 
 
@@ -293,7 +327,7 @@ PRIMITIVE: @ ( addr -- v ) " fetch"
 ;PRIMITIVE
    
 \ Increment the value at the given address
-PRIMITIVE: +! ( n adddr -- ) " plus store"
+PRIMITIVE: +! ( n addr -- ) " plus store"
     (*((CELLPTR) addr)) += n;
 ;PRIMITIVE
     
@@ -312,14 +346,22 @@ PRIMITIVE: C@ ( addr -- c ) " see fetch"
     
 \ Move a block upwards in memory, where addr1 < addr2
 PRIMITIVE: CMOVE> ( addr1 addr2 n -- ) " see move up"
-    for(int i = 0; i < n ; i++) {
-        (*((BYTEPTR) addr2++) = (*((BYTEPTR) addr1++);
+    int i;
+    BYTEPTR ptr1, ptr2;
+
+    ptr1 = (BYTEPTR) addr1;    ptr2 = (BYTEPTR) addr2;
+    for(i = 0; i < n ; i++) {
+        *ptr2++ = *ptr1++;
     }
 ;PRIMITIVE
 
 \ Move a block downwards in memory, where addr2 < addr1
 PRIMITIVE: CMOVE< ( addr1 addr2 n -- ) " see move down"
-    for(int i = n - 1; i >= 0 ; i++) {
-        (*((BYTEPTR) addr2++) = (*((BYTEPTR) addr1++);
+    int i;
+    BYTEPTR ptr1, ptr2;
+
+    ptr1 = (BYTEPTR) addr1;    ptr2 = (BYTEPTR) addr2;
+    for(i = n - 1; i >= 0 ; i++) {
+        *ptr1++ = *ptr2++;
     }
 ;PRIMITIVE

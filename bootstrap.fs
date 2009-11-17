@@ -22,30 +22,38 @@
 \ These primitives are only intended for a bootstrapped Attila. Once
 \ we have a running system using these, we can then use the cross-compiler
 \ to re-generate the system from proper Attila source code.
+\
+\ All data -- headers, code and data -- are placed linearly in memory
+\ in a single pre-allocated block. Each word is laid out as follows:
+\
+\     xt -> cf       code field             1 CELLS  bytes
+\     ha -> len      length of name         1 byte
+\           name     name of word           len bytes
+\    lfa -> link     ha of previous word    1 CELLS bytes
+\           status   status of word         1 byte
+\           body     body of word           n cells
+\
+\ This isn't an especially  sensible layout, but it *is* simple for
+\ bootstrapping purposes.
 
 C:
-#include <stdio.h>
-#include <string.h>
-#include <readline/readline.h>
-
-#define WHITESPACE " \t\n"
-
-#define USER_STATUS 0
-#define USER_LAST 1
-#define USER_INPUTSOURCE 2
-#define USER_TIB 3
-#define USER_OFFSET 4
-
-// The available numeric digits
-static const char *digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+#include "bootstrap.h"
 
 // The include path for source files
 char **include_path;
 int includes = 0;
 
-// Assorted hacks to call underlying primitives from C level
+// ---------- Initialisation ----------
 
-extern PRIMITIVE user_variable_address;    
+BYTEPTR
+init_memory( CELL len ) {
+    return malloc(len);
+}
+
+
+// ---------- Assorted hacks to call underlying primitives from C level ----------
+
+VOID user_variable_address();    
 CELLPTR
 user_variable( int n ) {
     PUSH_CELL(n);
@@ -53,23 +61,354 @@ user_variable( int n ) {
     return (CELLPTR) POP_CELL();
 }    
 
-extern PRIMITIVE to_name;
-BYTEPTR
-xt_to_name( XT xt, BYTEPTR *addr, CELL *len ) {
-    PUSH_CELL(xt);
-    to_name();
-    (*len) = POP_CELL();
-    (*addr) = (BYTEPTR) POP_CELL();
-}
-
-extern PRIMITIVE to_lfa;
-CELLPTR
+VOID to_lfa();
+XTPTR
 xt_to_lfa( XT xt ) {
     PUSH_CELL(xt);
     to_lfa();
+    return (XTPTR) POP_CELL();
+}
+
+VOID to_ha();
+BYTEPTR
+xt_to_ha( XT xt ) {
+    PUSH_CELL(xt);
+    to_ha();
+    return (BYTEPTR) POP_CELL();
+}
+
+VOID ha_to();
+XT
+ha_to_xt( BYTEPTR ha ) {
+    PUSH_CELL(ha);
+    ha_to();
+    return (XT) POP_CELL();
+}
+
+VOID to_body();
+CELLPTR
+xt_to_body( XT xt ) {
+    PUSH_CELL(xt);
+    to_body();
     return (CELLPTR) POP_CELL();
 }
+
+XT lastxt;
+VOID execute();
+VOID docolon();
+
+VOID start_word();
+VOID to_status();
+VOID
+begin_colon_definition( char *name, PRIMITIVE prim, int status) {
+    XT xt;
+    BYTEPTR addr;
+
+    // compile the header
+    PUSH_CELL(name);
+    PUSH_CELL(strlen(name));
+    PUSH_CELL(prim);
+    start_word();
+    xt = POP_CELL();
+
+    // set status
+    PUSH_CELL(xt);
+    to_status();
+    addr = (BYTEPTR) POP_CELL();
+    *addr = status;
+
+    // store the xt
+    lastxt = xt;
+
+    printf("%s %lx\n", name, xt);
+}
+
+VOID end_word();
+VOID
+end_colon_definition() {
+    PUSH_CELL(lastxt);
+    end_word();
+}
+
+VOID prim_compile_cell();
+VOID
+compile_cell( CELL c ) {
+    PUSH_CELL(c);
+    prim_compile_cell();
+}
+
+VOID prim_compile_char();
+VOID
+compile_byte( BYTE b ) {
+    PUSH_CELL((CELL) b);
+    prim_compile_char();
+}
+
+VOID prim_compile_string();
+VOID
+compile_string( char *str, int len ) {
+    PUSH_CELL((CELL) str);
+    PUSH_CELL((CELL) len);
+    prim_compile_string();
+}
+
+VOID bracket_find();
+XT xt_of( char *name ) {
+    XT xt;
+        
+    PUSH_CELL(name);
+    PUSH_CELL((CELL) strlen(name));
+    PUSH_CELL(xt_to_ha(*(user_variable(USER_LAST))));
+    bracket_find();
+    xt = POP_CELL();
+    if(xt == NULL) {
+        printf("FAILED TO FIND %s\n", name);
+        exit(1);
+    }
+    return xt;
+}
+VOID
+compile_xt_of( char *name ) {
+    XT xt;
+
+    xt = xt_of(name); 
+    compile_cell(xt);
+}
+
+VOID allot();
+CELLPTR
+allocate_code_memory( int n ) {
+    CELLPTR ptr;
+
+    ptr = (CELLPTR) top;
+    PUSH_CELL((CELL) n);
+    allot();
+    return ptr;
+}
+
+void
+show_execute( XT xt ) {
+    CHARACTERPTR buf;
+    BYTEPTR ha;
+    CELL len;
+
+    if(xt != 0) {
+        ha = xt_to_ha(xt);
+        len = (BYTE) (*ha);
+        buf = (CHARACTERPTR) malloc(len + 1);
+        memcpy(buf, ha + 1, len);   buf[len] = '\0';
+        printf("%s\n", buf);
+        free(buf);
+    }
+}
 ;C
+
+
+\ ---------- Memory and compilation primitives ----------
+
+\ Compile a character into the body of a word
+PRIMITIVE: C, compile_char ( c -- )
+    *top++ = (BYTE) c;
+;PRIMITIVE
+
+\ Compile a cell into the body of a word
+PRIMITIVE: , ( v -- )
+    CELLPTR t;
+
+    t = (CELLPTR) top;
+    *t = (CELL) v;
+    top += CELL_SIZE;
+;PRIMITIVE
+
+\ Allocate some body memory
+PRIMITIVE: ALLOT allot ( n -- )
+    top += n;
+;PRIMITIVE
+
+\ Return the address of the top of the dictionary
+PRIMITIVE: TOP ( -- addr )
+    addr = (CELL) top;
+;PRIMITIVE
+
+\ Compile a cell (generally an xt) into the code of a word
+PRIMITIVE: COMPILE, prim_compile_cell ( xt -- )
+    CELLPTR t;
+
+    t = (CELLPTR) top;
+    *t = (CELL) xt;
+    top += CELL_SIZE;
+;PRIMITIVE
+
+\ Compile a character into the code of a word
+PRIMITIVE: CCOMPILE, prim_compile_char ( c -- )
+    *top++ = (BYTE) c;
+;PRIMITIVE
+
+\ Compile a string into the code of a word
+PRIMITIVE: SCOMPILE, prim_compile_string ( addr n -- )
+    int i;
+    CHARACTERPTR str;
+
+    str = (CHARACTERPTR) addr;
+    compile_byte(n);
+    for(i = 0; i < n; i++ ) {
+        compile_byte(str[i]);
+   }
+;PRIMITIVE
+
+\ Return the address of the next available body word. This is the
+\ same as TOP in this memory model, but conceptually distinct
+PRIMITIVE: HERE ( -- addr )
+    addr = (CELL) top;
+;PRIMITIVE
+
+\ Return the address of the n'th user variable
+\ sd: note USERVAR not USER -- the latter is the new-user-variable-creating word
+PRIMITIVE: USERVAR user_variable_address ( n -- addr )
+    addr = (CELL) (((CELLPTR) user) + n);
+;PRIMITIVE
+
+
+\ ---------- Navigating the header ----------
+
+\ Covert an xt to a code field address.
+PRIMITIVE: >CFA ( xt -- xt )
+;PRIMITIVE
+
+\ Convert an xt to a header address
+PRIMITIVE: >HA to_ha ( xt -- ha ) " to aitch ay"
+    ha = ((CELLPTR) xt + 1);
+;PRIMITIVE
+
+\ Convert a header address to an xt
+PRIMITIVE: HA> ha_to ( ha -- xt ) " aitch ay to"
+    xt = ((CELLPTR) ha - 1);
+;PRIMITIVE
+
+\ Convert an xt to a link field address
+PRIMITIVE: >LFA to_lfa ( xt -- lfa )
+    BYTEPTR ptr;
+
+    ptr = (BYTEPTR) xt;
+    ptr += CELL_SIZE;
+    lfa = ptr + 1 + *ptr;
+;PRIMITIVE
+
+\ Convert an xt to a status byte address.
+PRIMITIVE: >STATUS to_status ( -- addr )
+    CELLPTR lfa;
+
+    to_lfa();
+    lfa = (CELLPTR) POP_CELL();
+    addr = lfa + 1;
+;PRIMITIVE
+
+\ Convert an xt to the body address
+PRIMITIVE: >BODY to_body ( -- addr ) " to body"
+    BYTEPTR body;
+
+    to_status();
+    body = POP_CELL();
+    addr = body + 1;
+;PRIMITIVE
+
+\ Convert an xt to the name of the corresponding word
+PRIMITIVE: >NAME to_name ( xt -- addr namelen)
+    BYTEPTR nla;
+
+    nla = (BYTEPTR) ((CELLPTR) xt + 1);
+    namelen = (BYTE) *nla;
+    addr = nla + 1;
+;PRIMITIVE
+
+
+\ ---------- Control primitives ----------
+
+\ Jump unconditionally to the address compiled in the next cell
+PRIMITIVE: (BRANCH) ( -- )
+  CELL offset = (CELL) *ip;
+  ip = (XTPTR) (((BYTEPTR) ip) + offset);
+;PRIMITIVE
+
+\ Test the top of the stack and either continue (if true) or
+\ jump to the address compiled in the next cell (if false)
+PRIMITIVE: (?BRANCH) ( f -- )
+  if(f)
+    ip++;
+  else {
+    CELL offset = (CELL) *ip;
+    ip = (XTPTR) (((BYTEPTR) ip) + offset);
+  }
+;PRIMITIVE
+
+
+\ ---------- Inner interpreter ----------
+
+\ Execute an xt from the stack
+PRIMITIVE: EXECUTE execute ( xt -- )
+    PRIMITIVE prim;
+
+    // dispatch on the instruction
+    if(xt == NULL) {
+        // NEXT, return from this word
+	ip = POP_RETURN();
+    } else {
+	prim = (*((CELLPTR) xt));
+	if(prim == docolon) {
+	    // another colon-definition, push the return address
+	    // and re-point the instruction pointer
+	    PUSH_RETURN(ip);
+            ip = (XTPTR) xt_to_body(xt);
+	} else {
+	    // a primitive, execute it
+	    (*prim)();
+	}
+    }
+;PRIMITIVE
+
+\ Run the virtual machine interpretation loop. This is simple, infinite,
+\ single-threaded loop to get things going
+PRIMITIVE: (:) docolon ( -- ) " bracket colon"
+    XT xt;
+
+    do {
+	// grab the next instruction
+	xt = (*((XTPTR) ip++));
+
+	// EXECUTE it
+	DEBUG(xt);
+	PUSH_CELL(xt);
+	execute();
+    } while(1);
+;PRIMITIVE
+
+\ The run-time behaviour of a variable, returning its body address
+PRIMITIVE: (VAR) dovar ( -- addr ) " bracket var"
+    addr = xt_to_body(*(ip - 1));
+;PRIMITIVE
+
+
+\ ---------- Word compilation ----------
+
+\ Start a word, compiling a header	
+PRIMITIVE: (WORD start_word ( addr len cf -- xt )
+    XT last;
+	
+    xt = top;                                                   // grab the xt	
+    *((CELLPTR) top) = cf;
+    top += CELL_SIZE;
+    *top++ = (BYTE) len;                                        // the counted-string name   
+    memcpy(top, addr, len);   top += len;
+    last = (XT) (*(user_variable(USER_LAST)));                  // the link pointer
+    *((CELLPTR) top) = (last == NULL) ? NULL : xt_to_ha(last);
+    top += CELL_SIZE;
+    *top++ = (BYTE) 0;                                          // the status field
+;PRIMITIVE
+
+\ Finish a word's compilation
+PRIMITIVE: WORD) end_word ( xt -- )
+    *(user_variable(USER_LAST)) = xt;        // LAST gets the xt we just compiled
+;PRIMITIVE
 
 
 \ ---------- Terminal I/O ----------
@@ -240,7 +579,8 @@ PRIMITIVE: PARSE ( c -- )
 \ Print the given string on the terminal
 PRIMITIVE: TYPE ( addr n -- )
   char *buf;
-
+  int len;
+	
   // copy string to null-terminated local buffer
   buf = (char *) calloc(sizeof(CHARACTER), n + 1);
   strncpy(buf, (BYTEPTR) addr, len);
@@ -262,19 +602,19 @@ PRIMITIVE: EMIT ( c -- )
 
 \ Convert a token to a number if possible, pushing the result
 \ (if done) and a flag
-PRIMITIVE: NUMBER? ( addr n --- )
+PRIMITIVE: NUMBER? ( addr n -- )
   char *buf;
   char *digitptr;
   int i, len, acc, digit;
   int valid = 1;
   int base = *(user_variable(USER_BASE));
 
-  buf = til_string_to_c_string(addr, n);
-  len = strlen(buf);
+  buf = (char *) malloc(n + 1);
+  memcpy(buf, addr, n);   buf[n] = '\0';
 
   // convert number
   acc = 0;
-  for(i = 0; i < len; i++) {
+  for(i = 0; i < n; i++) {
     digitptr = index(digits, toupper(buf[i]));
     digit = digitptr - digits;
     if((digitptr == NULL) ||
@@ -294,18 +634,23 @@ PRIMITIVE: NUMBER? ( addr n --- )
 
 \ Look up a word in a list, traversing the headers until we find the word
 \ or hit null
-PRIMITIVE: (FIND) ( addr namelen start -- xt ) " bracket find"
-    CELL taddr, tlen;
+PRIMITIVE: (FIND) bracket_find ( addr namelen ha -- xt ) " bracket find"
+    CHARACTERPTR taddr;
+    CELL tlen;
+    XT x;
     CELLPTR link;
 	
     xt = NULL;
-    while(start != NULL) {
-	xt_to_name(start, &taddr, &tlen);
-	if(strncmp(addr, taddr, namelen) == 0) {
-	    xt = start;   start = NULL;
+    while(ha != NULL) {
+        x = ha_to_xt(ha);
+        tlen = (BYTE) *((BYTEPTR) ha);
+	taddr = (CHARACTERPTR) ha + 1;
+	if((namelen == tlen) &&
+	   (strncmp(addr, taddr, namelen) == 0)) {
+	    xt = x;   ha = NULL;
 	} else {
-	    link = xt_to_lfa(start);
-	    start = *link;
+	    link = xt_to_lfa(x);
+	    ha = *link;
 	}
     }
 ;PRIMITIVE	
@@ -324,16 +669,15 @@ PRIMITIVE: EXHAUSTED? ( -- eof )
   }
 ;PRIMITIVE
 
-
 \ Open a file, returning a file handle or 0
 PRIMITIVE: FILE-OPEN ( addr namelen -- fh )
   char *fn;
 
-  fn = til_string_to_c_string((char *) addr, namelen);
+  fn = (char *) malloc(namelen + 1);
+  strncpy(fn, addr, namelen);   fn[namelen] = '\0';
   fh = (CELL) fopen(fn, "r");
   free(fn);
 ;PRIMITIVE
-
 
 \ Close a file
 PRIMITIVE: FILE-CLOSE ( fh -- )
@@ -341,3 +685,20 @@ PRIMITIVE: FILE-CLOSE ( fh -- )
     fclose(fh);
 ;PRIMITIVE
 
+
+\ ---------- Start-up and shut-down ----------
+
+\ Warm-start the system into a known state
+PRIMITIVE: WARM ( -- )
+    // reset the stacks      
+    DATA_STACK_RESET();
+    RETURN_STACK_RESET();  
+
+    // reset user variables
+    *(user_variable(USER_STATE)) = STATE_INTERPRETING;
+    *(user_variable(USER_BASE)) = 10;
+      
+    // point the ip at the executive and return
+    ip = xt_to_body(*(user_variable(USER_EXECUTIVE)));
+;PRIMITIVE
+      
