@@ -23,9 +23,9 @@
 \ at the start of their bodies to store the indirect body address. It also
 \ relies on >BODY understanding the redirectable field
 
-\ Create a data block that returns its address when executed
+\ Create a data block that returns its body address when executed
 : (DATA) \ ( addr n -- )
-    [ ' (VAR) >CFA @ ] LITERAL (HEADER,) ;
+    [ ' (VAR) >CFA @ ] LITERAL (HEADER,) DROP ;
     
 \ Create a data block from the next word in the input
 : DATA \ ( "name" -- )
@@ -55,8 +55,8 @@
                                              \ and then return without executing
                                              \ that code during the defining word
 
-\ Compile the (DOES>) behaviour plus general definition management
+\ Compile the (DOES>) behaviour, leaving the newly-defined word's xt on the
+\ stack for it to use in re-directing that word's run-time behaviour
 : DOES> \ ( -- )
-    [COMPILE] END-DEFINITION
     [COMPILE] LASTXT
     [COMPILE] (DOES>) ; IMMEDIATE
