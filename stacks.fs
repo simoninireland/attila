@@ -1,4 +1,4 @@
-\ $Id: stacks.fs,v 1.6 2007/05/24 21:51:03 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -41,7 +41,7 @@
 
 \ Return the address of the number of stack elements
 : ST>N \ ( st -- iaddr )
-    CELL - ;
+    1 CELLS - ;
 
 \ Return the maximum number of cells
 : ST>MAXN \ ( st -- imax )
@@ -72,7 +72,7 @@
 : >ST \ ( v st  -- )
     DUP ROT ST-OVERFLOW?
     [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	2DROP S" Stack overflow" ABORT
+	S" Stack overflow" ABORT
     [ DUP JUMP> SWAP ! ]                      \ THEN
     OVER ST>TOPADDR !
     1 SWAP +STN ;
@@ -81,18 +81,18 @@
 : ST> \ ( st -- v )
     DUP ST-UNDERFLOW?
     [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	2DROP S" Stack underflow" ABORT
+	S" Stack underflow" ABORT
     [ DUP JUMP> SWAP ! ]                      \ THEN
-    DUP ST>TOPADDR CELL - @
+    DUP ST>TOPADDR 1 CELLS - @
     1 NEGATE -ROT +STN ;
 
 \ Peek at the top entry of the given stack
 : ST@ \ ( st -- v )
     DUP ST>N @ 0 =
     [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	2DROP S" Stack underflow" ABORT
+	S" Stack underflow" ABORT
     [ DUP JUMP> SWAP ! ]                      \ THEN
-    ST>TOPADDR CELL - @ ;
+    ST>TOPADDR 1 CELLS - @ ;
     
 \ Return the depth of the stack in cells
 : #ST \ ( st -- n )
@@ -103,7 +103,7 @@
 : ST>ADDR \ ( i st -- addr )
     2DUP ST>N @ >
     [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	2DROP S" Stack pick underflow" ABORT
+	S" Stack pick underflow" ABORT
     [ DUP JUMP> SWAP ! ]                      \ THEN
     ST>TOPADDR SWAP 1+ CELLS - ;
 
