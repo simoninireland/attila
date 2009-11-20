@@ -1,4 +1,4 @@
-\ $Id: base.fs,v 1.9 2007/06/14 14:48:18 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -48,7 +48,7 @@
 
 \ Compile an anonymous word with no name, leaving its xt on the data stack
 : :NONAME \ ( -- xt )
-    [ ' (DOCOLON) >CFA @ ] LITERAL 0 0 (HEADER,) CFA, LASTXT ] ;
+    0 0 [ ' (:) >CFA @ ] LITERAL (HEADER,) DUP START-DEFINITION ] ;
     
 
 \ ---------- Portable address arithmetic ----------
@@ -60,10 +60,6 @@
 \ Compute a jump offset from TOP to a, in bytes
 : >JUMP \ ( a -- offset )
     TOP - ;
-
-\ Convert cell sizes to byte sizes
-: CELLS \ ( ncells -- nbytes )
-    CELL * ;
 
 
 \ ---------- Recursion ----------
