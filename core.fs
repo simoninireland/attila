@@ -84,19 +84,39 @@ PRIMITIVE: 2DROP ( a b -- )
 PRIMITIVE: 2DUP ( a b -- a b a b )
 ;PRIMITIVE
 
-\ Move the top item on the return stack to the data stack
-PRIMITIVE: R> ( -- addr )
-    addr = POP_RETURN();
+\ Swap the top two double-cells
+PRIMITIVE: 2SWAP ( a b c d -- c d a b )
 ;PRIMITIVE
 
-\ Copy the top item on the return stack to the data stack
+\ Copy the second double-cell to the top
+PRIMITIVE: 2OVER ( a b c d -- a b c d a b )
+;PRIMITIVE
+
+\ Move the top item on the return stack to the data stack
+PRIMITIVE: R> ( -- addr )
+    addr = (CELL) POP_RETURN();
+;PRIMITIVE
+
+\ Drop the top return stack item
+PRIMITIVE: RDROP ( -- )
+    POP_RETURN();
+;PRIMITIVE
+
+\ Copy the top item on the return stack to the data stack, without
+\ altering the return stack
 PRIMITIVE: R@ ( -- addr )
     addr = (CELL) PEEK_RETURN();
 ;PRIMITIVE
 
 \ Move the top item on the data stack to the return stack
 PRIMITIVE: >R ( addr -- )
-    PUSH_CELL(addr);
+    PUSH_RETURN((XT) addr);
+;PRIMITIVE
+
+\ Copy the n'th return stack item to the data stack counting from 0,
+\ so 0 PICK is the same as R>
+PRIMITIVE: RPICK ( n -- addr )
+    addr = *(RETURN_STACK_ITEM(n));
 ;PRIMITIVE
 
 
@@ -336,6 +356,24 @@ PRIMITIVE: C! ( c addr -- ) " see store"
     (*((CHARACTERPTR) addr)) = (CHARACTER) c;
 ;PRIMITIVE
 
+\ Store a double cell value
+PRIMITIVE: 2! ( a b addr -- ) " too store"
+    CELLPTR ptr;
+
+    ptr = (CELLPTR) addr;
+    *ptr++ = b;
+    *ptr = a;
+;PRIMITIVE
+
+\ Retrieve a double cell from the given address
+PRIMITIVE: 2@ ( addr -- a b ) " too fetch"
+    CELLPTR ptr;
+
+    ptr = (CELLPTR) addr;
+    b = *ptr++;
+    a = *ptr;
+;PRIMITIVE
+
 \ Retrieve the character at the given address
 PRIMITIVE: C@ ( addr -- c ) " see fetch"
     c = (*((CHARACTERPTR) addr));
@@ -344,8 +382,8 @@ PRIMITIVE: C@ ( addr -- c ) " see fetch"
 \ sd: These next two words are deliberately coded without using memcpy()
 \ or bcopy() to minimise library dependencies    
     
-\ Move a block upwards in memory, where addr1 < addr2
-PRIMITIVE: CMOVE> ( addr1 addr2 n -- ) " see move up"
+\ Move a block of memory from addr1 to addr2, starting from the lower address
+PRIMITIVE: CMOVE ( addr1 addr2 n -- ) " see move up"
     int i;
     BYTEPTR ptr1, ptr2;
 
@@ -355,13 +393,13 @@ PRIMITIVE: CMOVE> ( addr1 addr2 n -- ) " see move up"
     }
 ;PRIMITIVE
 
-\ Move a block downwards in memory, where addr2 < addr1
-PRIMITIVE: CMOVE< ( addr1 addr2 n -- ) " see move down"
+\ Move a block of memory from addr1 to addr2, starting from the higher address
+PRIMITIVE: CMOVE> ( addr1 addr2 n -- ) " see move down"
     int i;
     BYTEPTR ptr1, ptr2;
 
     ptr1 = (BYTEPTR) addr1;    ptr2 = (BYTEPTR) addr2;
     for(i = n - 1; i >= 0 ; i++) {
-        *ptr1++ = *ptr2++;
+        *ptr2++ = *ptr1++;
     }
 ;PRIMITIVE

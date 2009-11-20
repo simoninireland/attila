@@ -104,8 +104,8 @@ init_dictionary() {
   NEXT();
 
   // default FIND behaviour
-  // can be remapped later using ( xt ) (FIND-POLICY) !
-  VARIABLE("(FIND-POLICY)");
+  // can be remapped later using ( xt ) (FIND-BEHAVIOUR) !
+  VARIABLE("(FIND-BEHAVIOUR)");
   COMPILE_DATA_REFERENCE_TO("(FIND-IN-FLAT-NAMESPACE)");
 
   // test for an IMMEDIATE word
@@ -118,23 +118,10 @@ init_dictionary() {
 
   // outer FIND
   // sd: not quite standard, as we don't use a counted string address 
-  DEFINE("FIND"); // ( addr n -- addr n 0 | xt 1 | xt -1 )
-  COMPILE("2DUP");                // addr n addr n
-  COMPILE("(FIND-POLICY)");
+  DEFINE("FIND"); // ( addr n -- 0 | xt 1 | xt -1 )
+  COMPILE("(FIND-BEHAVIOUR)");
   COMPILE("@");
-  COMPILE("EXECUTE");             // addr n xt | 0
-  COMPILE("DUP");
-  COMPILE_IF(if9,th9,el10);
-    COMPILE("ROT");
-    COMPILE("2DROP");
-    COMPILE("DUP");
-    COMPILE("IMMEDIATE?");
-    COMPILE_IF(if10,th10,el10);
-      LITERAL(1);
-    COMPILE_ELSE(if10,th10,el10);
-      LITERAL(-1);
-    COMPILE_ELSETHEN(if10,the0,el10);
-  COMPILE_THEN(if9,th9,el9);
+  COMPILE("EXECUTE");
   NEXT();
 
 
@@ -242,7 +229,7 @@ init_dictionary() {
   DEFINE(":");
   COMPILE("PARSE-WORD");
   LITERAL(&docolon);
-  COMPILE("(WORD");
+  COMPILE("(HEADER,)");
   COMPILE("START-DEFINITION");
   COMPILE("]");
   NEXT();
@@ -252,7 +239,7 @@ init_dictionary() {
   COMPILE_NEXT();
   COMPILE("END-DEFINITION");
   COMPILE("[");
-  COMPILE("WORD)");
+  COMPILE("DROP");
   NEXT();
 
 
@@ -263,10 +250,13 @@ init_dictionary() {
   COMPILE_BEGIN(be0,un0);
     COMPILE("PARSE-WORD");        // addr n
     COMPILE("?DUP");              // addr n n
-    COMPILE("0<>");                // addr n f
+    COMPILE("0<>");               // addr n f
     COMPILE_IF(if6,th6,el6);
-      COMPILE("FIND");            // addr n 0 | xt f
-      COMPILE_IF(if1,th1,el1);    // xt
+      COMPILE("2DUP");            // addr n addr n
+      COMPILE("FIND");            // addr n 0 | addr n xt f
+      COMPILE_IF(if1,th1,el1);    // addr n xt
+        COMPILE("ROT");
+        COMPILE("2DROP");
         COMPILE("INTERPRETING?"); // xt interpret?
         COMPILE("OVER");          // xt interpret? xt
         COMPILE("IMMEDIATE?");    // xt interpret? immediate?
@@ -367,10 +357,8 @@ init_dictionary() {
   COMPILE("INCLUDE");
   NEXT();
 
-  // initialise for user input
-  *(user_variable(USER_INPUTSOURCE)) = stdin;
+  // allocate an input buffer
   *(user_variable(USER_TIB)) = (CELL) malloc(TIB_SIZE);
-  *(user_variable(USER_OFFSET)) = -1; // in need of a refill
 
   // put COLD into the start-up vector and set OUTER as the executive
   startup = (XTPTR) bottom;

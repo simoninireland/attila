@@ -35,35 +35,44 @@
 static const char *digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 
+// ---------- Debugging ----------
+
+#define DIE( msg ) (printf("DIE: %s\n", msg), exit(1), NULL)
+
+
 // ---------- Data stack access ----------
-// sd: These versions have no over- or under-flow checking
+// sd: These versions have no over-flow checking
  
 #define PUSH_CELL( cell ) (*(data_stack++)) = ((CELL) cell)
-#define POP_CELL() (CELL) (*(--data_stack))
+#define POP_CELL() (CELL) ((--data_stack < data_stack_base) ? DIE("data stack underflow") : (*data_stack))
 #define DATA_STACK_ITEM( n ) (CELLPTR) (data_stack - n - 1) 
-#define DATA_STACK_DEPTH() ((data_stack - data_stack_base) / sizeof(CELL))
+#define DATA_STACK_DEPTH() (data_stack - data_stack_base)
 #define DATA_STACK_RESET() data_stack = data_stack_base
 
 
 // ---------- Return stack access ----------
-// sd: These versions have no over- or under-flow checking
+// sd: These versions have no over-flow checking
  
 #define PUSH_RETURN( xt ) (*(return_stack++)) = ((XT) xt)
-#define POP_RETURN() (XT) (*(--return_stack))
-#define PEEK_RETURN() (XT) (*return_stack)
+#define POP_RETURN() (CELL) ((--return_stack < return_stack_base) ? DIE("return stack underflow") : (*return_stack))
+#define PEEK_RETURN() (XT) ((return_stack == return_stack_base) ? DIE("peeking empty return stack") : (*(return_stack - 1)))
+#define RETURN_STACK_ITEM( n ) (XTPTR) (return_stack - n - 1) 
 #define RETURN_STACK_RESET() return_stack = return_stack_base
 
 
 // ---------- Compilation helper macros ----------
 
 // User variable offsets
-#define USER_STATE 0
-#define USER_LAST 1
-#define USER_INPUTSOURCE 2
-#define USER_TIB 3
-#define USER_OFFSET 4
-#define USER_EXECUTIVE 5
-#define USER_BASE 6
+#define USER_COLD 0
+#define USER_EXECUTIVE 1
+#define USER_STATE 2
+#define USER_BASE 3
+#define USER_INPUTSOURCE 4
+#define USER_OFFSET 5
+#define USER_TIB 6
+#define USER_LAST 7
+#define USER_TRACE 8
+#define USER_CURRENT 9
 
 // Status bitmasks
 #define STATUS_IMMEDIATE 1

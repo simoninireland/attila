@@ -65,6 +65,14 @@ xt_to_lfa( XT xt ) {
     return (XTPTR) POP_CELL();
 }
 
+VOID to_status( XT );
+BYTEPTR
+xt_to_status( XT xt ) {
+    PUSH_CELL(xt);
+    to_status(NULL);
+    return (BYTEPTR) POP_CELL();
+}
+
 VOID to_ha( XT );
 BYTEPTR
 xt_to_ha( XT xt ) {
@@ -147,17 +155,21 @@ compile_string( char *str, int len ) {
 VOID bracket_find( XT );
 XT xt_of( char *name ) {
     XT xt;
+    CELL f;
         
     PUSH_CELL(name);
     PUSH_CELL((CELL) strlen(name));
     PUSH_CELL(xt_to_ha((XT) *(user_variable(USER_LAST))));
     bracket_find(NULL);
-    xt = (XT) POP_CELL();
-    if(xt == NULL) {
+
+    f = POP_CELL();
+    if(!f) {
         printf("FAILED TO FIND %s\n", name);
         exit(1);
+    } else {
+        xt = POP_CELL();
+        return xt;
     }
-    return xt;
 }
 VOID
 compile_xt_of( char *name ) {
@@ -197,6 +209,12 @@ show_execute( XT xt ) {
 
 
 \ ---------- Memory and compilation primitives ----------
+
+\ We don't do alignment for boostrapping
+PRIMITIVE: ALIGNED ( addr -- addr )
+;PRIMITIVE
+PRIMITIVE ALIGN ( -- )
+;PRIMITIVE
 
 \ Compile a character into the body of a word
 PRIMITIVE: C, compile_char ( c -- )
@@ -372,8 +390,12 @@ PRIMITIVE: (:) docolon ( -- ) " bracket colon"
 	// grab the next instruction
 	xt = (*((XTPTR) ip++));
 
+	// run the debug code if we're tracing
+	if(*(user_variable(USER_TRACE))) {
+            DEBUG(xt);
+	}
+		
 	// EXECUTE it
-	//DEBUG(xt);
 	PUSH_CELL(xt);
 	execute(xt);
     } while(1);
@@ -381,7 +403,7 @@ PRIMITIVE: (:) docolon ( -- ) " bracket colon"
 
 \ The run-time behaviour of a variable, returning its body address
 PRIMITIVE: (VAR) dovar ( -- addr ) " bracket var"
-    addr = (CELL) xt_to_body(*(ip - 1));
+    addr = (CELL) xt_to_body(_xt);
 ;PRIMITIVE
 
 \ For a re-directable word, grab the indirect body address and jump to it,
@@ -403,16 +425,16 @@ PRIMITIVE: (DOES) ( -- body )
 PRIMITIVE: (HEADER,) start_word ( addr len cf -- xt )
     XT last;
 	
-    xt = (XT) top;                                               // grab the xt	
+    xt = (XT) top;                                     // grab the xt	
     *((CELLPTR) top) = cf;
     top += CELL_SIZE;
-    *top++ = (BYTE) len;                                        // the counted-string name   
+    *top++ = (BYTE) len;                               // the counted-string name   
     memcpy(top, (BYTEPTR) addr, len);   top += len;
-    last = (XT) (*(user_variable(USER_LAST)));                  // the link pointer
-    *((CELLPTR) top) = (CELL) ((last == NULL) ? NULL : xt_to_ha(last));
+    last = (XT) *(user_variable(USER_LAST));           // the link pointer	
+    *((CELLPTR) top) = ((last == NULL) ? NULL : xt_to_ha(last)); 
     top += CELL_SIZE;
-    *top++ = (BYTE) 0;                                          // the status field
-    *(user_variable(USER_LAST)) = xt;        // LAST gets the xt we just compiled
+    *top++ = (BYTE) 0;                                 // the status field
+    *(user_variable(USER_LAST)) = xt;                  // LAST gets the xt we just compiled
 ;PRIMITIVE
 
 
@@ -602,6 +624,18 @@ PRIMITIVE: EMIT ( c -- )
 PRIMITIVE: . ( n -- )	
     printf("%d", n);
 ;PRIMITIVE
+
+\ Print the whole stack
+PRIMITIVE: .S ( -- )
+    int i, n;
+
+    n = DATA_STACK_DEPTH();
+    printf("#%d", n);
+    for(i = n - 1; i >= 0; i--) {
+        printf(" %d", *(DATA_STACK_ITEM(i)));
+    }
+;PRIMITIVE
+
 	
 \ ---------- Compilation support ----------
 
@@ -638,12 +672,14 @@ PRIMITIVE: NUMBER? ( addr n -- )
 ;PRIMITIVE
 
 \ Look up a word in a list, traversing the headers until we find the word
-\ or hit null
-PRIMITIVE: (FIND) bracket_find ( addr namelen ha -- xt ) " bracket find"
+\ or hit null. We return 0 if the word is not found, its xt and 1 if it
+\ is, and its xt and -1 if it is found an is immediate
+PRIMITIVE: (FIND) bracket_find ( addr namelen ha -- ) " bracket find"
     CHARACTERPTR taddr;
     CELL tlen;
-    XT x;
+    XT xt, x;
     CELLPTR link;
+    BYTE status;
 	
     xt = (XT) NULL;
     while(ha != (BYTEPTR) NULL) {
@@ -651,12 +687,18 @@ PRIMITIVE: (FIND) bracket_find ( addr namelen ha -- xt ) " bracket find"
         tlen = (BYTE) *((BYTEPTR) ha);
 	taddr = (CHARACTERPTR) ha + 1;
 	if((namelen == tlen) &&
-	   (strncmp(addr, taddr, namelen) == 0)) {
+	   (strncasecmp(addr, taddr, namelen) == 0)) {
 	    xt = x;   ha = NULL;
 	} else {
 	    link = xt_to_lfa(x);
 	    ha = (BYTEPTR) (*link);
 	}
+    }
+
+    PUSH_CELL(xt);
+    if(xt != (XT) NULL) {
+        status = *xt_to_status(xt);
+        PUSH_CELL((status & STATUS_IMMEDIATE) ? -1 : 1);
     }
 ;PRIMITIVE	
 
@@ -702,6 +744,9 @@ PRIMITIVE: WARM ( -- )
     // reset user variables
     *(user_variable(USER_STATE)) = (CELL) STATE_INTERPRETING;
     *(user_variable(USER_BASE)) = (CELL) 10;
+    *(user_variable(USER_TRACE)) = (CELL) 0;
+    *(user_variable(USER_INPUTSOURCE)) = stdin;
+    *(user_variable(USER_OFFSET)) = -1; // in need of a refill
       
     // point the ip at the executive and return
     ip = xt_to_body(*(user_variable(USER_EXECUTIVE)));
