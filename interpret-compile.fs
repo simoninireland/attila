@@ -1,4 +1,4 @@
-\ $Id: interpret-compile.fs,v 1.1 2007/05/25 13:13:27 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -27,7 +27,7 @@
 \
 \ :NONAME \ the runtime behaviour
 \     ... ;
-\ :NONAME \ the compile- behaviour
+\ :NONAME \ the compile-time behaviour
 \     ... ;
 \ INTERPRET/COMPILE TOP-LEVEL-NAME
 \
@@ -44,6 +44,6 @@
   DOES> \ ( addr -- )
     INTERPRETING? NOT
     [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	CELL+
+	1 CELLS +
     [ DUP JUMP> SWAP ! ]                      \ THEN
     @ EXECUTE ;
