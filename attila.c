@@ -1,7 +1,8 @@
-// $Id: attila.c,v 1.7 2007/06/13 15:57:39 sd Exp $
+// $Id$
 
-// This file is part of Attila, a multi-targeted threaded interpreter
-// Copyright (c) 2007, UCD Dublin. All rights reserved.
+// This file is part of Attila, a retargetable threaded interpreter
+// Copyright (c) 2007--2009, Simon Dobson <simon.dobson@computer.org>.
+// All rights reserved.
 //
 // Attila is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -17,114 +18,48 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-// Attila main setup and interactive routine
+// Attila main setup
+//
+// The start-up sequence at this level is minimal:
+// 1. Allocate and initialise the memory block
+// 2. Allocate space for a cold-start vector at the bottom of memory,
+//    which will be filled-in when the dictionary is bootstrapped
+// 3. Allocate the return and data stacks, initialising their pointers
+// 4. Allocate the user variable area
+// 5. Initialise the dictionary, which should also initialise the
+//    cold-start vector
+// 6. Start the inner interpreter, assumed to be a primitive call docolon,
+//    executing the xt in the cold-start vector
 
-#include "attila.h"
+#include "vm.h"
 
 
 // ---------- Globals ----------
 
-byte *data_stack, *data_stack_top;
-byte *return_stack, *return_stack_top;
-jmp_buf env;
+BYTEPTR top, bottom;
+XTPTR ip;
+CELLPTR data_stack_base, data_stack;
+XTPTR return_stack_base, return_stack;
+CELLPTR user;
 
-char *prelude = ATTILA_STANDARD_PRELUDE;
 
 // ---------- Main routine ----------
 
 int
 main( int argc, char **argv ) {
-  // announce ourselves
-  printf("%s\n", ATTILA_ANNOUNCE);
-  printf("%s\n", ATTILA_COPYRIGHT);
+  // initialise memory and stacks
+  bottom = init_memory(MEM_SIZE);
+  top = bottom + CELL_SIZE;  // leave space for the cold-start vector
+  return_stack_base = return_stack = top;   top += RETURN_STACK_SIZE;
+  data_stack_base = data_stack = top;   top += DATA_STACK_SIZE;
+  user = top;   top += USER_SIZE;
 
-  // add the standard include directory
-  include_path = (char *) calloc(sizeof(char *), MAX_INCLUDE_PATH);
-  include_path[includes++] = ATTILA_STANDARD_INCLUDE_DIR;
+  // initialise dictionary
+  init_dictionary();
 
-  // process options
-  char c;
-  while((c = getopt(argc, argv, "I:np:h")) != -1) {
-    switch(c) {
-    case 'I': {
-      // add a directory to the include path
-      char *d = strdup(optarg);
-      if(includes >= MAX_INCLUDE_PATH) {
-	fprintf(stderr, "Too many included directories: %s ignored\n", d);
-	free(d);
-      } else {
-	include_path[includes++] = d;
-      }
-      break;
-    }
-
-    case 'n':
-      // do not load the standard prelude
-      prelude = NULL;
-      break;
-
-    case 'p':
-      // use the given file as the standard prelude instead of prelude.fs
-      prelude = optarg;
-      break;
-
-    case '?':
-    case 'h':
-      // display help and exit
-      printf("attila: an abstract multi-targeted threaded interpreter\n");
-      printf("usage: attila [options] [source ...]\n");
-      printf("options:\n");
-      printf("   -I <dir>      add <dir> to the include path\n");
-      printf("   -n            do not load standard prelude\n");
-      printf("   -p <prelude>  use <prelude> as the prelude instead\n");
-      printf("                 of prelude.fs\n");
-      printf("   -h            display usage\n");
-      exit(0);
-    }
-  }
-  argc -= optind;
-  argv += optind;
-
-  // set up the starting command, #include'ing the prelude (if required) followed
-  // by all the file mentioned on the command line
-  if(prelude != NULL) {
-    sprintf(start, "#include %s", prelude);
-  } else {
-    start[0] = '\0';
-  }
-  int i;
-  for(i = 0; i < argc; i++) {
-    strcat(start, " #include ");
-    strcat(start, argv[i]);
-    //    strcat(start, " ");
-  }
-  printf("%s\n", start);
-
-  // set up inital (root) vocabulary, dictionary, data and return stacks
-  rootvocabulary = new_vocabulary(NAMESPACE_MEMORY_SIZE, CODESPACE_MEMORY_SIZE, DATASPACE_MEMORY_SIZE, NULL);
-  *(user_variable(USER_CURRENT)) = rootvocabulary;
-  stack_init(&return_stack, &return_stack_top, RETURN_STACK_SIZE);
-  stack_init(&data_stack, &data_stack_top, DATA_STACK_SIZE);
-  *(user_variable(USER_TIB)) = (char *) allocate_word_data_memory(TIB_SIZE);
-  *(user_variable(USER_OFFSET)) = -1;
-
-  // create the dictionary and initialise the user variables
-  *(user_variable(USER_INPUTSOURCE)) = stdin;
-  build_bootstrap_dictionary();
-  build_initial_dictionary();
-
-  // set the executive and re-start point
-  *(user_variable(USER_EXECUTIVE)) = xt_of_word("OUTER");
-  XT warm = xt_of_word("WARM");
-
-  // we return here in case of catastrophic errors
-  setjmp(env);
-  stack_reset(data_stack, &data_stack_top);
-  stack_reset(return_stack, &return_stack_top);
-
-  // boot
-  ip = &warm;
-  inner_interpreter();
+  // start the outer interpreter
+  ip = bottom;
+  docolon();
 
   exit(0);
 }
