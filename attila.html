@@ -521,6 +521,23 @@ You're looking at it! The Attila web site, http://www.attila-language.org, is im
 This manual contains brief descriptions of all words and sub-systems within Attila. Each word description is tagged with the name of the word set it is part of. Most of these word sets relate to the ANS Standard for Forth. If you want to see a word set, just click on the corresponding tag in the right-hand tags menu.
 </pre>
 </div>
+<div title="Addresses" modifier="sd" created="200911201110" modified="200911201127" tags="terminology" changecount="2">
+<pre>!Addresses
+
+Attila works with memory at quite a low level: variables are represented by the address of the memory that stores their value, for example:
+
+&gt; VARIABLE test
+&gt; 23 test !
+
+This use of addressing is somewhat at odds with Attila's other goal of portability and experimentation, especially if programs make arbitrary memory accesses. But arbitrary memory access is //useful//, especially for embedded systems that have memory-mapped devices and other goodies that programs will want to interact with and control. We don't want to outlaw fun things in the interests of portability.
+
+To get round this problem, Attila has two notions of &quot;address&quot;. What is generally referred to as an address within Attila -- for variables and the like -- is a //virtual// address meaningful //only// to Attila. You can obtain these addresses in various ways, and can perform limited address arithmetic on them, but they don't //necessarily// relate to  &quot;real&quot; computer-memory addresses (although they //might//). This makes Attila's usual address mechanisms completely portable. [[The words|MemoryWords]] {{{!}}}, {{{@}}} and the like work on virtual addresses
+
+To interact with real computer memory Attila provides a different set of word that work on //real// addresses and which //can't// be used for accessing virtual (Attila) memory: these two classes of address may be physically the same in some memory models, but are conceptually different. [[The words|RealMemoryWords]] {{{R!}}}, {{{RC@}}} and so forth work on real addresses.
+
+
+</pre>
+</div>
 <div title="Bootstrapping" modifier="sd" created="200911151832" modified="200911151847" tags="bootstrapping compiler" changecount="5">
 <pre>!Bootstrapping
 
@@ -556,7 +573,7 @@ primgen is a Perl script that generates a bootstrap virtual machine.
 
 </pre>
 </div>
-<div title="ColonCompilerWords" modifier="sd" created="200911161105" modified="200911161112" tags="words compiler (:) EXECUTE : ; [ ]" changecount="4">
+<div title="ColonCompilerWords" modifier="sd" created="200911161105" modified="200911191614" tags="words compiler (:) EXECUTE : ; [ ] (HEADER,)" changecount="5">
 <pre>!Colon-compiler words
 
 These words form the heart of the compiler, allowing new words to be defined. (The concepts behind colon-definitions is explained [[here|ColonDefinition]].)
@@ -582,9 +599,11 @@ Place the system into [[compilation state|CompileInterpretState]]. Words read fr
 
 {{{(:)}}} ( -- ) &quot;bracket colon&quot;
 Execute the inner interpreter for the Attila system, running colon-definitions and primitives.
-</pre>
+
+{{{(HEADER,)}}} ( addr n prim -- xt )
+Compile a header for a word with the given name using prim as its primitive behaviour, returning the xt for the new word.</pre>
 </div>
-<div title="ColonDefinition" modifier="sd" created="200911161730" modified="200911161742" tags="compiler [[colon definition]]" changecount="2">
+<div title="ColonDefinition" modifier="sd" created="200911161730" modified="200911191615" tags="compiler [[colon definition]]" changecount="3">
 <pre>!Colon definitions
 
 ''Colon definitions'' are the most common way to create new [[words|Word]].
@@ -596,13 +615,32 @@ By way of example, suppose we want to define a word that performs some simple ca
 
 Let's examine this word by word. The colon {{{:}}} is the start of the colon definition. It creates a new word by parsing the next word in the input stream ({{{SQUARE-AREA}}}), and shifts the system into [[compilation state|CompileInterpretState]] to that subsequent words will be compiled to create the behaviour associated with {{{SQUARE-WORD}}} rather than happening immediately.
 
-The next words ({{{DUP}}} and {{{*}}}) are compiled as the &quot;body&quot; of {{{SQUARE_AREA}}}. The compiler then encounters the {{{;}}} word, which ends the colon definition: it shifts the system back into [[interpretation state|CompileInterpretState]] and wraps-up the definition of {{{SQUARE-AREA}}}.
+The next words ({{{DUP}}} and {{{*}}}) are compiled as the &quot;body&quot; of {{{SQUARE-AREA}}}. The compiler then encounters the {{{;}}} word, which ends the colon definition: it shifts the system back into [[interpretation state|CompileInterpretState]] and wraps-up the definition of {{{SQUARE-AREA}}}.
 
 If you now enter some code using the new word, for example {{{10 SQUARE-AREA}}}, the system will interpret {{{10}}} (by putting it on the stack) and then interpret {{{SQUARE-AREA}}} by executing its behaviour {{{DUP *}}} to produce a result, again on the stack.
 
 The body of a colon definition -- its behaviour -- can use (pretty much) any word already defined. All words are created equal in this sense.
 
 More detailed information about the words in the colon compiler can be found [[here|ColonCompilerWords]].
+</pre>
+</div>
+<div title="ColonDefinitionImplementation" modifier="sd" created="200911191614" modified="200911191614" tags="compiler [[colon definition]]" changecount="4">
+<pre>!The implementation of colon definitions
+
+...
+
+The process the compiler follows when it executes a colon definition begins with {{{:}}}, and is:
+
+# Call {{{(HEADER,)}}} to create the header for the word, using {{{(:)}}} as its primitive behaviour
+# Call {{{START-DEFINITION}}} to run any pre-definition hooks
+# Enter compile state using {{{]}}}
+# Compile the code of the word until {{{;}}}
+# Call {{{END-DEFINITION}}} to run any post-definition hooks
+# Enter interpretation state using {{{]}}}
+ 
+
+
+
 </pre>
 </div>
 <div title="Copyright" modifier="sd" created="200911151816" modified="200911151817" changecount="3">
@@ -618,7 +656,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 </pre>
 </div>
-<div title="CrossCompiler" modifier="sd" created="200911161003" modified="200911161011" tags="compiler cross-compiler [[virtual machine]]" changecount="4">
+<div title="CrossCompiler" modifier="sd" created="200911161003" modified="200911191706" tags="compiler cross-compiler [[virtual machine]]" changecount="6">
 <pre>!The Attila cross-compiler
 
 !!Terminology
@@ -636,15 +674,28 @@ A ''cross-compiler'' is a compiler that compiles code for a machine other than t
 
 !!!Overview
 
+There are essentially three elements to an Attila system:
+
+# The primitives providing raw access to the underlying machine
+# The dictionary defining words at Attila level both primitive and colon- (and other) definitions
+# The look-up mechanism for finding and resolving words in the target
+
+Why the third element? The target may not maintain a proper dictionary itself, in the sense of having names, link fields and the rest. On embedded systems these are often omitted to save space, since the application isn't interactive anyway. The cross-compiler therefore maintains its &quot;dictionary&quot; in the host, and //may// (or may not) store an equivalent structure on the target.
+
+Primitives are provided as C code, typically extracted from Attila source code by looking for {{{PRIMITIVE:}}} and {{{C:}}} blocks. These fragments of code are turned into a standard form and emitted to a C file for compilation.
+
+The target image contains all the Attila-level data, including word headers for the primitives. When cross-compiling any &quot;compilation&quot; results in data being written into an image of the target, which is later emitted as a C data structure.
+
+
 !!!Targets and architectures
 
 !!!Use of word lists
 
 The cross-compiler maintains two word lists relating to the target, in addition to the words it has defined with reference to the host.
 
-Words that support compilation live in {{{CROSS}}}. This includes the colon-compiler, the {{{IMMEDIATE}}} words used to define control structures, and some other supporting words.
+Words that support cross-compilation live in {{{CROSS}}}. This includes the colon-compiler, the {{{IMMEDIATE}}} words used to define control structures, and some other supporting words.
 
-Words that are intended to land on the target live in {{{TARGET}}}. Any word that the cross-compiler compiles for the target gets placed here (although not actually as code -- see later). So listing this word list ({{{TARGET .VOC}}}) will show the dictionary that will land on the target once it's built.
+Words that are intended to land on the target live in {{{TARGET}}}. Any word that the cross-compiler compiles for the target gets placed here (although not actually as code -- see later). So listing this word list ({{{TARGET CONTEXT .WORDLIST}}}) will show the dictionary that will land on the target once it's built.
 
 </pre>
 </div>
@@ -743,6 +794,89 @@ Legalities
 </div>
 <div title="MemoryModels" modifier="sd" created="200911171247" modified="200911171248" tags="[[memory model]] architecture" changecount="2">
 <pre>* [[Flat, single block for all code and data|FlatMemoryModel]]
+</pre>
+</div>
+<div title="MemoryWords" modifier="sd" created="200911200939" modified="200911201131" tags="words ! C! @ C@ , ALLOT CELLS CHARS COMPILE, CCOMPILE, ALIGN ALIGNED" changecount="3">
+<pre>!Memory words
+
+These are the normal words for accessing any memory allocated or managed within Attila. If you need to access real memory addresses, use the [[real memory access words|RealMemoryWords]].
+
+A memory model //may// check that addresses passed to these words are valid and refer to Attila memory -- or may not. 
+
+
+!!Accessing memory
+
+{{{!}}} ( n addr -- ) &quot;store&quot;
+Store a cell value n at the given address
+
+{{{@}}} ( addr -- n ) &quot;fetch&quot;
+Retrieve the value from the given address
+
+{{{C!}}} ( c addr -- ) &quot;see store&quot;
+Store a character c at the given address
+
+{{{C@}}} ( addr -- c ) &quot;see fetch&quot;
+Retrieve the character from the given address
+
+
+!!Allocating body memory
+
+{{{ALLOT}}} ( b -- )
+Allot b bytes of memory in the body of the current word.
+
+{{{,}}} ( n -- )
+Compile the cell from the top of the stack into body memory at the next free cell-aligned address.
+
+{{{C,}}} ( c -- )
+Compile the character from the top of the stack into body memory at the next free character-aligned address.
+
+
+!!Compiling into the body of a word
+
+{{{COMPILE,}}} ( n -- ) &quot;compile comma&quot;
+Compile a cell into the code of the word currently being defined.
+
+{{{CCOMPILE,}}} ( n -- ) &quot;see compile comma&quot;
+Compile a character into the code of the word currently being defined.
+
+
+!!Computing sizes
+
+{{{CELLS}}} ( n -- b)
+Return the number of bytes needed to accommodate n cells of data.
+
+{{{CHARS}}} ( n -- b )
+Return the number of bytes needed to accommodate n characters of data.
+
+
+!!Alignment
+
+{{{ALIGN}}} ( -- )
+Align the {{{TOP}}} and {{{HERE}}} pointers to cell boundaries. May be a no-op on some architectures.
+
+{{{ALIGNED}}} ( addr -- addr1 )
+Align addr to the next cell boundary. May be a no-op on some architectures.
+ </pre>
+</div>
+<div title="RealMemoryWords" modifier="sd" created="200911201129" modified="200911201131" tags="words R! R@ RC! RC@" changecount="2">
+<pre>!Real memory words
+
+Words that allow access to &quot;real&quot; memory addresses, rather than [[normal Attila memory access|MemoryWords]]. These words are only really useful for accessing memory-mapped devices and other hardware.
+
+A real address is simply a cell that's interpreted as a pointer, and can be to anywhere in the memory map. Use with care!
+
+{{{R!}}} ( n raddr -- ) &quot;ar store&quot;
+Store a cell value n at real memory address raddr.
+
+{{{R@}}} ( raddr -- n ) &quot;ar fetch&quot;
+Retrieve a cell from real address raddr
+
+{{{RC!}}} ( c raddr -- ) &quot;ar see store&quot;
+Store a character at real address raddr.
+
+{{{RC@}}} ( raddr -- c ) &quot;ar see fetch&quot;
+Retrieve a character from real address raddr.
+
 </pre>
 </div>
 <div title="SiteSubtitle" modifier="sd" created="200911151807" changecount="1">
