@@ -25,7 +25,10 @@
 
 \ Create a data block that returns its body address when executed
 : (DATA) \ ( addr n -- )
-    [ ' (VAR) >CFA @ ] LITERAL (HEADER,) DROP ;
+    START-DEFINITION
+    [ ' (VAR) >CFA @ ] LITERAL (HEADER,)
+    END-DEFINITION
+    DROP ;
     
 \ Create a data block from the next word in the input
 : DATA \ ( "name" -- )
