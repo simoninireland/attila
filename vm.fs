@@ -44,6 +44,7 @@
 6 USER TIB                   \ address of the TIB
 7 USER LAST                  \ xt of the most-recently-defined word
 8 USER TRACE                 \ trace (debugging) flag
+9 USER CURRENT               \ the current wordlist receiving definitions
 
 \ ---------- Truth values ----------
 
