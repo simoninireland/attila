@@ -1,4 +1,4 @@
-\ $Id: strings.fs,v 1.8 2007/06/15 15:32:17 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -49,28 +49,8 @@
     [CHAR] " PARSE TYPE ;
 :NONAME \ ( "str" -- )
     POSTPONE S"
-    [COMPILE] TYPE ; IMMEDIATE
+    [COMPILE] TYPE ;
 INTERPRET/COMPILE ."
-
-
-\ ---------- Moving memory around ----------
-
-: CMOVE> \ ( addr1 addr2 n -- ) with addr1 < addr2
-    DUP >R + SWAP R@ + SWAP
-    R> 0 DO
-	1- SWAP 1- SWAP
-	OVER C@ OVER C!
-    LOOP 2DROP ;
-
-: CMOVE< \ ( addr1 addr2 n -- ) with addr2 < addr1
-    0 DO
-	OVER C@ OVER C!
-	1+ SWAP 1+ SWAP
-    LOOP 2DROP ;
-
-\ Move n bytes starting at addr1 to addr2, handling any overlap
-: CMOVE \ ( addr1 addr2 n-- )
-    2 PICK 1 PICK < IF CMOVE> ELSE CMOVE< THEN ;
 
     
 \ ---------- String operations ----------

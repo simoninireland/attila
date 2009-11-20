@@ -1,6 +1,6 @@
-\ $Id: colon.fs,v 1.6 2007/05/18 20:33:25 sd Exp $
+\ $Id$
 
-\ This file is part of Attila, a minimal threaded interpretive language
+\ This file is part of Attila, a retargetable threaded interpreter
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -19,10 +19,6 @@
 
 \ The initial dictionary containing the words necessary to bring up
 \ the colon-definiton compiler.
-\
-\ This code is re-written in C in initial.c, but may be bootstrapped
-\ at some point (like when we do a cross-compiler). For now, use it
-\ for reference in case the C code isn't clear.
 
 \ ---------- Error handling ----------
 
@@ -34,6 +30,12 @@
 
 
 \ ---------- Compilation helpers ----------
+
+\ Hooks run before the creation of a word and at its fianlisation
+\ sd: TBD
+
+\ Return the xt of the last defined word
+: LASTXT LAST USER @ ;
 
 \ Set a status mask for a colon definition
 : SET-STATUS \ ( mask xt -- )
@@ -51,11 +53,11 @@
 
 \ Test whether we're interpreting
 : INTERPRETING? \ ( -- f )
-    STATE @ INTERPRETATION-STATE = ;
+    STATE @ INTERPRETING = ;
 
 \ Test whether a word is IMMEDIATE
 : IMMEDIATE? \ ( xt -- f )
-    >STATUS C@ IMMEDIATE-MASK & ;
+    >STATUS C@ IMMEDIATE_MASK & ;
 
 \ Find the xt of the next word in the input source, or abort
 : ' \ ( "word" -- xt )
@@ -82,7 +84,7 @@
 
 \ Compile a "-delimited string from the input source as a literal
 : S" \ ( "string" -- )
-    BL CONSUME
+    32 CONSUME \ spaces
     [CHAR] " PARSE
     ?DUP IF
 	SLITERAL
@@ -92,21 +94,23 @@
 
 \ Enter interpretation state
 : [ \ ( -- )
-    INTERPRETATION-STATE STATE ! ;
+    INTERPRETING STATE ! ;
 
-\ Enter comilation state
+\ Enter compilation state
 : ] \ ( -- )
-    COMPILATION-STATE STATE ! ;
+    COMPILING STATE ! ;
 
 \ The colon-definer
 : : \ ( "name" -- )
-    [ ' (DOCOLON) >CFA @ ] PARSE-WORD HEADER, CFA,
+    START-DEFINITION
+    [ ' (:) >CFA @ ] PARSE-WORD HEADER,
     ] ;
 
 \ Complete a colon-definition
 : ; \ ( -- )
     0 COMPILE, \ NEXT
-    [ ; IMMEDIATE
+    END_DEFINITION
+    [ DROP ; IMMEDIATE
 
 
 \ ---------- The outer interpreter ----------

@@ -1,4 +1,4 @@
-\ $Id: locals-base.fs,v 1.4 2007/06/15 15:57:38 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.

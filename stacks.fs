@@ -43,27 +43,30 @@
 : ST>N \ ( st -- iaddr )
     1 CELLS - ;
 
+\ Return the depth of the stack in cells
+: #ST \ ( st -- n )
+    ST>N @ ;
+
 \ Return the maximum number of cells
 : ST>MAXN \ ( st -- imax )
     2 CELLS - @ ;
 
 \ Check if a push will result in an overflow
 : ST-OVERFLOW? \ ( st -- f )
-    DUP ST>N @ SWAP ST>MAXN = ;
+    DUP #ST SWAP ST>MAXN >= ;
 
 \ Check if a pop will result in an underflow
 : ST-UNDERFLOW? \ ( st -- f )
-    ST>N @ 0 = ;
+    #ST 0= ;
 
 \ Return the address of the top of the stack, where the
-\ next element will be pushed to
+\ next element will be pushed to (*not* that of the top element)
 : ST>TOPADDR \ ( st -- addr )
-    DUP ST>N @ CELLS + ;
+    DUP #ST CELLS + ;
 
 \ Update the value of the stack index
 : +STN \ ( n st -- )
-    ST>N DUP
-    @ -ROT + SWAP ! ;
+    ST>N +! ;
 
 
 \ ---------- Access ----------
@@ -88,20 +91,16 @@
 
 \ Peek at the top entry of the given stack
 : ST@ \ ( st -- v )
-    DUP ST>N @ 0 =
+    DUP #ST 0=
     [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
 	S" Stack underflow" ABORT
     [ DUP JUMP> SWAP ! ]                      \ THEN
     ST>TOPADDR 1 CELLS - @ ;
-    
-\ Return the depth of the stack in cells
-: #ST \ ( st -- n )
-    ST>N @ ;
 
 \ Return the address of the i-th cell, counting from 0
 \ Very un-TIL-like, but useful....
 : ST>ADDR \ ( i st -- addr )
-    2DUP ST>N @ >
+    2DUP #ST >=
     [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
 	S" Stack pick underflow" ABORT
     [ DUP JUMP> SWAP ! ]                      \ THEN
@@ -121,7 +120,7 @@
     OVER 0>
     [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]                        \ IF
         DUP ST>N -ROT MIN
-    NEGATE SWAP +STN
+        NEGATE SWAP +STN
     [ ' (BRANCH) COMPILE, TOP 0 COMPILE, SWAP DUP JUMP> SWAP ! ]   \ ELSE
         2DROP
     [ DUP JUMP> SWAP ! ] ;                                         \ THEN

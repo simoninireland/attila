@@ -1,4 +1,4 @@
-\ $Id: cs-stack.fs,v 1.5 2007/05/17 15:33:46 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -143,4 +143,4 @@ MAX-LEAVES STACK LEAVES
     CS-DROP
     1-
     [ ' (BRANCH) COMPILE, SWAP >JUMP COMPILE, DUP JUMP> SWAP ! ] \ REPEAT
-    [COMPILE] NEXT ; IMMEDIATE
+    0 COMPILE, ; IMMEDIATE

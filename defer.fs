@@ -1,4 +1,4 @@
-\ $Id: defer.fs,v 1.5 2007/06/09 12:15:50 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.

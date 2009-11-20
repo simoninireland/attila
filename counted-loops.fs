@@ -1,4 +1,4 @@
-\ $Id: counted-loops.fs,v 1.2 2007/05/17 15:33:45 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
