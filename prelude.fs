@@ -3,7 +3,7 @@
 
 \ ... and now we can parse comments, we can begin ... :-)
 
-\ $Id: prelude.fs,v 1.10 2007/05/25 13:13:27 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -32,6 +32,7 @@
 
 \ "Primitives" outside the VM core, mainly wrappers for "real" primitives
 #include base.fs
+#include conditionals.fs          \ IF ... ELSE ... THEN
 
 \ Advanced compilation words
 #include createdoes.fs            \ CREATE ... DOES>
@@ -48,7 +49,6 @@
 #include stacks.fs                \ General stacks
 
 \ Control structures
-#include conditionals.fs          \ IF ... ELSE ... THEN
 #include cs-stack.fs              \ Control structures stack
 #include loops.fs                 \ BEGIN ... AGAIN
                                   \ BEGIN ... UNTIL
@@ -60,16 +60,16 @@
 \ Data types
 #include strings.fs               \ Character and string operations
 #include scratch.fs               \ String scratch area
-#include formatting.fs            \ Formatted numeric output\
+\ #include formatting.fs            \ Formatted numeric output
 
-\ Vocabulary control
-#include vocabularies.fs          \ Multiple vocabularies
+\ Word list control
+#include wordlists.fs             \ Multiple word lists
 
 \ Dynamic memory
-#include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
+\ #include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
 
 \ Local variables
-#include locals-base.fs           \ base definitions
+\ #include locals-base.fs           \ base definitions
 \ #include ans-locals.fs            \ LOCALS| ... | for symbolic local definitions
-#include locals.fs                \ stack-comment-style locals
+\ #include locals.fs                \ stack-comment-style locals
 
