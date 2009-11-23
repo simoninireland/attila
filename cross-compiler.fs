@@ -3,6 +3,26 @@
 \ The Attila cross-compiler
 \
 
+\ ---------- The word lists ----------
+
+VOCABUALRY CROSS   \ Host words
+VOCABULARY TARGET  \ Target words as data
+
+\ Execute a host cross word without changing the search order
+\ State-smart: do the word or compile it
+:NONAME \ ( "name" -- )
+    ALSO CROSS
+    '
+    PREVIOUS
+    EXECUTE ;
+:NONAME \ ( "name" -- )
+    ALSO CROSS
+    '
+    PREVIOUS
+    COMPILE, ;
+INTERPRET/COMPILE [CROSS]
+
+
 \ ---------- Target image creation and access ----------
 
 \ The body address of the current target image we're working with
@@ -34,6 +54,10 @@ VARIABLE (CURRENT-TARGET-IMAGE)
 
 \ ---------- Cross-compiler compilation primitives ----------
 
+\ Place definitions into CROSS without making it searchable, so
+\ the words are defined in terms of the host
+ALSO CROSS DEFINITIONS
+
 \ Return the logical address of the top of the target's dictionary
 : TOP \ ( -- taddr )
     CURRENT-TARGET-IMAGE @ ;
@@ -57,14 +81,43 @@ VARIABLE (CURRENT-TARGET-IMAGE)
 : C, \ ( n -- )
     HERE TARGET> C!
     1 COMPILED ;
-    
+
+\ Host access to target image data
+: !
+    \ ( n addr -- )
+    TARGET! ! ;
+: @ \ ( addr -- n )
+    TARGET> @ ;
+: C!
+    \ ( d addr -- )
+    TARGET! C! ;
+: C@ \ ( addr -- c )
+    TARGET> C@ ;
+
+\ Target compilation state
+VARIABLE STATE
+
+
+
 
 \ ---------- The colon-compiler ----------
 
-: TARGET-: \ ( "name" -- )
-    PARSE-WORD TARGET-(HEADER,)
-    
+\ Compile a locator word in TARGET that returns the target
+\ address of the word
+: (TARGET:) \ ( addr n -- )
+    GET-CURRENT >R            \ save the current word list
+    ALSO TARGET DEFINITIONS   \ place definition in TARGET
+    (CREATE)                  \ named word
+    [CROSS] TOP ,             \ body holds target address
+    R> SET-CURRENT            \ restore current
+  DOES> \ ( addr -- taddr )
+    @ ;                       \ return the target-level address
 
+\ The host cross-colon-compiler
+: : \ ( "name" -- xt )
+    PARSE-WORD
+    2DUP (TARGET:)            \ create locator word
+    [CROSS] (HEADER,)
 
     
     
