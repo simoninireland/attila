@@ -174,7 +174,7 @@ init_dictionary() {
   COMPILE_ELSE(if0,th0,el0);
     COMPILE("ROT");
     COMPILE("2DROP");
-  COMPILE_THEN(if0,th0,el0);
+  COMPILE_ELSETHEN(if0,th0,el0);
   NEXT();
 
 
