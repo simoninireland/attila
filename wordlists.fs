@@ -49,7 +49,7 @@ VARIABLE CURRENT-WORDLIST
 : (OTHER-WORDLISTS?) \ ( -- f )
     WORDLISTS #ST 0> ;
 
-\ Create a new, empty, anonymous word list. We use the word lists's body
+\ Create a new, empty, anonymous word list. We use the word list's body
 \ pointer as its identifier. The body stores the xt of the last
 \ word added to this word list
 : WORDLIST \ ( -- wid )
@@ -60,13 +60,6 @@ VARIABLE CURRENT-WORDLIST
 \ the word list is empty
 : WID> \ ( wid -- xt )
     @ ;
-
-\ Retrieve the HA of the top-most word on a word list, or 0 if
-\ the word list is empty
-: WID>HA \ ( wid -- ha )
-    WID> DUP IF
-	>HA
-    THEN ;
 
 \ Update a word list with a new top word 
 : >WID \ ( xt wid -- )
@@ -147,10 +140,10 @@ WORDLIST CONSTANT ROOT-WORDLIST
 \ Find the definition of a word in a word list
 \ sd: slightly non-standard as we don't use counted addresses
 : SEARCH-WORDLIST \ ( addr n wid -- 0 | xt 1 | xt -1 )
-    WID>HA ?DUP IF
+    WID> ?DUP IF
 	(FIND)
-    ELSE
-	2DROP 0     \ empty wordlist
+    ELSE             \ empty wordlist
+	2DROP 0
     THEN ;
 
 \ Find the definition of a word in the current search order -- messy, messy...
@@ -178,20 +171,16 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
 
 \ ---------- Word listing ----------
 
-\ Print the name in a given HA, followed by a space
-: .HA \ ( ha -- )
-    COUNT TYPE SPACE ;
-
 \ Print the name of a word followed by a space
 : .WORD \ ( xt -- )
-    >HA .HA ;
+    >NAME TYPE SPACE ;
 
 \ List all the words in a word list
 : .WORDLIST ( wid -- )
-    WID>HA ?DUP IF
+    WID> ?DUP IF
 	BEGIN
-	    DUP .HA
-	    HA> >LFA @
+	    DUP .WORD
+	    >LFA @
 	    ?DUP 0=
 	UNTIL
     THEN ;
