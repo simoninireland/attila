@@ -164,12 +164,16 @@ init_dictionary() {
   // find the xt of the next word in the input stream
   DEFINE("'"); // ( "word" -- xt )
   COMPILE("PARSE-WORD");
+  COMPILE("2DUP");
   COMPILE("FIND");
   COMPILE("0=");
   COMPILE_IF(if0,th0,el0);
     COMPILE("TYPE");
     STRING("?");
     COMPILE("ABORT");
+  COMPILE_ELSE(if0,th0,el0);
+    COMPILE("ROT");
+    COMPILE("2DROP");
   COMPILE_THEN(if0,th0,el0);
   NEXT();
 
