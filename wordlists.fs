@@ -1,4 +1,4 @@
-\ $Id: vocabularies.fs,v 1.8 2007/05/23 15:41:48 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -205,21 +205,19 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
 \ ---------- Vocabularies, words that select word lists ----------
 
 \ Create a vocabulary that will add itself to the search order when executed
-: (VOCABULARY) \ ( addr n -- )
+: (VOCABULARY) \ ( wid addr n -- )
     (CREATE)
-    WORDLIST DROP            \ the wid is our body address
-  DOES> \ ( wid -- )
-    >ORDER ;
+    ,                \ the wid is in our body address
+  DOES> \ ( addr -- )
+    @ >ORDER ;
 
 \ Create a new vocabulary
 : VOCABULARY \ ( "name" -- )
+    WORDLIST
     PARSE-WORD (VOCABULARY) ;
 
-\ A vocabulary around the root word list
-: ROOT \ ( -- )
-    (OTHER-WORDLISTS?) IF
-	ROOT-WORDLIST >ORDER
-    THEN ;
+\ A vocabulary for the root word list
+ROOT-WORDLIST PARSE-WORD ROOT (VOCABULARY)
 
 
 \ ---------- Set-up ----------
