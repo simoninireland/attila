@@ -27,9 +27,9 @@
 \ in a single pre-allocated block. Each word is laid out as follows:
 \
 \     xt -> cf       code field             1 CELLS  bytes
-\     ha -> len      length of name         1 byte
+\           len      length of name         1 byte
 \           name     name of word           len bytes
-\    lfa -> link     ha of previous word    1 CELLS bytes
+\    lfa -> link     xt of previous word    1 CELLS bytes
 \           status   status of word         1 byte
 \           body     body of word           n cells
 \
@@ -71,22 +71,6 @@ xt_to_status( XT xt ) {
     PUSH_CELL(xt);
     to_status(NULL);
     return (BYTEPTR) POP_CELL();
-}
-
-VOID to_ha( XT );
-BYTEPTR
-xt_to_ha( XT xt ) {
-    PUSH_CELL(xt);
-    to_ha(NULL);
-    return (BYTEPTR) POP_CELL();
-}
-
-VOID ha_to( XT );
-XT
-ha_to_xt( BYTEPTR ha ) {
-    PUSH_CELL(ha);
-    ha_to(NULL);
-    return (XT) POP_CELL();
 }
 
 VOID to_body( XT );
@@ -159,7 +143,7 @@ XT xt_of( char *name ) {
         
     PUSH_CELL(name);
     PUSH_CELL((CELL) strlen(name));
-    PUSH_CELL(xt_to_ha((XT) *(user_variable(USER_LAST))));
+    PUSH_CELL(*(user_variable(USER_LAST)));
     bracket_find(NULL);
 
     f = POP_CELL();
@@ -197,7 +181,7 @@ show_execute( XT xt ) {
     CELL len;
 
     if(xt != 0) {
-        ha = xt_to_ha(xt);
+        ha = (BYTEPTR) ((CELLPTR) xt + 1);
         len = (BYTE) (*ha);
         buf = (CHARACTERPTR) malloc(len + 1);
         memcpy(buf, ha + 1, len);   buf[len] = '\0';
@@ -283,16 +267,6 @@ PRIMITIVE: USERVAR user_variable_address ( n -- addr )
 
 \ Covert an xt to a code field address.
 PRIMITIVE: >CFA ( xt -- xt )
-;PRIMITIVE
-
-\ Convert an xt to a header address
-PRIMITIVE: >HA to_ha ( xt -- ha ) " to aitch ay"
-    ha = (CELL) ((CELLPTR) xt + 1);
-;PRIMITIVE
-
-\ Convert a header address to an xt
-PRIMITIVE: HA> ha_to ( ha -- xt ) " aitch ay to"
-    xt = (CELL) ((CELLPTR) ha - 1);
 ;PRIMITIVE
 
 \ Convert an xt to a link field address
@@ -430,8 +404,7 @@ PRIMITIVE: (HEADER,) start_word ( addr len cf -- xt )
     top += CELL_SIZE;
     *top++ = (BYTE) len;                               // the counted-string name   
     memcpy(top, (BYTEPTR) addr, len);   top += len;
-    last = (XT) *(user_variable(USER_LAST));           // the link pointer	
-    *((CELLPTR) top) = ((last == NULL) ? NULL : xt_to_ha(last)); 
+    *((CELLPTR) top)  = (XT) *(user_variable(USER_LAST));   // the link pointer	
     top += CELL_SIZE;
     *top++ = (BYTE) 0;                                 // the status field
     *(user_variable(USER_LAST)) = xt;                  // LAST gets the xt we just compiled
@@ -674,25 +647,25 @@ PRIMITIVE: NUMBER? ( addr n -- )
 \ Look up a word in a list, traversing the headers until we find the word
 \ or hit null. We return 0 if the word is not found, its xt and 1 if it
 \ is, and its xt and -1 if it is found an is immediate
-PRIMITIVE: (FIND) bracket_find ( addr namelen ha -- ) " bracket find"
+PRIMITIVE: (FIND) bracket_find ( addr namelen x -- ) " bracket find"
     CHARACTERPTR taddr;
+    BYTEPTR ha;
     CELL tlen;
-    XT xt, x;
+    XT xt;
     CELLPTR link;
     BYTE status;
 	
     xt = (XT) NULL;
-    while(ha != (BYTEPTR) NULL) {
-        x = ha_to_xt((BYTEPTR) ha);
-        tlen = (BYTE) *((BYTEPTR) ha);
+    while(x != (BYTEPTR) NULL) {
+        ha = ((BYTEPTR) x + CELL_SIZE);
+	tlen = (BYTE) *((BYTEPTR) ha);
 	taddr = (CHARACTERPTR) ha + 1;
 	if((namelen == tlen) &&
 	   (strncasecmp(addr, taddr, namelen) == 0)) {
-	    xt = x;   ha = NULL;
+	    xt = x;   x = NULL;
 	} else {
 	    link = xt_to_lfa(x);
-	    ha = (BYTEPTR) (*link);
-	}
+	    x = (XT) (XTPTR) (*link);	}
     }
 
     PUSH_CELL(xt);
