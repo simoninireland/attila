@@ -61,12 +61,6 @@ init_dictionary() {
   COMPILE("@");
   NEXT();
 
-  // return the header address of the last word defined
-  DEFINE("LASTHA");
-  COMPILE("LASTXT");
-  COMPILE(">HA");
-  NEXT();
-
   
   // ---------- Compilation hooks and wrappers ----------
   // sd: these should realy be DEFERred words, but we don't necessarily
@@ -99,7 +93,7 @@ init_dictionary() {
 
   // a flat find
   DEFINE("(FIND-IN-FLAT-NAMESPACE)");
-  COMPILE("LASTHA");
+  COMPILE("LASTXT");
   COMPILE("(FIND)");
   NEXT();
 
