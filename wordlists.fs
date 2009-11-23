@@ -196,11 +196,18 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
 	UNTIL
     THEN ;
 
-\ List all the words in the current search order
+\ List all the words in the current search order, ignoring adjacent
+\ duplicate word lists (but *not* ignoring non-adjacent duplicates)
 : WORDS \ ( -- )
-    GET-ORDER 0 DO
-	.WORDLIST
-    LOOP ;
+    0 GET-ORDER DROP BEGIN
+	?DUP 0<>
+    WHILE
+	2DUP = NOT IF
+	    .WORDLIST
+	ELSE
+	    DROP
+	THEN
+    REPEAT ;
     
 \ ---------- Vocabularies, words that select word lists ----------
 
