@@ -5,120 +5,107 @@
 
 \ ---------- The word lists ----------
 
-VOCABUALRY CROSS   \ Host words
-VOCABULARY TARGET  \ Target words as data
+WORDLIST CONSTANT CROSS-WORDLIST                   \ Host words
+CROSS-WORDLIST PARSE-WORD CROSS (VOCABULARY)
+WORDLIST CONSTANT TARGET-WORDLIST                  \ Target locator words
+TARGET-WORDLIST PARSE-WORD TARGET (VOCABULARY)
+
+\ Find a word in a given wordlist aborting if we fail
+: FIND-IN-WORDLIST \ ( addr n wid -- xt )
+    >R 2DUP R> SEARCH-WORDLIST
+    0<> IF
+	ROT 2DROP
+    ELSE
+	TYPE SPACE
+	S" not found in word list" ABORT
+    THEN ;
 
 \ Execute a host cross word without changing the search order
 \ State-smart: do the word or compile it
 :NONAME \ ( "name" -- )
-    ALSO CROSS
-    '
-    PREVIOUS
+    CROSS-WORDLIST FIND-IN-WORDLIST
     EXECUTE ;
 :NONAME \ ( "name" -- )
-    ALSO CROSS
-    '
-    PREVIOUS
+    CROSS-WORDLIST FIND-IN-WORDLIST
     COMPILE, ;
 INTERPRET/COMPILE [CROSS]
 
 
-\ ---------- Target image creation and access ----------
+\ ---------- Target description ----------
+\ sd: This should come from elsewhere
 
-\ The body address of the current target image we're working with
-VARIABLE (CURRENT-TARGET-IMAGE)
+ONLY CROSS ALSO DEFINITIONS
 
-\ Fetch the currently selected image
-: CURRENT-TARGET-IMAGE (CURRENT-TARGET-IMAGE) @ ;
+8 CONSTANT #CELL
 
-\ Create a named target image with the given maximum size. Executing an
-\ image selects it for compilation
-: TARGET-IMAGE \ ( bs "name" -- )
-    CREATE
-    0 ,                \ the TOP pointer
-    0 ,                \ the HERE pointer
-    ALLOT              \ the memory
-  DOES> \ ( addr -- )
-    (CURRENT-TARGET-IMAGE) ! ;
-
-\ Return the host address of the given logical target address
-: TARGET> \ ( taddr -- addr )
-    CURRENT-TARGET-IMAGE 2 CELLS + + ;
-
-\ Update pointers having compiled or stored data
-: COMPILED \ ( b -- )
-    CURRENT-TARGET-IMAGE +! ;
-: ALLOTTED \ ( b -- )
-    CURRENT-TARGET-IMAGE 1 CELLS + +! ;
+\ Single block of memory with TOP = HERE
+0 VALUE TOP
+: HERE TOP ;
 
 
-\ ---------- Cross-compiler compilation primitives ----------
+\ ---------- Low-level compilation into the target image ----------
 
-\ Place definitions into CROSS without making it searchable, so
-\ the words are defined in terms of the host
-ALSO CROSS DEFINITIONS
+\ For debugging only
+: EMIT-CELL \ ( n -- )
+    S" (CELL) 0x" TYPE
+    .HEX
+    S" ," TYPE NL ;
+: EMIT-SYMBOL-ADDRESS \ ( addr n -- )
+    S" (CELL) &" TYPE
+    TYPE
+    S" ," TYPE NL ;
 
-\ Return the logical address of the top of the target's dictionary
-: TOP \ ( -- taddr )
-    CURRENT-TARGET-IMAGE @ ;
+\ Compilation primitive that collects bytes and emits cells
+\ sd: currently hard-coded as being little-endian
+VARIABLE (CURRENT-CELL)
+VARIABLE (CURRENT-BYTE)
+: CCOMPILE, \ ( c -- )
+    (CURRENT-BYTE) @ 8 * LSHIFT (CURRENT-CELL) +!
+    1 (CURRENT-BYTE) +!
+    (CURRENT-BYTE) @ #CELL >= IF
+	(CURRENT-CELL) @ EMIT-CELL
+	0 (CURRENT-BYTE) !
+	0 (CURRENT-CELL) !
+    THEN
+    TOP 1+ TO TOP ;
 
-\ Return the logical address of the top of the target's data space
-: HERE \ ( -- taddr )
-    CURRENT-TARGET-IMAGE 1 CELLS + @ ;
+\ Align code address on cell boundaries
+: CALIGN \ ( addr -- aaddr )
+    DUP #CELL MOD #CELL SWAP - + ;
+: CALIGNED \ ( -- )
+    TOP CALIGN TOP - ?DUP IF
+	0 DO
+	    0 CCOMPILE,
+	LOOP
+    THEN ;
 
-\ Compile elements into the target's code
-: CCOMPILE, ( c -- )
-    TOP TARGET> C!
-    1 COMPILED ;
-: COMPILE, ( n -- )
-    TOP TARGET> !
-    1 CELLS COMPILED ;
+\ Additional compilation primitives for cells and strings
+: COMPILE, \ ( n -- )
+    CALIGNED
+    #CELL 0 DO
+	DUP 255 AND CCOMPILE,
+	8 RSHIFT
+    LOOP DROP ;
+: SCOMPILE, \ ( addr n -- )
+    DUP CCOMPILE,
+    0 DO
+	DUP C@ CCOMPILE,
+	1+
+    LOOP
+    DROP ;
 
-\ Compile elements as target data
-: , \ ( n -- )
-    HERE TARGET> !
-    1 CELLS COMPILED ;
-: C, \ ( n -- )
-    HERE TARGET> C!
-    1 COMPILED ;
+\ To compile a code field we emit the address of the symbol pointed to 
+: CFA, \ ( cf -- )
+    COUNT EMIT-SYMBOL-ADDRESS ;
 
-\ Host access to target image data
-: !
-    \ ( n addr -- )
-    TARGET! ! ;
-: @ \ ( addr -- n )
-    TARGET> @ ;
-: C!
-    \ ( d addr -- )
-    TARGET! C! ;
-: C@ \ ( addr -- c )
-    TARGET> C@ ;
-
-\ Target compilation state
-VARIABLE STATE
-
-
+\ In this model, data and code compilation are the same
+: C, COMPILE, ;
+: , COMPILE, ;
+: ALIGN CALIGN ;
+: ALIGNED CALIGNED ;
 
 
-\ ---------- The colon-compiler ----------
+\ ---------- Higher-level compilation into the target ----------
 
-\ Compile a locator word in TARGET that returns the target
-\ address of the word
-: (TARGET:) \ ( addr n -- )
-    GET-CURRENT >R            \ save the current word list
-    ALSO TARGET DEFINITIONS   \ place definition in TARGET
-    (CREATE)                  \ named word
-    [CROSS] TOP ,             \ body holds target address
-    R> SET-CURRENT            \ restore current
-  DOES> \ ( addr -- taddr )
-    @ ;                       \ return the target-level address
 
-\ The host cross-colon-compiler
-: : \ ( "name" -- xt )
-    PARSE-WORD
-    2DUP (TARGET:)            \ create locator word
-    [CROSS] (HEADER,)
 
-    
-    
-    
