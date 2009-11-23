@@ -81,24 +81,25 @@ WORDLIST CONSTANT ROOT-WORDLIST
     DUP CURRENT !
     WID> LAST ! ;
 
-\ Duplicate the top of the search order
-: ALSO \ ( -- )
+\ Retrieve the top-most word list in the search order without affecting it
+: CONTEXT
     (OTHER-WORDLISTS?) IF
 	WORDLISTS ST@
-	WORDLISTS >ST
     ELSE
-	ROOT-WORDLIST WORDLISTS >ST
+	ROOT-WORDLIST
     THEN ;
+
+\ Duplicate the top of the search order
+: ALSO \ ( -- )
+    CONTEXT WORDLISTS >ST ;
 
 \ Make the top-most word list current for definitions, dropping
 \ it from the search order in the process
 : DEFINITIONS \ (  -- )
+    CONTEXT SET-CURRENT
     (OTHER-WORDLISTS?) IF
-	WORDLISTS ST>
-    ELSE
-	ROOT-WORDLIST
-    THEN
-    SET-CURRENT ;
+	WORDLISTS ST-DROP
+    THEN ;
 
 \ Remove all word lists from the search order except root
 : ONLY \ ( -- )
@@ -118,14 +119,6 @@ WORDLIST CONSTANT ROOT-WORDLIST
 : GET-ORDER \ ( -- widn-1 ...wid0 n )
     ROOT-WORDLIST
     WORDLISTS ST-ALL> 1+ ;
-
-\ Retrieve the top-most word list in the search order without affecting it
-: CONTEXT
-    (OTHER-WORDLISTS?) IF
-	WORDLISTS ST@
-    ELSE
-	ROOT-WORDLIST
-    THEN ;
 
 \ Replace the top word list in the search order with the given one
 : >ORDER ( wid -- )
@@ -229,7 +222,7 @@ ROOT-WORDLIST PARSE-WORD ROOT (VOCABULARY)
 LASTXT ROOT-WORDLIST >WID
 
 \ ROOT-WORDLIST is searched and current 
-ONLY ROOT ALSO DEFINITIONS
+ONLY ALSO DEFINITIONS
 
 \ Update the global FIND behaviour to be wordlist-enabled
 ' (FIND-IN-WORDLISTS) (FIND-BEHAVIOUR) !
