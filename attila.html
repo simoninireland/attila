@@ -573,7 +573,7 @@ primgen is a Perl script that generates a bootstrap virtual machine.
 
 </pre>
 </div>
-<div title="ColonCompilerWords" modifier="sd" created="200911161105" modified="200911191614" tags="words compiler (:) EXECUTE : ; [ ] (HEADER,)" changecount="5">
+<div title="ColonCompilerWords" modifier="sd" created="200911161105" modified="200911250843" tags="words compiler (:) EXECUTE : ; [ ] (HEADER,) XTCOMPILE," changecount="8">
 <pre>!Colon-compiler words
 
 These words form the heart of the compiler, allowing new words to be defined. (The concepts behind colon-definitions is explained [[here|ColonDefinition]].)
@@ -600,8 +600,13 @@ Place the system into [[compilation state|CompileInterpretState]]. Words read fr
 {{{(:)}}} ( -- ) &quot;bracket colon&quot;
 Execute the inner interpreter for the Attila system, running colon-definitions and primitives.
 
-{{{(HEADER,)}}} ( addr n prim -- xt )
-Compile a header for a word with the given name using prim as its primitive behaviour, returning the xt for the new word.</pre>
+{{{(HEADER,)}}} ( addr n prim -- xt ) &quot;bracket header comma&quot;
+Compile a header for a word with the given name using prim as its primitive behaviour, returning the xt for the new word.
+
+{{{XTCOMPILE,}}} ( xt -- ) &quot;ex tee compile comma&quot;
+Compile the compilation token for the given execution token into the code current word. What this does to the code segment depends on the [[memory|MemoryModels]] and [[threading|ThreadingModels]] models: it is typically functionally the same as {{{COMPILE,}}}, but is conceptually different and should not be used interchangeably.
+
+</pre>
 </div>
 <div title="ColonDefinition" modifier="sd" created="200911161730" modified="200911191615" tags="compiler [[colon definition]]" changecount="3">
 <pre>!Colon definitions
@@ -702,7 +707,7 @@ Words that are intended to land on the target live in {{{TARGET}}}. Any word tha
 <div title="DefaultTiddlers" modifier="sd" created="200911151809" modified="200911151810" changecount="2">
 <pre>[[Home]]</pre>
 </div>
-<div title="FlatMemoryModel" modifier="sd" created="200911161048" modified="200911171247" tags="[[memory model]] compiler" changecount="7">
+<div title="FlatMemoryModel" modifier="sd" created="200911161048" modified="200911241040" tags="[[memory model]] compiler" changecount="10">
 <pre>!The flat memory model
 
 The flat memory model is the &quot;standard&quot; Forth memory model, in which all data lives in a single contiguous block that is statically managed as a dictionary.
@@ -710,9 +715,10 @@ The flat memory model is the &quot;standard&quot; Forth memory model, in which a
 |!Access word    |!Field name |!Description                                     |!Size in bytes|
 |                         |name           |name of word                                   |namelen|
 |                         |namelen      |length of name                                 |1|
+|{{{&gt;STATUS}}}  |status          |status flags                                       |1|
 |{{{&gt;LFA}}}         |link               |link to previous word in word list      |1 cell|
 |xt -&gt; {{{&gt;CFA}}} |cf                 |pointer to primitive code to execute |1 cell|
-|{{{&gt;STATUS}}}  |status          |status flags                                       |1|
+|{{{&gt;IBA}}}          |iba               |pointer to the indirect body             |1 cell ({{{REDIRECTABLE}}} words only)|
 |{{{&gt;BODY}}}       |code           |the code of the word                         ||
 
 The execution token (xt) for a word is the address of its code field.
@@ -722,15 +728,15 @@ If the above layout looks a little bizarre, there //are// reasons for the choice
 The flat memory model provides a {{{&gt;NAME}}} word that returns the name of the word represented by an xt as a counted string. This isn't always available, and so should be avoided for applications: but it does simplify debugging somewhat.
 </pre>
 </div>
-<div title="Home" modifier="sd" created="200911151810" modified="200911151814" changecount="3">
+<div title="Home" modifier="sd" created="200911151810" modified="200911241354" changecount="5">
 <pre>!Attila: a re-targetable threaded interpreter
 
 Attila is a compiler system for threaded interpretive languages such as Forth. It is intended as a vehicle for experimenting with language design, and especially as a portable target for novel languages for sensor networks and other embedded distributed systems.
 
-* Support //small devices//, specifically the microcontroller-scale devices used in sensor networks
-* Be //highly portable// to different target platforms and memory models
-* To //support experimentation// into different programming approaches and language styles
-* As far as possible, be //bootstrapped// so that most of the language is written in the language itself, and cross-compiled. Minimise the number of primitives needing C for their implementation
+* Support ''small devices'', specifically the microcontroller-scale devices used in sensor networks
+* Be ''highly portable'' to different target platforms and memory models
+* To '''support experimentation'' into different programming approaches and language styles
+* As far as possible, be ''bootstrapped'' so that most of the language is written in the language itself, and ''cross-compiled''. Minimise the number of primitives needing C for their implementation
 
 
 
@@ -858,6 +864,103 @@ Align the {{{TOP}}} and {{{HERE}}} pointers to cell boundaries. May be a no-op o
 Align addr to the next cell boundary. May be a no-op on some architectures.
  </pre>
 </div>
+<div title="PrimitiveWords" modifier="sd" created="200911241038" modified="200911241352" tags="words PRIMITIVE: ;PRIMITIVE C: ;C [[virtual machine]]" changecount="3">
+<pre>!Primitive words
+
+Primitives live in ordinary Attila source code, but are handled subtly differently by the [[compiler|Compiler]] and the [[cross-compiler|CrossCompiler]].
+
+{{{PRIMITIVE:}}} ( &quot;name&quot; [&quot;primname&quot;] &quot;stack-comment&quot; -- ) &quot;primitive colon&quot;
+Start a primitive definition for the named primitive, with an optional primitive (C-level) name for the generated function, and a stack comment (see below).
+
+{{{;PRIMITIVE}}} ( -- ) &quot;semi primitive&quot;
+End a primitive definition.
+
+{{{C:}}} ( -- ) &quot;see colon&quot;
+Start a literal block of C text that will be passed through &quot;as is&quot; to the virtual machine.
+
+{{{;C}}} ( -- ) &quot;semi see&quot;
+End a literal block
+
+
+!!Stack comments
+
+Stack comments take the usual form, with the proviso that each element must be a valid C identifier and so should only for safety include letters and (trailing) numbers. For example:
+
+&gt; ( a1 a2 b -- c )
+
+but not
+
+&gt; ( a-1 a2 b-1 -- c )
+
+Future versions of Attila may assign special meaning to leading capital letters, so for the moment avoid elements like Da as they might &quot;inherit&quot; a meaning you didn't intend.
+
+</pre>
+</div>
+<div title="Primitives" modifier="sd" created="200911241037" modified="200911241353" tags="compiler primitive" changecount="4">
+<pre>!Primitives
+
+Attila is programmed in itself as far as possible, with the features of the language written in itself and then cross-compiled. At the lowest level, however, Attila needs to perform basic operations that reference &quot;real&quot; machine operations and facilities. This link is provided by ''primitives''.
+
+A primitive is simply a fragment of code in another. lower-level language (typically C) that is compiled into the Attila [[virtual machine|VirtualMachine]] and made accessible as an Attila [[word|Words]]. The [[syntax of primitives|PrimitiveWords]] allows primitives to be coded within ordinary Attila source code, but still be recognised and handled appropriately by the (cross-)compiler.
+
+
+!!Writing primitives
+
+Primitives are written using the {{{PRIMITIVE:}}} construct. This takes the name of the word the primitive provides code for, an optional C-level name for the  primitive (seldom used), and a standard-ish stack comment to show how the primitive affects the data stack.The stack comment is important: unlike in ordinary Attila where it's typically //just// a comment, in primitives it is used to synthesise code that converts Attila-style stack parameters into C-style local parameters.
+
+The code of a primitive is just C code, written in terms of the parameters in the stack comment (and possibly introducing its own local variables.
+
+
+!!Example
+
+Perhaps the simplest primitive are words that provide basic stack manipulations. We can illustrate this by re-implementing {{{NIP}}}, which drops the second word on the stack. This can be implemented in Attila as:
+
+&gt; : NIP ( a b -- b )
+&gt;     SWAP DROP ;
+
+but we'll code it as a primitive. First we need to declare it as a primitive and put in its stack signature, pretty much as above:
+
+&gt; PRIMITIVE: NIP ( a b -- b )
+
+What is the code for this primitive? Actually it doesn't need any, since the stack comment encapsulates all that it does, so that's the end of the primitive:
+
+&gt; ;PRIMITIVE
+
+When run through a primitive compiler, the code generated will look something like this:
+
+&gt; VOID
+&gt; prim23( XT _xt ) {
+&gt;     CELL a;
+&gt;     CELL b;
+&gt;
+&gt;     b = POP_CELL()
+&gt;     a = POP_CELL();
+&gt;
+&gt;     PUSH_CELL(b);
+&gt; }
+
+If you know C, and if you also know that {{{POP_CELL()}}} and {{{PUSH_CELL()}}} manipulate tthe data stack, you can see what the primitive does: pops the top two stack cells and then pushes the first, dropping the second. It's possible to re-code this more efficiently, of course, but it illustrates the approach. The primitive is given a fairly random name at C level, and has run-time access to the xt of the word it implements at Attila level.
+
+We can do a more complex primitive that actually runs real code in its body, rather than simply manipulating the stack. For example, {{{*/MOD}}} is coded as:
+
+&gt; PRIMITIVE: */MOD ( n1 n2 n3 -- r q )
+&gt;     DOUBLE_CELL i;
+&gt;
+&gt;     i = (DOUBLE_CELL) (n1 * n2);
+&gt;     q = (CELL) (i / (DOUBLE_CELL) n3);
+&gt;     r = (CELL) (i % (DOUBLE_CELL) n3);
+&gt; ;PRIMITIVE
+
+Here we declare a new, local variable which we then use in computing the effect of the primitive. The elements in the stack comment appear as variables in the primitive's code, and can be read and assigned to aas required. The compiler will handle placing them on and off the stack.
+
+
+!!Caveat implementor
+
+* Make primitives non-blocking. This will be important for the future when we have multi-tasked Attila implementations.
+* Liberal use of casts reduces compiler warnings and makes genuine errors easier to spot.
+* It's possible to speed-up primitives by bypassing the stack-comment-based generation of parameters. However, it's almost certainly //not// worthwhile for any but the most core primitives. It's occasionally necessary for &quot;odd&quot; words that have a variable stack effect like {{{(FIND)}}}, though.
+</pre>
+</div>
 <div title="RealMemoryWords" modifier="sd" created="200911201129" modified="200911201131" tags="words R! R@ RC! RC@" changecount="2">
 <pre>!Real memory words
 
@@ -915,6 +1018,71 @@ Start the system from scratch. This is typically the first word called when the 
 Warm-start the system after an error. A typical behaviour on an interactive system is to clear the stacks and then start the interactive outer executive (although this would be different on an embedded system). The executive that will be re-started is held in the user variable {{{EXECUTIVE}}}.
 </pre>
 </div>
+<div title="ThingsToConsider" modifier="sd" created="200911250855" modified="200911250855" tags="future todo" changecount="3">
+<pre>!Things to consider
+
+!!Virtual machine
+
+!!Compiler
+
+Should we encapsulate the colon-compiler into its own variant of the outer interpreter? At the moment the interpret-state behaviour is woven-in with the compile-state behaviour within {{{OUTER}}}. This is standard behaviour, but does mean that the colon-compiler is privileged in a way that feels rather un-TIL-like. This could  be changed so that {{{:}}} executes its own outer loop, with {{{[}}} changing back to a nested call to the {{{OUTER}}}. Other compilers could then be implemented cleanly, with compiler behaviour localised into a single word.
+ 
+
+!!Cross-compiler
+
+</pre>
+</div>
+<div title="ThreadedInterpreters" modifier="sd" created="200911241403" modified="200911250855" tags="concepts [[virtual machine]]" changecount="3">
+<pre>!Threaded interpreters
+
+Threaded interpreters are a style of programming language implementation that has enjoyed mixed popularity. Recently they have been eclipsed by the more common &quot;bytecode&quot; style of virtual machine as found in Java and Microsoft CLR. But they remain an exceptionally useful, easily-implemented and efficient way of implementing a language, and have enormous advantages in terms of extensibility.
+
+Part of the problem is that a &quot;threaded interpreter&quot; is neither threaded (in the usual modern sense of having multiple concurrent loci of control) nor interpreted (in having applications decoded from plain text at run-time). This shouldn't mask the innate simplicity and elegance of threaded-interpreted languages (TILs), but means we have to start the explanation from the beginning.
+
+
+!!Language style
+
+Most machines draw a distinction between machine code and other, higher-level code written in that machine code. Constructs in a language like C expand to a large number of machine instructions each time they're used.
+
+A TIL blurs this distinction by building a &quot;virtual&quot; instruction set in which every construction is represented in essentially the same way. This means that there's no space penalty -- and often only a small speed penalty -- in using a complex construction over a simple one: each gets encapsulated in the same way. You don't so much program a TIL as extend the language itself, in the sense that the base and the extensions are essentially indistinguishable to other code. In many TILs this extensibility naturally leads to the compiler being a language extension, making it relatively easy to write new syntax or other language-level functions.
+
+
+!!Threading
+
+...
+
+Each word brings together several elements:
+
+* A name, for use in the definitions of other words
+* A link to a word that will interpret the body (the &quot;code field&quot;)
+* Some TIL code, data, or a combination of the two (the &quot;body&quot;)
+
+Since all TIL elements are words, and all have names, all words have essentially the privileges. Most words are written using TIL code and will use the same &quot;interpreter&quot; (described below); some words will be primitives whose behaviour will be directly coded.
+
+Executing code in a TIL consists of running a word, either interactively or from another word's definition: either way the system behaves in the same way. It loads the code field and calls it, passing a reference to the body. In most cases this will invoke the TIL inner interpreter, which invokes each word in the body in turn in the same way. Control therefore &quot;threads&quot; from the body of one word into another and so on, until the system hits a word whose code field is a primitive that can be executed directly by the machine.
+
+DIAGRAM
+
+
+!!Interpretation and compilation
+
+We said earlier that A TIL compiler is typically regarded as a language extension, as is an interactive interpreter. The core of the language is the &quot;inner&quot; interpreter that threads control through words: //what// it interprets is up for grabs. A typical interactive system includes a command line for evaluating words directly and a compiler by which new words can be defined; an end-user application, or an embedded system, might have neither.
+
+An interactive system provides an &quot;outer&quot; interpreter that reads and executes user input. The outer interpreter in a TIL is typically very simple: it reads the name of a word, looks up its definition, executes it, and then reads the next word when control returns. (Numbers are recognised and handled directly.) The system is said to be in [[interpretation state|InterpretationState]].
+
+How does compilation happen? The execution of some words places the system into [[compilation state|CompilationState]], where rather than //executing// the words it reads, the outer interpreter //compiles// them into a new word definition. This continues until another word is encountered that puts the system back into interpretation state. The important point here is that //there's nothing special about the compiler//: it's just words that the outer interpreter reads and executes. 
+
+
+
+
+!!A TIL virtual machine
+
+(There are [[two basic styles of threading model|ThreadingModels]], but the difference is invisible to programmers who aren't hacking the guts of the system.)
+
+
+
+</pre>
+</div>
 <div title="UserVariableWords" modifier="sd" created="200911171119" modified="200911171130" tags="words USER USERVAR STATE EXECUTIVE BASE LAST TIB OFFSET INPUTSOURCE" changecount="2">
 <pre>!Creating and accessing user variables
 
@@ -941,18 +1109,6 @@ The following user variables are available in interactive systems (embedded syst
 <pre>!Virtual machine
 
 The Attila virtual machine...</pre>
-</div>
-<div title="Word" modifier="sd" created="200911161735" modified="200911161735" tags="compiler" changecount="2">
-<pre>!Words
-
-Programming in Attila consists of defining ''words'', small fragments of code. A word is rather like a procedure in a language such as C, but generally smaller and lighter-weight. Also unlike traditional compiled languages, essentially //everything// in Attila is a word, including the compiler itself, which is to a large extent written  in Attila. There are words whose purpose is to interact with the hardware, words to provide control structures, words to do calculations, and words to facilitate defining other words. This regularity simplifies understanding, once you get used to the idea. 
-
-A word generally consists of a name and a behaviour. Typing in the word's name when the system is in [[interpreting state|CompileInterpretState]] will cause the word's behaviour to be executed immediately. You can think of the set of words available as a vocabulary letting you instruct the computer to perform tasks.
-
-Most words are defined using [[colon definitions|ColonDefinition]].
-
-
-</pre>
 </div>
 <div title="WordHeaderAccessWords" modifier="sd" created="200911161103" modified="200911161729" tags="words compiler &gt;LFA &gt;CFA &gt;STATUS &gt;BODY" changecount="6">
 <pre>!Word header access words
@@ -986,6 +1142,18 @@ This model can be made concrete in a number of different ways, and Attila suppor
 &lt;&lt;tiddler MemoryModels&gt;&gt;
 
 (More to come.)
+</pre>
+</div>
+<div title="Words" modifier="sd" created="200911161735" modified="200911241352" tags="compiler" changecount="3">
+<pre>!Words
+
+Programming in Attila consists of defining ''words'', small fragments of code. A word is rather like a procedure in a language such as C, but generally smaller and lighter-weight. Also unlike traditional compiled languages, essentially //everything// in Attila is a word, including the compiler itself, which is to a large extent written  in Attila. There are words whose purpose is to interact with the hardware, words to provide control structures, words to do calculations, and words to facilitate defining other words. This regularity simplifies understanding, once you get used to the idea. 
+
+A word generally consists of a name and a behaviour. Typing in the word's name when the system is in [[interpreting state|CompileInterpretState]] will cause the word's behaviour to be executed immediately. You can think of the set of words available as a vocabulary letting you instruct the computer to perform tasks.
+
+Most words are defined using [[colon definitions|ColonDefinition]].
+
+
 </pre>
 </div>
 </div>
