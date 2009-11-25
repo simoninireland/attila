@@ -103,7 +103,7 @@
 \ The colon-definer
 : : \ ( "name" -- )
     START-DEFINITION
-    [ ' (:) >CFA @ ] PARSE-WORD HEADER,
+    PARSE-WORD [ ' (:) >CFA @ ] (HEADER,)
     ] ;
 
 \ Complete a colon-definition
