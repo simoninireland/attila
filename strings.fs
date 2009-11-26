@@ -52,6 +52,14 @@
     [COMPILE] TYPE ;
 INTERPRET/COMPILE ."
 
+\ Place a string into data memory
+: S, \ ( addr n -- )
+    DUP C,
+    0 DO
+	DUP C@ C, 1+
+    LOOP
+    DROP ;
+
     
 \ ---------- String operations ----------
 
