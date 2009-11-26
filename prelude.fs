@@ -61,6 +61,7 @@
 #include strings.fs               \ Character and string operations
 #include scratch.fs               \ String scratch area
 #include formatting.fs            \ Formatted numeric output
+#include lists.fs                 \ Linked lists
 
 \ Word list control
 #include wordlists.fs             \ Multiple word lists
