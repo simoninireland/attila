@@ -49,6 +49,10 @@ PRIMITIVE: DROP ( a -- )
 PRIMITIVE: NIP ( a b -- b )
 ;PRIMITIVE
 
+\ Tuck the top element below the second
+PRIMITIVE: TUCK ( a b -- b a b )
+;PRIMITIVE
+
 \ Swap the top two stack items
 PRIMITIVE: SWAP ( a b -- b a )
 ;PRIMITIVE
