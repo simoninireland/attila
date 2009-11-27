@@ -24,7 +24,7 @@
 
 \ Character constants
 32 CONSTANT BL
-13 CONSTANT NL
+10 CONSTANT NL
 
 \ Push the first character of a string onto the stack
 : CHAR \ ( addr len -- c )
@@ -52,12 +52,14 @@
     [COMPILE] TYPE ;
 INTERPRET/COMPILE ."
 
-\ Place a string into data memory
+\ Place a string into data memory. Safe for empty strings
 : S, \ ( addr n -- )
     DUP C,
-    0 DO
-	DUP C@ C, 1+
-    LOOP
+    ?DUP 0> IF
+	0 DO
+	    DUP C@ C, 1+
+	LOOP
+    THEN
     DROP ;
 
     
