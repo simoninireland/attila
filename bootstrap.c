@@ -345,14 +345,14 @@ init_dictionary() {
   NEXT();
 
   // load a file -- same as LOAD
-  DEFINE("INCLUDE"); // ( addr len -- ) 
+  DEFINE("INCLUDED"); // ( addr len -- ) 
   COMPILE("LOAD");
   NEXT();
    
   // compiler directive to include (load) a file
-  DEFINE_IMMEDIATE("#INCLUDE");
+  DEFINE_IMMEDIATE("INCLUDE");
   COMPILE("PARSE-WORD");
-  COMPILE("INCLUDE");
+  COMPILE("INCLUDED");
   NEXT();
 
   // allocate an input buffer
