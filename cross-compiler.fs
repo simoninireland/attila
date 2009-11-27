@@ -23,12 +23,25 @@ TARGET-WORDLIST PARSE-WORD TARGET (VOCABULARY)
 \ Execute a host cross word without changing the search order
 \ State-smart: do the word or compile it
 :NONAME \ ( "name" -- )
+    PARSE-WORD
     CROSS-WORDLIST FIND-IN-WORDLIST
     EXECUTE ;
 :NONAME \ ( "name" -- )
+    PARSE-WORD
     CROSS-WORDLIST FIND-IN-WORDLIST
     COMPILE, ;
 INTERPRET/COMPILE [CROSS]
+
+\ Look up a target word 
+\ State-smart: tick the word or compile it as a literal
+:NONAME \ ( "name" -- )
+    PARSE-WORD
+    CROSS-WORDLIST FIND-IN-WORDLIST ;
+:NONAME \ ( "name" -- )
+    PARSE-WORD
+    CROSS-WORDLIST FIND-IN-WORDLIST
+    POSTPONE LITERAL ;
+INTERPRET/COMPILE ['TARGET]
 
 
 \ ---------- Target description ----------
@@ -79,7 +92,7 @@ VARIABLE (CURRENT-BYTE)
 	LOOP
     THEN ;
 
-\ Additional compilation primitives for cells and strings
+\ Additional compilation primitives for cells, strings
 : COMPILE, \ ( n -- )
     CALIGNED
     #CELL 0 DO
@@ -93,6 +106,8 @@ VARIABLE (CURRENT-BYTE)
 	1+
     LOOP
     DROP ;
+: XTCOMPILE, \ ( xt -- )
+    COMPILE, ;
 
 \ To compile a code field we emit the address of the symbol pointed to 
 : CFA, \ ( cf -- )
@@ -104,8 +119,45 @@ VARIABLE (CURRENT-BYTE)
 : ALIGN CALIGN ;
 : ALIGNED CALIGNED ;
 
+\ ALLOTting data space simply compiles zeros
+: ALLOT ( n -- )
+    0 DO
+	0 C,
+    LOOP ;
+
+
+\ ---------- Target locator words ----------
+
+\ Compile a locator for a primitive
+: PRIMITIVE-LOCATOR \ ( txt "name' -- )
+    ALSO TARGET DEFINITIONS
+    CREATE
+    ,                                 \ body holds target xt of the word
+  DOES> \ ( body -- txt )
+    @ ;
+
+\ Compile a locator for an ordinary (non-primitive) word
+: LOCATOR \ ( addr n "name" -- )
+    ALSO TARGET DEFINITIONS
+    CREATE
+    DUP C,
+    HERE OVER ALLOT SWAP CMOVE        \ body holds primitive name as a counted string
+  DOES> \ ( body -- addr n )
+    COUNT ;
+
 
 \ ---------- Higher-level compilation into the target ----------
 
 
+
+
+
+\ ---------- Top-level compilation into the target ----------
+
+\ Begin cross-compilation of a new colon definition
+: : \ ( "name" -- xt )
+    PARSE-WORD
+    ['TARGET] (:) CFA@
+    (HEADER,) ;
+    
 

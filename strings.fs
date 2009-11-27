@@ -65,10 +65,17 @@ INTERPRET/COMPILE ."
     
 \ ---------- String operations ----------
 
-\ Turn an address into a counted string
+\ The null string
+: NULLSTRING 0 0 ;
+
+\ Turn an address into a counted string. Safe for null stringd
 : COUNT \ ( addr -- addr' len )
-    DUP C@
-    SWAP 1+ SWAP ;
+    DUP 0= IF
+	DROP NULLSTRING
+    ELSE
+	DUP C@
+	SWAP 1+ SWAP
+    THEN ;
 
 \ Check two strings for equality
 : S= \ ( addr1 len1 addr2 len2 -- f )

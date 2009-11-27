@@ -455,10 +455,13 @@ PRIMITIVE: REFILL fill_tib ( -- f )
 \ Place the address of the current input point in the TIB and the
 \ number of remaining characters onto the stack
 PRIMITIVE: SOURCE ( -- addr n )
-  char *tib = (char *) (*(user_variable(USER_TIB)));
-  int offset = (int) (*(user_variable(USER_OFFSET)));
-  char *point = ((offset == -1) ? tib : tib + offset);
-  n = (offset == -1) ? 0 : strlen(point);
+  char *tib;
+  int offset;
+      
+  tib = (char *) (*(user_variable(USER_TIB)));
+  offset = (int) (*(user_variable(USER_OFFSET)));
+  addr = (CELL) ((offset == -1) ? tib : tib + offset);
+  n = (CELL) ((offset == -1) ? 0 : strlen((char *) addr));
 ;PRIMITIVE
 
 
