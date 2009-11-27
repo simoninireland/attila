@@ -2,7 +2,7 @@
 
 \ The primitive cross-compiler
 \
-\ Primitives are stored in Attila source files alongide Attila code.
+\ Primitives are stored in Attila source files alongside Attila code.
 \ When loaded into the cross-compiler they are converted into
 \ stylised C functions and output to a file ready for later compilation.
 \
@@ -24,28 +24,34 @@
     0 ,    \ address of list of results
     0 , ;  \ address of code text
 
-\ Compile the various elements in the locator, fixing its pointers
+\ Compile the various elements in the locator, fixing its pointers. These
+\ *must* be called immediately after the locator is created using PRIMITIVE-LOCATOR
+\ to build its body. See the definition of PRIMITIVE: below
 : PRIMITIVE-NAME, \ ( addr n xt -- )
     DROP S, ;
-: PRIMITIVE-PARAMETERS, \ ( xt -- elem )
-    0 CELL-ELEMENT
-    DUP -ROT ! ;
+: PRIMITIVE-ARGUMENTS, \ ( xt -- elem )
+    NULLSTRING STRING-ELEMENT
+    DUP -ROT >BODY ! ;
 : PRIMITIVE-RESULTS, \ ( xt -- elem )
-    0 CELL-ELEMENT
-    DUP -ROT 1 CELLS + ! ;
-    
+    NULLSTRING STRING-ELEMENT
+    DUP -ROT >BODY 1 CELLS + ! ;
+: PRIMITIVE-TEXT, \ ( addr n xt -- )
+    HERE >R
+    ROT S, R> SWAP
+    >BODY 2 CELLS + ! ;
+
 \ Return the primitive name
 : PRIMITIVE-NAME \ ( loc -- addr n )
     3 CELLS + COUNT ;
 
 \ Return lists of parameters and results
 : PRIMITIVE-ARGUMENTS \ ( loc -- elem )
-    @ ;
+    @ ELEMENT> ;
 : PRIMITIVE-RESULTS \ ( loc -- elem )
-    1 CELLS + @ ;
+    1 CELLS + @ ELEMENT> ;
 
 \ Return the primitive code text
-: PRIMITIVE-CODE-TEXT \ ( loc -- addr n )
+: PRIMITIVE-TEXT \ ( loc -- addr n )
     2 CELLS + @ COUNT ;
 
 
@@ -73,11 +79,35 @@
     2 PICK + SWAP C!
     CMOVE ;
 
+\ Increment a string count
+: C1+! \ ( addr -- )
+    DUP C@ 1+ SWAP C! ;
+
+\ Catenate newline to the (counted) string
+: SNL+ \ ( caddr -- )
+    NL OVER CHARACTER-AFTER C!
+    C1+! ;
+
+\ Test whether a list of strings contains the given string, working
+\ *backwards* from the given node
+: STRING-LIST-CONTAINS-BEFORE \ ( addr n elem -- f )
+    BEGIN
+	DUP 0<>
+    WHILE
+	    DUP 2OVER -ROT     \ addr n elem addr n elem
+	    STRING-ELEMENT@ S= IF
+		DROP TRUE LEAVE
+	    ELSE
+		<ELEMENT
+	    THEN
+    REPEAT
+    ROT 2DROP ;
+
 
 \ ---------- Primitive name generator ----------
 
 VARIABLE (#PRIM) 0 (#PRIM) !    \ uniques
-DATA (PRIMNAME) 256 ALLOT       \ buffer for name
+DATA (PRIMNAME) 32 ALLOT       \ buffer for name
 
 \ Create a new primitive name
 : PRIMNAME \ ( -- addr n )
@@ -89,6 +119,9 @@ DATA (PRIMNAME) 256 ALLOT       \ buffer for name
 
 \ ---------- Primitive parser ----------
 
+\ Buffer for the text
+DATA (PRIMTEXT) 2048 ALLOT
+
 \ Parse a primitive, creating a locator word that holds all its details
 : PRIMITIVE:
     \ ALSO TARGET DEFINITIONS
@@ -99,7 +132,7 @@ DATA (PRIMNAME) 256 ALLOT       \ buffer for name
     THEN
     LASTXT PRIMITIVE-NAME,
 
-    LASTXT PRIMITIVE-PARAMETERS,   \ compile the parameters list
+    LASTXT PRIMITIVE-ARGUMENTS,    \ compile the parameters list
     BEGIN
 	PARSE-WORD S" --" S=? NOT
     WHILE
@@ -107,19 +140,102 @@ DATA (PRIMNAME) 256 ALLOT       \ buffer for name
     REPEAT
     2DROP DROP
 
-    LASTXT PRIMITIVE-RESULTS,       \ compile the results list
+    LASTXT PRIMITIVE-RESULTS,      \ compile the results list
     BEGIN
 	PARSE-WORD S" )" S=? NOT
     WHILE
 	    STRING-ELEMENT DUP -ROT ELEMENT+
     REPEAT
     2DROP DROP
-;
 
-    
-	    
+    0 (PRIMTEXT) C!               \ compile the text
+    (PRIMTEXT)
+    BEGIN
+	DUP
+	REFILL IF
+	    SOURCE 1- S" ;PRIMITIVE" S=? IF
+		2DROP DROP
+		REFILL DROP
+		FALSE
+	    ELSE
+		TRUE
+	    THEN
+	ELSE
+	    S" Input ended before ;PRIMITIVE" ABORT
+	THEN
+    WHILE
+	    -ROT S+
+	    DUP SNL+
+    REPEAT
+    COUNT LASTXT PRIMITIVE-TEXT, ;
 
 
 \ ---------- Primitive generation ----------
 
-   
+\ Generate the declarations for arguments and results
+: GENERATE-PRIMITIVE-VARIABLES \ ( loc -- )
+    DUP PRIMITIVE-ARGUMENTS
+    BEGIN                                        \ arguments
+	?DUP 0<>
+    WHILE
+	    DUP STRING-ELEMENT@
+	    2 PICK <ELEMENT STRING-LIST-CONTAINS-BEFORE NOT IF
+		S" CELL " TYPE
+		DUP STRING-ELEMENT@ TYPE
+		S" ;" TYPE CR
+	    THEN
+	    ELEMENT>
+    REPEAT
+
+    DUP PRIMITIVE-ARGUMENTS ELEMENT>>            \ results
+    SWAP PRIMITIVE-RESULTS
+    BEGIN
+	?DUP 0<>
+    WHILE
+	    DUP STRING-ELEMENT@                                        \ args res addr n
+	    2DUP 4 PICK <ELEMENT STRING-LIST-CONTAINS-BEFORE NOT IF    \ args res addr n 
+		3 PICK STRING-LIST-CONTAINS-BEFORE NOT IF              \ args res
+		    S" CELL " TYPE
+		    DUP STRING-ELEMENT@ TYPE
+		    S" ;" TYPE CR
+		THEN
+	    THEN
+	    ELEMENT>
+    REPEAT
+    DROP ;
+
+\ Generate the stack pops for the arguments
+: GENERATE-PRIMITIVE-ARGUMENT-POPS \ ( loc -- )
+    PRIMITIVE-ARGUMENTS
+    BEGIN
+	?DUP 0<>
+    WHILE
+	    DUP STRING-ELEMENT@ TYPE
+	    SPACE S" = POP_CELL();" TYPE CR
+	    ELEMENT>
+    REPEAT ;
+
+\ Generate the stack pushes for the results
+: GENERATE-PRIMITIVE-RESULT-POPS \ ( loc -- )
+    PRIMITIVE-RESULTS
+    BEGIN
+	?DUP 0<>
+    WHILE
+	    S" PUSH_CELL(" TYPE
+	    DUP STRING-ELEMENT@ TYPE
+	    S" );" TYPE CR
+	    ELEMENT>
+    REPEAT ;
+
+\ Generate the C source code for a primitive
+: GENERATE-PRIMITIVE \ ( loc -- )
+    S" VOID" TYPE CR
+    DUP PRIMITIVE-NAME TYPE S" ( XT _xt ) {" TYPE CR
+    DUP GENERATE-PRIMITIVE-VARIABLES
+    DUP GENERATE-PRIMITIVE-ARGUMENT-POPS
+    DUP PRIMITIVE-TEXT TYPE CR
+    DUP GENERATE-PRIMITIVE-RESULT-POPS
+    S" }" TYPE CR CR
+    DROP ;
+
+    
