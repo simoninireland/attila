@@ -31,46 +31,46 @@
 \ indicated in the comments for the files in the distribution).
 
 \ "Primitives" outside the VM core, mainly wrappers for "real" primitives
-#include base.fs
-#include conditionals.fs          \ IF ... ELSE ... THEN
+include base.fs
+include conditionals.fs          \ IF ... ELSE ... THEN
 
 \ Advanced compilation words
-#include createdoes.fs            \ CREATE ... DOES>
-#include interpret-compile.fs     \ INTERPRET-COMPILE
-#include variables.fs             \ VARIABLE, CONSTANT, VALUE and USER
+include createdoes.fs            \ CREATE ... DOES>
+include interpret-compile.fs     \ INTERPRET-COMPILE
+include variables.fs             \ VARIABLE, CONSTANT, VALUE and USER
 
 \ The VM
-#include vm.fs
+include vm.fs
 
 \ Compilation helpers
-#include defer.fs                 \ DEFER ... IS
+include defer.fs                 \ DEFER ... IS
 
 \ Data structures
-#include stacks.fs                \ General stacks
+include stacks.fs                \ General stacks
 
 \ Control structures
-#include cs-stack.fs              \ Control structures stack
-#include loops.fs                 \ BEGIN ... AGAIN
+include cs-stack.fs              \ Control structures stack
+include loops.fs                 \ BEGIN ... AGAIN
                                   \ BEGIN ... UNTIL
                                   \ BEGIN ... WHILE ... REPEAT
-#include counted-loops.fs         \ DO ... LOOP
+include counted-loops.fs         \ DO ... LOOP
                                   \ DO ... +LOOP
-#include case.fs                  \ CASE ... OF ... ENDOF ... ENDCASE
+include case.fs                  \ CASE ... OF ... ENDOF ... ENDCASE
 
 \ Data types
-#include strings.fs               \ Character and string operations
-#include scratch.fs               \ String scratch area
-#include formatting.fs            \ Formatted numeric output
-#include lists.fs                 \ Linked lists
+include strings.fs               \ Character and string operations
+include scratch.fs               \ String scratch area
+include formatting.fs            \ Formatted numeric output
+include lists.fs                 \ Linked lists
 
 \ Word list control
-#include wordlists.fs             \ Multiple word lists
+include wordlists.fs             \ Multiple word lists
 
 \ Dynamic memory
-\ #include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
+\ include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
 
 \ Local variables
-\ #include locals-base.fs           \ base definitions
-\ #include ans-locals.fs            \ LOCALS| ... | for symbolic local definitions
-\ #include locals.fs                \ stack-comment-style locals
+\ include locals-base.fs           \ base definitions
+\ include ans-locals.fs            \ LOCALS| ... | for symbolic local definitions
+\ include locals.fs                \ stack-comment-style locals
 
