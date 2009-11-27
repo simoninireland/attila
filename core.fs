@@ -225,7 +225,7 @@ PRIMITIVE: MAX ( n1 n2 -- n3 )
     n3 = (n1 > n2) ? n1 : n2;
 ;PRIMITIVE
 
-\Extract the smaller of two numbers
+\ Extract the smaller of two numbers
 PRIMITIVE: MIN ( n1 n2 -- n3 )
     n3 = (n1 < n2) ? n1 : n2;
 ;PRIMITIVE
@@ -328,7 +328,7 @@ PRIMITIVE: 1- ( n1 -- n2 ) " one minus"
 ;PRIMITIVE
 
 \ Double the top stack item    
-2* ( n1 -- n2 ) " two times"
+PRIMITIVE: 2* ( n1 -- n2 ) " two times"
     n2 = n1 << 1;
 ;PRIMITIVE
 
