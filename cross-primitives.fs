@@ -187,7 +187,9 @@ DATA (PRIMTEXT) 2048 ALLOT
 	    ELEMENT>
     REPEAT
 
-    DUP PRIMITIVE-ARGUMENTS ELEMENT>>            \ results
+    DUP PRIMITIVE-ARGUMENTS DUP 0<> IF          \ results
+	ELEMENT>>
+    THEN
     SWAP PRIMITIVE-RESULTS
     BEGIN
 	?DUP 0<>
@@ -206,14 +208,20 @@ DATA (PRIMTEXT) 2048 ALLOT
 
 \ Generate the stack pops for the arguments
 : GENERATE-PRIMITIVE-ARGUMENT-POPS \ ( loc -- )
-    PRIMITIVE-ARGUMENTS
-    BEGIN
-	?DUP 0<>
-    WHILE
-	    DUP STRING-ELEMENT@ TYPE
-	    SPACE S" = POP_CELL();" TYPE CR
-	    ELEMENT>
-    REPEAT ;
+    PRIMITIVE-ARGUMENTS ?DUP 0<> IF
+	ELEMENT>>
+	BEGIN
+	    ?DUP 0<>
+	WHILE
+		DUP STRING-ELEMENT@ ?DUP 0> IF
+		    TYPE
+		    SPACE S" = POP_CELL();" TYPE CR
+		ELSE
+		    DROP
+		THEN
+		<ELEMENT
+	REPEAT
+    THEN ;
 
 \ Generate the stack pushes for the results
 : GENERATE-PRIMITIVE-RESULT-POPS \ ( loc -- )
