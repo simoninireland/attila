@@ -17,20 +17,28 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Word lists
+\ Separated wordlists.
 \
-\ Word lists allow the available words to be segmented in a fairly
+\ Wordlists allow the available words to be segmented in a fairly
 \ weak fashion. A word list order controls the search order for words
 \ at compile-time, allowing one definition to mask another.
 \
-\ The ROOT-WORDLIST includes everything defined at the point that
-\ wordlists.fs is loaded, and is always the base vocabulary in the
-\ search order. Since this will include the word list management words
-\ themselves, we then can't forget the core of the system by accident.
+\ The ROOT-WORDLIST contains the wordlist words and  is always the base
+\ vocabulary in the search order. Since this will include the wordlist
+\ management words themselves, we can't forget the core of the system by
+\ accident. The FORTH-WORDLIST contains the rest of the words defined
+\ up until this file is included, and is made current so it gets all subsequent
+\ words (unless you choose to change the current wordlist). This
+\ separation means it's possible to not search the main system (by not having
+\ FORSTH-WORDLIST in the search order) while still being able to get it back
+\ (by using words from the ROOT-WORDLIST, which is always accessible).
 \
-\ A vocabulary is a word that establishes a word list on the top of the
+\ A vocabulary is a word that establishes a wordlist on the top of the
 \ search order.
 \ Requires: createdoes.fs, variables.fs, strings.fs, loops.fs, counted-loops.fs
+
+\ Grab the word on top of the system for use later
+LASTXT
 
 \ ---------- Word list creation and access ----------
 
@@ -39,24 +47,27 @@
 \ in the search order
 10 VALUE MAX-WORDLISTS
 
-\ The word list search order
+\ Grab this word as the bootom of the root wordlist
+LASTXT
+
+\ The wordlist search order
 MAX-WORDLISTS STACK WORDLISTS
 
-\ The current word list that gets new definitions
+\ The current wordlist that gets new definitions
 VARIABLE CURRENT-WORDLIST
 
-\ Check if we have word lists other than ROOT available
+\ Check if we have wordlists other than ROOT available
 : (OTHER-WORDLISTS?) \ ( -- f )
     WORDLISTS #ST 0> ;
 
-\ Create a new, empty, anonymous word list. We use the word list's body
+\ Create a new, empty, anonymous wordlist. We use the word list's body
 \ pointer as its identifier. The body stores the xt of the last
 \ word added to this word list
 : WORDLIST \ ( -- wid )
     HERE
     0 , ;     \ last xt defined in this word list
 
-\ Retrieve the xt of the top-most word on a word list, or 0 if
+\ Retrieve the xt of the top-most word on a wordlist, or 0 if
 \ the word list is empty
 : WID> \ ( wid -- xt )
     @ ;
@@ -68,20 +79,22 @@ VARIABLE CURRENT-WORDLIST
 
 \ ---------- Word list management ----------
 
-\ A reference to the root wordlist
+\ A reference to the root wordlist (holding the wordlist words) and the
+\ main (Forth) wordlist holding the rest of the system 
 WORDLIST CONSTANT ROOT-WORDLIST
+WORDLIST CONSTANT FORTH-WORDLIST
 
-\ Return the word list receiving definitions
+\ Return the wordlist receiving definitions
 : GET-CURRENT \ ( -- wid )
     CURRENT @ ;
 
-\ Set the word list receiving definitions, updating LAST to reflect the last word
+\ Set the wordlist receiving definitions, updating LAST to reflect the last word
 \ defined in this wordlist
 : SET-CURRENT \ ( wid -- )
     DUP CURRENT !
     WID> LAST ! ;
 
-\ Retrieve the top-most word list in the search order without affecting it
+\ Retrieve the top-most wordlist in the search order without affecting it
 : CONTEXT
     (OTHER-WORDLISTS?) IF
 	WORDLISTS ST@
@@ -93,7 +106,7 @@ WORDLIST CONSTANT ROOT-WORDLIST
 : ALSO \ ( -- )
     CONTEXT WORDLISTS >ST ;
 
-\ Make the top-most word list current for definitions, dropping
+\ Make the top-most wordlist current for definitions, dropping
 \ it from the search order in the process
 : DEFINITIONS \ (  -- )
     CONTEXT SET-CURRENT
@@ -101,12 +114,12 @@ WORDLIST CONSTANT ROOT-WORDLIST
 	WORDLISTS ST-DROP
     THEN ;
 
-\ Remove all word lists from the search order except root
+\ Remove all wordlists from the search order except root
 : ONLY \ ( -- )
     WORDLISTS #ST WORDLISTS ST-NDROP ;
 
-\ Drop the top-most word list from the search order. This does not affect the
-\ current word list: it is possible (though unusual) to compile into a word
+\ Drop the top-most wordlist from the search order. This does not affect the
+\ current wordlist: it is possible (though unusual) to compile into a word
 \ list we don't search
 : PREVIOUS
     (OTHER-WORDLISTS?) IF
@@ -114,23 +127,23 @@ WORDLIST CONSTANT ROOT-WORDLIST
     THEN ;
 
 \ Retrieve the order onto the stack topped with the number of
-\ word lists pushed. The root wordlists is always at the bottom of
+\ wordlists pushed. The root wordlists is always at the bottom of
 \ the order
 : GET-ORDER \ ( -- widn-1 ...wid0 n )
     ROOT-WORDLIST
     WORDLISTS ST-ALL> 1+ ;
 
-\ Replace the top word list in the search order with the given one
+\ Replace the top wordlist in the search order with the given one
 : >ORDER ( wid -- )
     (OTHER-WORDLISTS?) IF
-	WORDLISTS ST-DROP    \ drop top word list if it's not just root on the stack
+	WORDLISTS ST-DROP    \ drop top wordlist if it's not just root on the stack
     THEN
     WORDLISTS >ST ;
 
 
 \ ---------- Finding ----------
 
-\ Find the definition of a word in a word list
+\ Find the definition of a word in a wordlist
 \ sd: slightly non-standard as we don't use counted addresses
 : SEARCH-WORDLIST \ ( addr n wid -- 0 | xt 1 | xt -1 )
     WID> ?DUP IF
@@ -168,7 +181,7 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
 : .WORD \ ( xt -- )
     >NAME TYPE SPACE ;
 
-\ List all the words in a word list
+\ List all the words in a wordlist
 : .WORDLIST ( wid -- )
     WID> ?DUP IF
 	BEGIN
@@ -179,7 +192,7 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
     THEN ;
 
 \ List all the words in the current search order, ignoring adjacent
-\ duplicate word lists (but *not* ignoring non-adjacent duplicates)
+\ duplicate wordlists (but *not* ignoring non-adjacent duplicates)
 : WORDS \ ( -- )
     0 GET-ORDER DROP BEGIN
 	?DUP 0<>
@@ -205,26 +218,34 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
     WORDLIST
     PARSE-WORD (VOCABULARY) ;
 
-\ A vocabulary for the root word list
+\ Vocabulary words for the root and Forth wordlists
 ROOT-WORDLIST PARSE-WORD ROOT (VOCABULARY)
+FORTH-WORDLIST PARSE-WORD FORTH (VOCABULARY)
 
 
 \ ---------- Set-up ----------
 
-\ Update current word list with each new word defined by chaining
+\ Update current wordlist with each new word defined by chaining
 \ the appropriate behaviour onto the front of the (END-DEFINITION) hook
 : (END-DEFINITION-WORDLISTS) \ ( xt -- xt )
     DUP GET-CURRENT >WID
     [ (END-DEFINITION) @ ] LITERAL EXECUTE ;
 ' (END-DEFINITION-WORDLISTS) (END-DEFINITION) !
 
-\ Patch the root wordlist to include everything defined to date
-LASTXT ROOT-WORDLIST >WID
+\ Patch the Forth wordlist to include everything defined up to this point,
+\ which includes the root wordlist
+LASTXT FORTH-WORDLIST >WID
 
-\ ROOT-WORDLIST is searched and current 
-ONLY ALSO DEFINITIONS
+\ FORTH-WORDLIST is searched and current
+ONLY FORTH ALSO DEFINITIONS
 
 \ Update the global FIND behaviour to be wordlist-enabled
 ' (FIND-IN-WORDLISTS) (FIND-BEHAVIOUR) !
 
-
+\ Finally we separate the root and Forth wordlists by patching the top
+\ of the root wordlist to be the last word defined, breaking the word
+\ chain at the first word in this file, and patching the top of the
+\ Forth wordlist to be the first word before this file. Phew!
+LASTXT ROOT-WORDLIST >WID
+0 SWAP >LFA !
+FORTH-WORDLIST >WID
