@@ -511,8 +511,8 @@ Also see [[AdvancedOptions]]</pre>
 </div>
 <!--POST-SHADOWAREA-->
 <div id="storeArea">
-<div title="AboutThisDocumentation" modifier="sd" created="200911161013" modified="200911161016" changecount="2">
-<pre>!About this documentation
+<div title="AboutThisDocumentation" modifier="sd" created="200911161013" modified="200912021548" changecount="3">
+<pre>!About the Attila documentation
 
 You're looking at it! The Attila web site, http://www.attila-language.org, is implemented using [[TiddlyWiki|http://www.tiddlywiki.org]], which places an entire web site into a single interactive HTML file. If you save this file (File &gt;&gt; Save as...) to your machine, you have immediate local access to all the documentation for Attila.
 
@@ -573,7 +573,7 @@ primgen is a Perl script that generates a bootstrap virtual machine.
 
 </pre>
 </div>
-<div title="ColonCompilerWords" modifier="sd" created="200911161105" modified="200911250843" tags="words compiler (:) EXECUTE : ; [ ] (HEADER,) XTCOMPILE," changecount="8">
+<div title="ColonCompilerWords" modifier="sd" created="200911161105" modified="200912021543" tags="words compiler (:) EXECUTE : ; [ ] (HEADER,)" changecount="9">
 <pre>!Colon-compiler words
 
 These words form the heart of the compiler, allowing new words to be defined. (The concepts behind colon-definitions is explained [[here|ColonDefinition]].)
@@ -602,9 +602,6 @@ Execute the inner interpreter for the Attila system, running colon-definitions a
 
 {{{(HEADER,)}}} ( addr n prim -- xt ) &quot;bracket header comma&quot;
 Compile a header for a word with the given name using prim as its primitive behaviour, returning the xt for the new word.
-
-{{{XTCOMPILE,}}} ( xt -- ) &quot;ex tee compile comma&quot;
-Compile the compilation token for the given execution token into the code current word. What this does to the code segment depends on the [[memory|MemoryModels]] and [[threading|ThreadingModels]] models: it is typically functionally the same as {{{COMPILE,}}}, but is conceptually different and should not be used interchangeably.
 
 </pre>
 </div>
@@ -648,9 +645,10 @@ The process the compiler follows when it executes a colon definition begins with
 
 </pre>
 </div>
-<div title="Copyright" modifier="sd" created="200911151816" modified="200911151817" changecount="3">
+<div title="Copyright" modifier="sd" created="200911151816" modified="200911271535" changecount="4">
 <pre>!Copyright
 
+This file is part of Attila, a retargetable threaded interpreter
 Copyright (c) 2007 -- 2009, [[Simon Dobson|mailto:simon.dobson@computer.org]]. All rights reserved.
 
 Attila is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
@@ -661,8 +659,13 @@ You should have received a copy of the GNU General Public License along with thi
 
 </pre>
 </div>
-<div title="CrossCompiler" modifier="sd" created="200911161003" modified="200911191706" tags="compiler cross-compiler [[virtual machine]]" changecount="6">
+<div title="CrossCompiler" modifier="sd" created="200911161003" modified="200912021601" tags="compiler cross-compiler [[virtual machine]]" changecount="12">
 <pre>!The Attila cross-compiler
+
+The main goal of Attila is to be re-targetable, to be used to create languages and services for systems other than regular development platforms. This particularly includes small systems like wireless sensor network nodes and embedded sensors, which are traditionally programmed in C: using Attila we hope to be able to experiment with more advancaed, alternative language designs for these systems, using Attila as a target for programming language research.
+
+The way in which we re-target Attila -- and indeed the way in which we bootstrap it initially -- is using a cross-compiler. This section explains the concept of cross-compilation, provides a user-level guide to using Attila's cross-compiler, and explains the innards of the cross-compiler to aid extension and experimentation.
+
 
 !!Terminology
 
@@ -677,31 +680,39 @@ A ''cross-compiler'' is a compiler that compiles code for a machine other than t
 
 !!Design and implementation
 
-!!!Overview
+The design and implementation of a cross-compiler are conceptually quite delicate, in that they involve concepts appearing multiple times and in different guises.
 
-There are essentially three elements to an Attila system:
+!!!Approach
 
-# The primitives providing raw access to the underlying machine
-# The dictionary defining words at Attila level both primitive and colon- (and other) definitions
-# The look-up mechanism for finding and resolving words in the target
+...
 
-Why the third element? The target may not maintain a proper dictionary itself, in the sense of having names, link fields and the rest. On embedded systems these are often omitted to save space, since the application isn't interactive anyway. The cross-compiler therefore maintains its &quot;dictionary&quot; in the host, and //may// (or may not) store an equivalent structure on the target.
+The stages of cross-compilation are as follows. Firstly we need a full, working Attila ''host system''. This includes words for allocating and accessing memory, defining words and other core features. On top of this, we construct a ''target image'' which will hold the image of the Attila system we are attempting to cross-compile. Essentially the target image is a representation of the target system, held in the memory of the host, and will be initially empty.
 
-Primitives are provided as C code, typically extracted from Attila source code by looking for {{{PRIMITIVE:}}} and {{{C:}}} blocks. These fragments of code are turned into a standard form and emitted to a C file for compilation.
+We then define the words needed to ''populate'' the target image. This typically includes low-level memory access and compilation words like {{{COMPILE,}}} and {{{,}}}, and also any higher-level compilation words like {{{CREATE}}} and {{{:}}} -- the words we normally associate with a compiler. Executing these words will compile code and data -- but into the target image rather than into the host. Clearly these ''cross-compilation'' words should have the same names as the &quot;normal&quot; ''compilation'' words to avoid our having to learn a new vocabulary; equally clearly this is a source of potential confusion. We place the cross-compilation words into their own word list, {{{CROSS}}}. Words in {{{CROSS}}} will build code and data in the target image, never in the host.
 
-The target image contains all the Attila-level data, including word headers for the primitives. When cross-compiling any &quot;compilation&quot; results in data being written into an image of the target, which is later emitted as a C data structure.
+We can then use the {{{CROSS}}} words to compile our target code, simply by loading the relevant source code using {{{INCLUDE}}}. We load //all// the code we want to land in the target image, including the complete base system and virtual machine. The cross-compiler includes definitions for {{{PRIMITIVE:}}} and other words that allow virtual machine primitives to be defined. The result is that the target image is ''populated'' with the words we want to include -- and //only// those words.
+
+We need to be able to find words we've definined in the target for use in later words in the target, so we maintain a word list called {{{TARGET}}} that holds ''locator words'' for each word we define in the target image. So {{{TARGET}}} essentially holds the dictionary that the //target// will have access to,  held in a form that the //host//, and more specifically the //cross-compiler//, can use. 
+
+The code we load will generally include the words like {{{#CELL}}} that define the architecture of the system. These need not -- and typically //will// not -- be the same as the host: we might be cross-compiling on a workstation for deployment on a microcontroller, for example.
+
+Since the target image is not &quot;real&quot; Attila code as far as the host is concerned, it clearly can't be executed: it might be intended for a completely different machine architecture. For most languages this wouldn't be a problem, but for Attila it is, since a lot of Forth code involves defining new defining words. If we define a new defining word for the target, we can't use it to define //more// target words because that would involve executing it on the host. The solution to this is to load the defining words into the cross-compiler -- into {{{CROSS}}} -- so that they can be used. We can then load them into the target too, so we both define //and// use the //same// defining words. (Actually you can use the new defining words without loading into the target if you don't need them later: a lot of defining words are only needed at compile-time, so an embedded system probably wouldn't need them.) We usually load the words that define the target architecture and any defining words we want into {{{CROSS}}} early on, and then load and compile all the target code.
+
+All this means that we can often end up with the same word defined three times: in the main body of Attila, in the cross-compiler, and then again in the target image. Keeping these three definitions separate, and making sure we find the right one each time, is the job of the cross-compiler. It does this using [[word lists|Wordlists]], and as a consequence word lists are very hairy to cross-compile.
 
 
-!!!Targets and architectures
+</pre>
+</div>
+<div title="CrossCompilerFriendliness" modifier="sd" created="200912021555" modified="200912021603" tags="cross-compiler" changecount="7">
+<pre>!Writing cross-compiler-friendly code
 
-!!!Use of word lists
+The cross-compiler is intended to use as much &quot;normal&quot; code as possible, but there are a few //gotchas// for the unwary. These can largely be avoided by following some fairly un-intrusive guidelines:
 
-The cross-compiler maintains two word lists relating to the target, in addition to the words it has defined with reference to the host.
-
-Words that support cross-compilation live in {{{CROSS}}}. This includes the colon-compiler, the {{{IMMEDIATE}}} words used to define control structures, and some other supporting words.
-
-Words that are intended to land on the target live in {{{TARGET}}}. Any word that the cross-compiler compiles for the target gets placed here (although not actually as code -- see later). So listing this word list ({{{TARGET CONTEXT .WORDLIST}}}) will show the dictionary that will land on the target once it's built.
-
+# ''Separate defining words''. Words like {{{CREATE}}} that are used at compile-time to build other words are generally loaded into both a target image //and// the cross-compiler itself. This is much easier if the words are kept separate in their own files, so they can be loaded (or not) as required.
+# ''Be careful with {{{XTCOMPILE,}}}, {{{ACOMPILE,}}} and the like''. These words are //usually// all equivalent, but //can// be different, and are especially //likely// to be different when cross-compiling. In the gcc back-ends, for example, {{{ACOMPILE,}}} compiles the address of a C-level data structure, //not// simply a number; in a direct-threaded implementation, {{{XTCOMPILE,}}} will compile a machine-code jump //not// simply an execution token as an address.It's easy to get sloppy with the concepts involved, and they'll only cause problems when cross-compiling. Fortunately the times you'll ever need these words is pretty small.
+# ''Calculate things that involve the low-level architecture''. So if you need to allocate memory for three cells, do {{{3 CELLS ALLOT}}} and don't assume that cells are eight bytes long (as they are on a modern workstation) or two bytes long (as they are on a microcontroller).
+# ''When you can, load from source at run-time''. On a modern machine compilation is cheap, and it maximises flexibility to load and compile as much of the system as possible from source code when you need it. The [[standard prelude|StandardPrelude]]  is the canonical example of this, and can load a pretty much complete system on demand.
+# ''Minimise the size of the cross-compiled target image''. This is really just the flip-side of the last point. Minimising what you cross-compile maximises the &quot;standard&quot; bits of the system that are loaded from source code. (Of course this doesn't work if you're doing embedded programming, but then you need to minimise for other reasons anyway.)
 </pre>
 </div>
 <div title="DefaultTiddlers" modifier="sd" created="200911151809" modified="200911151810" changecount="2">
@@ -728,7 +739,7 @@ If the above layout looks a little bizarre, there //are// reasons for the choice
 The flat memory model provides a {{{&gt;NAME}}} word that returns the name of the word represented by an xt as a counted string. This isn't always available, and so should be avoided for applications: but it does simplify debugging somewhat.
 </pre>
 </div>
-<div title="Home" modifier="sd" created="200911151810" modified="200911241354" changecount="5">
+<div title="Home" modifier="sd" created="200911151810" modified="200912021546" changecount="6">
 <pre>!Attila: a re-targetable threaded interpreter
 
 Attila is a compiler system for threaded interpretive languages such as Forth. It is intended as a vehicle for experimenting with language design, and especially as a portable target for novel languages for sensor networks and other embedded distributed systems.
@@ -737,6 +748,8 @@ Attila is a compiler system for threaded interpretive languages such as Forth. I
 * Be ''highly portable'' to different target platforms and memory models
 * To '''support experimentation'' into different programming approaches and language styles
 * As far as possible, be ''bootstrapped'' so that most of the language is written in the language itself, and ''cross-compiled''. Minimise the number of primitives needing C for their implementation
+* Be ''standards-compliant'', complying to the latest Forth standard as far as possible to allow re-use of existing code
+
 
 
 
@@ -802,7 +815,7 @@ Legalities
 <pre>* [[Flat, single block for all code and data|FlatMemoryModel]]
 </pre>
 </div>
-<div title="MemoryWords" modifier="sd" created="200911200939" modified="200911201131" tags="words ! C! @ C@ , ALLOT CELLS CHARS COMPILE, CCOMPILE, ALIGN ALIGNED" changecount="3">
+<div title="MemoryWords" modifier="sd" created="200911200939" modified="200912021545" tags="words ! C! @ C@ , ALLOT CELLS CHARS COMPILE, CCOMPILE, ALIGN ALIGNED XTCOMPILE, ACOMPILE," changecount="4">
 <pre>!Memory words
 
 These are the normal words for accessing any memory allocated or managed within Attila. If you need to access real memory addresses, use the [[real memory access words|RealMemoryWords]].
@@ -844,6 +857,12 @@ Compile a cell into the code of the word currently being defined.
 
 {{{CCOMPILE,}}} ( n -- ) &quot;see compile comma&quot;
 Compile a character into the code of the word currently being defined.
+
+{{{XTCOMPILE,}}} ( xt -- ) &quot;ex tee compile comma&quot;
+Compile the compilation token for the given execution token into the code current word. What this does to the code segment depends on the [[memory|MemoryModels]] and [[threading|ThreadingModels]] models: it is typically functionally the same as {{{COMPILE,}}}, but is conceptually different and should not be used interchangeably.
+
+{{{ACOMPILE,}}} ( addr -- ) &quot;ay compile comma&quot;,
+Compile an address. This is typically the same as {{{COMPILE,}}}, but may be different when cross-compiling.
 
 
 !!Computing sizes
@@ -1008,6 +1027,28 @@ which expects, and consumes, a word from the input stream. Both kinds of element
 which takes a value on the stack //and// a word from the input stream.
 </pre>
 </div>
+<div title="StandardPrelude" modifier="sd" created="200912021608" tags="compiler prelude" changecount="1">
+<pre>!The Standard prelude
+
+The standard prelude, {{{prelude.fs}}}, is a file that's intended to load a complete Attila system from source code. It's intended to be loaded immediately from the start-up virtual machine, and lets the virtual machine stay minimal by compiling the rest of the system from code.
+
+The standard prelude includes the following features:
+
+* Core words
+* Common compilation patterns and helpers
+* Defining-word words 
+* The architectural description of the platform we're running on
+* Conditionals
+* Control structures and loops
+* General stacks
+* Formatted output
+* Linked lists
+* Dynamic memory management
+* Word lists
+
+
+</pre>
+</div>
 <div title="StartWords" modifier="sd" created="200911171109" modified="200911171115" tags="words WARM COLD" changecount="2">
 <pre>!Start-up and shutdown words
 
@@ -1110,11 +1151,11 @@ The following user variables are available in interactive systems (embedded syst
 
 The Attila virtual machine...</pre>
 </div>
-<div title="WordHeaderAccessWords" modifier="sd" created="200911161103" modified="200911161729" tags="words compiler &gt;LFA &gt;CFA &gt;STATUS &gt;BODY" changecount="6">
+<div title="WordHeaderAccessWords" modifier="sd" created="200911161103" modified="200912021604" tags="words compiler &gt;LFA &gt;CFA &gt;STATUS &gt;BODY" changecount="7">
 <pre>!Word header access words
 
 {{{&gt;LFA}}} ( xt -- lfa ) &quot;to ell eff ay&quot;
-Convert an xt into the address of the word's link field, which contains the xt of the word preceding the one identified by the xt in its word list (or zero if that word is first).
+Convert an xt into the address of the word's link field, which contains the xt of the word preceding the one identified by the xt in its [[word list|Wordlists]] (or zero if that word is first).
 
 {{{&gt;CFA}}} ( xt -- cfa ) &quot;to see eff ay&quot;
 Convert an xt to a code field address containing the address of the primitive code needed to execute this word.
