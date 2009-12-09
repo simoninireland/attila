@@ -72,7 +72,7 @@ VARIABLE CURRENT-WORDLIST
 : WID> \ ( wid -- xt )
     @ ;
 
-\ Update a word list with a new top word 
+\ Update a wordlist with a new top word 
 : >WID \ ( xt wid -- )
     ! ;
 
@@ -102,6 +102,14 @@ WORDLIST CONSTANT FORTH-WORDLIST
 	ROOT-WORDLIST
     THEN ;
 
+\ Drop the top-most wordlist from the search order. This does not affect the
+\ current wordlist: it is possible (though unusual) to compile into a wordlist
+\ we don't search
+: PREVIOUS
+    (OTHER-WORDLISTS?) IF
+	WORDLISTS ST-DROP
+    THEN ;
+
 \ Duplicate the top of the search order
 : ALSO \ ( -- )
     CONTEXT WORDLISTS >ST ;
@@ -110,21 +118,11 @@ WORDLIST CONSTANT FORTH-WORDLIST
 \ it from the search order in the process
 : DEFINITIONS \ (  -- )
     CONTEXT SET-CURRENT
-    (OTHER-WORDLISTS?) IF
-	WORDLISTS ST-DROP
-    THEN ;
+    PREVIOUS ;
 
 \ Remove all wordlists from the search order except root
 : ONLY \ ( -- )
     WORDLISTS #ST WORDLISTS ST-NDROP ;
-
-\ Drop the top-most wordlist from the search order. This does not affect the
-\ current wordlist: it is possible (though unusual) to compile into a word
-\ list we don't search
-: PREVIOUS
-    (OTHER-WORDLISTS?) IF
-	WORDLISTS ST-DROP
-    THEN ;
 
 \ Retrieve the order onto the stack topped with the number of
 \ wordlists pushed. The root wordlists is always at the bottom of
@@ -135,9 +133,7 @@ WORDLIST CONSTANT FORTH-WORDLIST
 
 \ Replace the top wordlist in the search order with the given one
 : >ORDER ( wid -- )
-    (OTHER-WORDLISTS?) IF
-	WORDLISTS ST-DROP    \ drop top wordlist if it's not just root on the stack
-    THEN
+    PREVIOUS
     WORDLISTS >ST ;
 
 
@@ -249,3 +245,4 @@ ONLY FORTH ALSO DEFINITIONS
 LASTXT ROOT-WORDLIST >WID
 0 SWAP >LFA !
 FORTH-WORDLIST >WID
+ONLY FORTH ALSO DEFINITIONS
