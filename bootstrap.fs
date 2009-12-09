@@ -250,6 +250,11 @@ PRIMITIVE: SCOMPILE, prim_compile_string ( addr n -- )
    }
 ;PRIMITIVE
 
+\ Compile an xt into the code of a word -- same as COMPILE,
+PRIMITIVE: XTCOMPILE, ( -- )
+    prim_compile_cell(_xt);
+;PRIMITIVE
+    
 \ Return the address of the next available body word. This is the
 \ same as TOP in this memory model, but conceptually distinct
 PRIMITIVE: HERE ( -- addr )
