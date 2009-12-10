@@ -1,6 +1,4 @@
-: \ REFILL DROP ; IMMEDIATE
-: ( 41 PARSE 2DROP ; IMMEDIATE
-
+include comments.fs
 \ ... and now we can parse comments, we can begin ... :-)
 
 \ $Id$
