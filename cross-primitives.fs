@@ -14,20 +14,23 @@
 \ Create a primitive locator
 \ Primitives are stored as lists of counted strings separated by blank
 \ string:
-\    counted string primitive name
+\    counted string name
+\    counted string primitive (C-level) name
 \    list of arguments
 \    list of results
 \    counted string primitive code text
-: PRIMITIVE-LOCATOR \ ( "name" -- )
-    DATA
+: (PRIMITIVE-LOCATOR) \ ( addr n -- )
+    (DATA)
     0 ,    \ address of list of arguments
     0 ,    \ address of list of results
     0 , ;  \ address of code text
 
 \ Compile the various elements in the locator, fixing its pointers. These
-\ *must* be called immediately after the locator is created using PRIMITIVE-LOCATOR
+\ *must* be called immediately after the locator is created using (PRIMITIVE-LOCATOR)
 \ to build its body. See the definition of PRIMITIVE: below
 : PRIMITIVE-NAME, \ ( addr n xt -- )
+    DROP S, ;
+: PRIMITIVE-PRIMNAME, \ ( addr n xt -- )
     DROP S, ;
 : PRIMITIVE-ARGUMENTS, \ ( xt -- elem )
     NULLSTRING STRING-ELEMENT
@@ -44,6 +47,10 @@
 : PRIMITIVE-NAME \ ( loc -- addr n )
     3 CELLS + COUNT ;
 
+\ Return the primitive primitive (C-level) name
+: PRIMITIVE-PRIMNAME \ ( loc -- addr n )
+    3 CELLS + COUNT + COUNT ;
+    
 \ Return lists of parameters and results
 : PRIMITIVE-ARGUMENTS \ ( loc -- elem )
     @ ELEMENT> ;
@@ -124,13 +131,14 @@ DATA (PRIMTEXT) 2048 ALLOT
 
 \ Parse a primitive, creating a locator word that holds all its details
 : PRIMITIVE:
-    \ ALSO TARGET DEFINITIONS
-    PRIMITIVE-LOCATOR
-
-    PARSE-WORD S" (" S=? IF        \ compile primitive name, creating one if necessary
+    PARSE-WORD 2DUP
+    (PRIMITIVE-LOCATOR)            \ compile a locator
+    LASTXT PRIMITIVE-NAME,         \ compile the primitive's name
+    
+    PARSE-WORD S" (" S=? IF        \ compile primitive's primitive name, creating one if necessary
 	2DROP PRIMNAME
     THEN
-    LASTXT PRIMITIVE-NAME,
+    LASTXT PRIMITIVE-PRIMNAME,
 
     LASTXT PRIMITIVE-ARGUMENTS,    \ compile the parameters list
     BEGIN
@@ -224,7 +232,7 @@ DATA (PRIMTEXT) 2048 ALLOT
     THEN ;
 
 \ Generate the stack pushes for the results
-: GENERATE-PRIMITIVE-RESULT-POPS \ ( loc -- )
+: GENERATE-PRIMITIVE-RESULT-PUSHES \ ( loc -- )
     PRIMITIVE-RESULTS
     BEGIN
 	?DUP 0<>
@@ -242,8 +250,7 @@ DATA (PRIMTEXT) 2048 ALLOT
     DUP GENERATE-PRIMITIVE-VARIABLES
     DUP GENERATE-PRIMITIVE-ARGUMENT-POPS
     DUP PRIMITIVE-TEXT TYPE CR
-    DUP GENERATE-PRIMITIVE-RESULT-POPS
+    DUP GENERATE-PRIMITIVE-RESULT-PUSHES
     S" }" TYPE CR CR
     DROP ;
 
-    
