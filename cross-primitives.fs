@@ -114,7 +114,7 @@
 \ ---------- Primitive name generator ----------
 
 VARIABLE (#PRIM) 0 (#PRIM) !    \ uniques
-DATA (PRIMNAME) 32 ALLOT       \ buffer for name
+DATA (PRIMNAME) 32 ALLOT        \ buffer for name
 
 \ Create a new primitive name
 : PRIMNAME \ ( -- addr n )
@@ -122,6 +122,10 @@ DATA (PRIMNAME) 32 ALLOT       \ buffer for name
     (#PRIM) @ <# #S #> (PRIMNAME) S+
     1 (#PRIM) +! 
     (PRIMNAME) COUNT ;
+
+
+\ ---------- Primitive word wrappers ----------
+\ TBD
 
 
 \ ---------- Primitive parser ----------
