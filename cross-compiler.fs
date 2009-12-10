@@ -10,7 +10,7 @@ CROSS-WORDLIST PARSE-WORD CROSS (VOCABULARY)
 WORDLIST CONSTANT TARGET-WORDLIST                  \ Target locator words
 TARGET-WORDLIST PARSE-WORD TARGET (VOCABULARY)
 
-\ Find a word in a given wordlist aborting if we fail
+\ Find a word in a given wordlist, aborting if we fail
 : FIND-IN-WORDLIST \ ( addr n wid -- xt )
     >R 2DUP R> SEARCH-WORDLIST
     0<> IF
@@ -20,144 +20,56 @@ TARGET-WORDLIST PARSE-WORD TARGET (VOCABULARY)
 	S" not found in word list" ABORT
     THEN ;
 
-\ Execute a host cross word without changing the search order
-\ State-smart: do the word or compile it
-:NONAME \ ( "name" -- )
-    PARSE-WORD
-    CROSS-WORDLIST FIND-IN-WORDLIST
+\ Look-up and execute/compile a word from (only) the given word list
+\ (Compilation on the host, not the target) 
+:NONAME \ ( wid "name" -- )
+    PARSE-WORD -ROT FIND-IN-WORDLIST
     EXECUTE ;
-:NONAME \ ( "name" -- )
-    PARSE-WORD
-    CROSS-WORDLIST FIND-IN-WORDLIST
-    COMPILE, ;
-INTERPRET/COMPILE [CROSS]
-
-\ Look up a target word 
-\ State-smart: tick the word or compile it as a literal
-:NONAME \ ( "name" -- )
-    PARSE-WORD
-    CROSS-WORDLIST FIND-IN-WORDLIST ;
-:NONAME \ ( "name" -- )
-    PARSE-WORD
-    CROSS-WORDLIST FIND-IN-WORDLIST
-    POSTPONE LITERAL ;
-INTERPRET/COMPILE ['TARGET]
+:NONAME \ ( wid "name" -- )
+    PARSE-WORD -ROT FIND-IN-WORDLIST
+    XTCOMPILE, ;
+INTERPRET/COMPILE [WORDLIST]
+: [CROSS]  CROSS-WORDLIST  POSTPONE [WORDLIST] ; IMMEDIATE
+: [TARGET] TARGET-WORDLIST POSTPONE [WORDLIST] ; IMMEDIATE
 
 
-\ ---------- Target description ----------
-\ sd: This should come from elsewhere
+\ ---------- The main body of the cross-compiler ----------
 
-ONLY CROSS ALSO DEFINITIONS
+\ Definitions go into CROSS, but it isn't being searched, so we
+\ will have to escape all CROSS words explicitly with [CROSS]
+ALSO CROSS DEFINITIONS
 
-8 CONSTANT #CELL
+\ The target architecture's description
+\ sd: should come from elsewhere
+include x-arch-gcc-host.fs
 
-\ Single block of memory with TOP = HERE
-0 VALUE TOP
-: HERE TOP ;
+\ Primitive parsing
+include cross-primitives.fs
 
+\ Return the number of bytes needed to hold n target cells
+: CELLS \ ( n -- b )
+    [CROSS] /CELL * ;
 
-\ ---------- Low-level compilation into the target image ----------
+\ The image manager
+\ sd: should come from elsewhere
+include x-image-gcc.fs
 
-\ For debugging only
-: EMIT-CELL \ ( n -- )
-    S" (CELL) 0x" TYPE
-    .HEX
-    S" ," TYPE NL ;
-: EMIT-SYMBOL-ADDRESS \ ( addr n -- )
-    S" (CELL) &" TYPE
-    TYPE
-    S" ," TYPE NL ;
-
-\ Compilation primitive that collects bytes and emits cells
-\ sd: currently hard-coded as being little-endian
-VARIABLE (CURRENT-CELL)
-VARIABLE (CURRENT-BYTE)
-: CCOMPILE, \ ( c -- )
-    (CURRENT-BYTE) @ 8 * LSHIFT (CURRENT-CELL) +!
-    1 (CURRENT-BYTE) +!
-    (CURRENT-BYTE) @ #CELL >= IF
-	(CURRENT-CELL) @ EMIT-CELL
-	0 (CURRENT-BYTE) !
-	0 (CURRENT-CELL) !
-    THEN
-    TOP 1+ TO TOP ;
-
-\ Align code address on cell boundaries
-: CALIGN \ ( addr -- aaddr )
-    DUP #CELL MOD #CELL SWAP - + ;
-: CALIGNED \ ( -- )
-    TOP CALIGN TOP - ?DUP IF
-	0 DO
-	    0 CCOMPILE,
-	LOOP
-    THEN ;
-
-\ Additional compilation primitives for cells, strings
-: COMPILE, \ ( n -- )
-    CALIGNED
-    #CELL 0 DO
-	DUP 255 AND CCOMPILE,
-	8 RSHIFT
-    LOOP DROP ;
-: SCOMPILE, \ ( addr n -- )
-    DUP CCOMPILE,
-    0 DO
-	DUP C@ CCOMPILE,
-	1+
-    LOOP
-    DROP ;
-: XTCOMPILE, \ ( xt -- )
-    COMPILE, ;
-
-\ To compile a code field we emit the address of the symbol pointed to 
-: CFA, \ ( cf -- )
-    COUNT EMIT-SYMBOL-ADDRESS ;
-
-\ In this model, data and code compilation are the same
-: C, COMPILE, ;
-: , COMPILE, ;
-: ALIGN CALIGN ;
-: ALIGNED CALIGNED ;
-
-\ ALLOTting data space simply compiles zeros
-: ALLOT ( n -- )
-    0 DO
-	0 C,
-    LOOP ;
+\ Get ready to go
+ONLY FORTH ALSO DEFINITIONS ALSO CROSS
+(INITIALISE-IMAGE)
 
 
-\ ---------- Target locator words ----------
+\ ---------- Running the cross-compiler ----------
+\ sd: should come from elsewhere
 
-\ Compile a locator for a primitive
-: PRIMITIVE-LOCATOR \ ( txt "name' -- )
-    ALSO TARGET DEFINITIONS
-    CREATE
-    ,                                 \ body holds target xt of the word
-  DOES> \ ( body -- txt )
-    @ ;
+\ Put the code we need to build the image into CROSS, where they will pick
+\ up the CROSS (image) definitions for the core primitives
+ONLY FORTH ALSO CROSS ALSO DEFINITIONS
+include flat-memory-model.fs
+include colon.fs
 
-\ Compile a locator for an ordinary (non-primitive) word
-: LOCATOR \ ( addr n "name" -- )
-    ALSO TARGET DEFINITIONS
-    CREATE
-    DUP C,
-    HERE OVER ALLOT SWAP CMOVE        \ body holds primitive name as a counted string
-  DOES> \ ( body -- addr n )
-    COUNT ;
-
-
-\ ---------- Higher-level compilation into the target ----------
-
-
-
-
-
-\ ---------- Top-level compilation into the target ----------
-
-\ Begin cross-compilation of a new colon definition
-: : \ ( "name" -- xt )
-    PARSE-WORD
-    ['TARGET] (:) CFA@
-    (HEADER,) ;
-    
+\ Now load the parts of the image into TARGET, using only the
+\ words defined in CROSS and TARGET
+\ sd: this might not be enough, and we might need FORTH too
+ONLY CROSS ALSO TARGET ALSO DEFINITIONS
 
