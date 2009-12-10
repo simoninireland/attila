@@ -13,6 +13,7 @@
 \  [ iba -> altbody    1 cell ]      (REDIRECTABLE words only)
 \   body -> body       n bytes
 
+
 \ ---------- Header access ----------
 
 \ Convert an xt to the address of its code field (no-op in this model)
@@ -33,18 +34,47 @@
 : >STATUS \ ( xt -- addr )
     2 CELLS - 1+ ;
 
-\ Convert an xt to a name string. addr will be aligned
+\ Convert an xt to a name string. addr will be CALIGNED
 : >NAME \ ( xt -- addr namelen )
     >LFA 1 CELLS - DUP C@
     DUP >R
     - 1-
-    7 - ALIGN        \ ensure we're aligned on the previous cell boundary
+    1 CELLS - CALIGN        \ ensure we're aligned on the previous cell boundary
     R> ;
 
 \ Convert xt to indirect body (DOES> behaviour) if present
 \ (We don't check whether there actually *is* an IBA)
 : >IBA \ ( xt -- iba )
     1 CELLS + ;
+
+
+\ ---------- Status and body management ----------
+
+\ Mask-in the given mask to the status of a word
+: SET-STATUS \ ( f xt -- )
+    >STATUS DUP C@
+    -ROT OR
+    SWAP ! ;
+
+\ Get the status of the given word
+: GET-STATUS \ ( xt -- s )
+    >STATUS @ ;
+
+\ Make the last word defined IMMEDIATE
+: IMMEDIATE \ ( -- )
+    IMMEDIATE-MASK LASTXT SET-STATUS ;
+
+\ Test whether the given word is IMMEDIATE
+: IMMEDIATE? \ ( xt -- f )
+    GET-STATUS IMMEDIATE-MASK AND 0<> ; 
+
+\ Make the last word defined REDIRECTABLE
+: REDIRECTABLE \ ( -- )
+    REDIRECTABLE-MASK LASTXT SET-STATUS ; 
+
+\ Test whether the given word is REDIRECTABLE
+: REDIRECTABLE? \ ( xt -- f )
+    >STATUS REDIRECTABLE-MASK AND 0<> ; 
 
 \ Convert xt to body address, accounting for iba if present
 : >BODY \ ( xt -- addr )
@@ -71,7 +101,7 @@
     CALIGNED
     0 COMPILE,          \ compile an empty link pointer
     TOP                 \ the xt
-    R> CFA, ;           \ the code pointer
+    R> CFACOMPILE, ;    \ the code pointer
 
 
 \ ---------- Finding words ----------
