@@ -17,39 +17,22 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ The initial dictionary containing the words necessary to bring up
-\ the colon-definiton compiler.
-
-\ ---------- Error handling ----------
-
-\ Abort with an error, re-starting the executive
-: ABORT \ ( addr len -- )
-    TYPE
-    SPACE TYPE
-    WARM ;
-
-
-\ ---------- Compilation helpers ----------
-
-\ Test whether we're interpreting
-: INTERPRETING? \ ( -- f )
-    STATE @ INTERPRETING = ;
-
-\ Find the xt of the next word in the input source, or abort
-: ' \ ( "word" -- xt )
-    PARSE-WORD 2DUP FIND
-    ?DUP IF
-	ROT 2DROP
-    ELSE
-	TYPE
-	S" ?" ABORT
-    THEN ;
-
+\ The colon-definition compiler
 
 \ ---------- Colon-definition words ----------
 
 \ Compile the top of the stack as a literal
 : LITERAL \ ( n -- )
+    ['] (LITERAL) XTCOMPILE,
+    COMPILE, ; IMMEDIATE
+
+\ Compile the address on the top of the stack as a literal
+: ALITERAL \ ( addr -- )
+    ['] (LITERAL) XTCOMPILE,
+    ACOMPILE, ; IMMEDIATE
+
+\ Compile the xt on the top of the stack as a literal
+: XTLITERAL \ ( xt -- )
     ['] (LITERAL) XTCOMPILE,
     XTCOMPILE, ; IMMEDIATE
 
@@ -66,7 +49,7 @@
 	SLITERAL
     ELSE
 	S" String not delimited" ABORT
-    THEN ;
+    THEN ; IMMEDIATE
 
 \ Enter interpretation state
 : [ \ ( -- )
@@ -76,42 +59,14 @@
 : ] \ ( -- )
     COMPILATION-STATE STATE ! ;
 
-\ The colon-definer
-: : \ ( "name" -- )
-    START-DEFINITION
-    PARSE-WORD [ ' (:) CFA@ ] (HEADER,)
-    ] ;
-
 \ Complete a colon-definition
-: ; \ ( -- )
+: ; \ ( xt -- )
     0 COMPILE, \ NEXT
     END_DEFINITION
     [ DROP ; IMMEDIATE
 
-
-\ ---------- The outer interpreter ----------
-
-\ The outer executive
-: OUTER \ ( -- )
-    BEGIN
-	PARSE-WORD ?DUP NOT IF
-	    2DUP FIND ?DUP IF
-		ROT 2DROP INTERPRETING?
-		OVER IMMEDIATE? OR IF
-		    EXECUTE
-		ELSE
-		    COMPILE,
-		THEN
-	    ELSE
-		2DUP NUMBER? IF
-		    ROT 2DROP INTERPRETING? NOT IF
-			LITERAL
-		    THEN
-		ELSE
-		    TYPE S" ?" ABORT
-		THEN
-	    THEN
-	THEN
-    EXHAUSTED? UNTIL ;
-
-
+\ The colon-definer
+: : \ ( "name" -- xt )
+    START-DEFINITION
+    PARSE-WORD [ ' (:) CFA@ ] (HEADER,)
+    ] ;
