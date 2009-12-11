@@ -199,6 +199,10 @@ PRIMITIVE: ALIGNED ( addr -- addr )
 ;PRIMITIVE
 PRIMITIVE ALIGN ( -- )
 ;PRIMITIVE
+PRIMITIVE: CALIGNED ( addr -- addr )
+;PRIMITIVE
+PRIMITIVE CALIGN ( -- )
+;PRIMITIVE
 
 \ Compile a character into the body of a word
 PRIMITIVE: C, compile_char ( c -- )
