@@ -107,7 +107,7 @@ begin_colon_definition( char *name, PRIMITIVE prim, int status) {
 
     // store the xt
     lastxt = xt;
-    printf("%s %lx\n", name, xt);
+    // printf("%s %lx\n", name, xt);
 }
 
 VOID
