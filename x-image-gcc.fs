@@ -14,8 +14,9 @@
 
 \ ---------- Building and maintaining the target ----------
 
-\ Maximum size of image in cells
-64 1024 * CONSTANT MAXIMAGECELLS
+\ Maximum size of image in cells. May be re-defined before calling
+\ (INIT-IMAGE) to get a larger or smaller image 
+64 1024 * VALUE MAXIMAGECELLS
 
 \ The parts of the image
 VARIABLE (TARGET-TOP)                    \ the current compilation address
@@ -26,8 +27,9 @@ VARIABLE (TARGET-TOP)                    \ the current compilation address
 \    - 1 (target) CELL for data
 1 CELLS 1 [CROSS] CELLS + CONSTANT /IMAGECELL
 
-\ The image data block
-DATA IMAGE [CROSS] MAXIMAGECELLS [CROSS] /IMAGECELL * ALLOT
+\ The pointer to the image data block. This is filled-in by (INIT-IMAGE)
+\ when the image block is created
+0 VALUE IMAGE
 
 \ Return the host address of the given target image address
 : TARGET> \ ( taddr -- addr )
@@ -96,6 +98,10 @@ DATA IMAGE [CROSS] MAXIMAGECELLS [CROSS] /IMAGECELL * ALLOT
 : TOP [CROSS] (TARGET-TOP) @ ;
 : HERE [CROSS] (TARGET-HERE) @ ;
 
+\ Retrieve the CFA of a word. The CFA always points to a primitive, so
+\ we use the caddr returned by PRIMITIVE-PRIMNAME
+\ TBD
+
 \ Compile a character
 : CCOMPILE, \ ( c -- )
     [CROSS] TOP [CROSS] C!
@@ -162,6 +168,12 @@ DATA IMAGE [CROSS] MAXIMAGECELLS [CROSS] /IMAGECELL * ALLOT
 
 \ Initialise the image
 : (INITIALISE-IMAGE) \ ( -- )
+    \ allocate the image and point IMAGE at it
+    HERE
+    [CROSS] MAXIMAGECELLS [CROSS] /IMAGECELL * ALLOT
+    TO IMAGE
+
+    \ initialise the image pointers, make the first cell data
     0 [CROSS] (TARGET-TOP) !
     [ ALSO CROSS ' EMIT-CELL PREVIOUS ] LITERAL [CROSS] TOP [CROSS] E! ;
 
