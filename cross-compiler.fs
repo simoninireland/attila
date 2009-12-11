@@ -1,10 +1,17 @@
 \ $Id$
 
 \ The Attila cross-compiler
-\
 
 \ ---------- The word lists ----------
 
+\ The word lists
+\
+\    - CROSS, used for words that build words in the target image
+\    - TARGET, used to hold locator words for words in the target
+\
+\ Any other word goes into the word list that's current when you load
+\ the cross-compiler
+ALSO ROOT DEFINITIONS
 WORDLIST CONSTANT CROSS-WORDLIST                   \ Host words
 CROSS-WORDLIST PARSE-WORD CROSS (VOCABULARY)
 WORDLIST CONSTANT TARGET-WORDLIST                  \ Target locator words
@@ -21,7 +28,7 @@ TARGET-WORDLIST PARSE-WORD TARGET (VOCABULARY)
     THEN ;
 
 \ Look-up and execute/compile a word from (only) the given word list
-\ (Compilation on the host, not the target) 
+\ sd: This may be a common pattern: should it be moved into wordlists.fs?
 :NONAME \ ( wid "name" -- )
     PARSE-WORD -ROT FIND-IN-WORDLIST
     EXECUTE ;
@@ -35,16 +42,16 @@ INTERPRET/COMPILE [WORDLIST]
 
 \ ---------- The main body of the cross-compiler ----------
 
-\ Definitions go into CROSS, but it isn't being searched, so we
-\ will have to escape all CROSS words explicitly with [CROSS]
-ALSO CROSS DEFINITIONS
+\ Primitive parsing
+include cross-primitives.fs
+
 
 \ The target architecture's description
 \ sd: should come from elsewhere
+\ Definitions go into CROSS, but it isn't being searched, so we
+\ will have to escape all CROSS words explicitly with [CROSS]
+ALSO CROSS DEFINITIONS
 include x-arch-gcc-host.fs
-
-\ Primitive parsing
-include cross-primitives.fs
 
 \ Return the number of bytes needed to hold n target cells
 : CELLS \ ( n -- b )
@@ -62,8 +69,7 @@ ONLY FORTH ALSO DEFINITIONS ALSO CROSS
 \ ---------- Running the cross-compiler ----------
 \ sd: should come from elsewhere
 
-\ Put the code we need to build the image into CROSS, where they will pick
-\ up the CROSS (image) definitions for the core primitives
+\ Load the words that build the image into CROSS
 ONLY FORTH ALSO CROSS ALSO DEFINITIONS
 include flat-memory-model.fs
 include colon.fs
@@ -71,5 +77,5 @@ include colon.fs
 \ Now load the parts of the image into TARGET, using only the
 \ words defined in CROSS and TARGET
 \ sd: this might not be enough, and we might need FORTH too
-ONLY CROSS ALSO TARGET ALSO DEFINITIONS
+ONLY FORTH ALSO CROSS ALSO TARGET ALSO DEFINITIONS
 
