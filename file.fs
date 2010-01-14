@@ -1,43 +1,68 @@
 \ $Id$
 
-\ File inclusion
+\ Additional file management functions
+\
+\ The SAVE-INPUT and RESTORE-INPUT functions let programs
+\ transparently save and restore the current input file
+\ and position.
+\
+\ <TO .. TO> and <FROM ... FROM> re-direct the
+\ virtual machine's standard input and output respectively,
+\ and can be used to replace the standard streams with
+\ files for a period.
 
-\ ---------- Loading sourcefiles ----------
+\ ---------- Save/restore ----------
 
-\ Load a file
-: (LOAD) \ ( fh -- )
-    INPUTSOURCE DUP @
-    2 PICK 2 PICK !
+\ Save the current input state
+: SAVE-INPUT \ ( -- fh pos 2 )
+    INPUTSOURCE @
+    DUP FILE-POSITION
+    2 ;
 
-    \ run the executive on its original stack
-    >R >R >R
-    EXECUTIVE @ EXECUTE
-    R> R> R>
-
-    -ROT FILE-CLOSE SWAP ! ;
-
-\ Open a file using the given word as file-finder
-: (OPEN-FILE) \ ( addr len opener -- fh )
-    >R 2DUP R> EXECUTE
-    DUP IF
-	ROT 2DROP
+\ Restore the previously-save input state, if possible
+: RESTORE-INPUT \ ( fh pos 2 -- f )
+    DROP
+    OVER REPOSITION-FILE ?DUP IF
+	NIP
     ELSE
-	DROP TYPE SPACE S" not accessible" ABORT
+	INPUTSOURCE !
+	TRUE
     THEN ;
 
-\ Load a file
-: LOAD \ ( addr len -- )
-    ['] FILE-OPEN (OPEN-FILE) (LOAD) ;
 
+\ ---------- Re-directing I/O ----------
 
-\ ---------- Including files ----------
-\ sd: no include path yet
+\ Re-direct subsequent output to the given file
+: (<TO) \ ( fh -- ofh )
+    OUTPUTSINK @
+    SWAP OUTPUTSINK ! ;
+: <TO \ ( "name" -- ofh )
+    PARSE-WORD 2DUP W/O CREATE-FILE IF
+	DROP
+	TYPE SPACE S" cannot be re-directed to" ABORT
+    ELSE
+	ROT 2DROP (<TO)
+    THEN ;
 
-\ Include a file, making use of the include path
-: INCLUDED \ ( addr len -- )
-    ['] FILE-OPEN-INCLUDE (OPEN-FILE) (LOAD) ;
+\ Restore previous output stream
+: TO> \ ( ofh -- ) 
+    OUTPUTSINK @ CLOSE-FILE DROP
+    OUTPUTSINK ! ;
 
-\ Load the next file from the input stream
-: INCLUDE \ ( "filename" -- )
-    PARSE-WORD INCLUDED ;
+\ Re-direct subsequent input from the given file
+: (<FROM) \ ( fh -- )
+    INPUTSOURCE @
+    SWAP INPUTSOURCE ! ;
+: <FROM \ ( "name" -- )
+    PARSE-WORD 2DUP R/O OPEN-FILE IF
+	DROP
+	TYPE SPACE S" cannot be re-directed from" ABORT
+    ELSE
+	ROT 2DROP (<FROM)
+    THEN ;
+
+\ Restore previous output stream
+: FROM> \ ( ofh -- ) 
+    INPUTSOURCE @ CLOSE-FILE DROP
+    INPUTSOURCE ! ;
 

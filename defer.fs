@@ -31,17 +31,19 @@
 \ Create a deferred word
 : DEFER \ ( "name" -- )
     CREATE
-    ['] (DEFERRED) ,
+    ['] (DEFERRED) XT,
   DOES>
     @ EXECUTE ;
 
-\ Re-map the behaviour of a deferred word
-: IS \ ( xt "name" -- )
-    PARSE-WORD FIND
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]                        \ IF
-	>BODY !
-    [ ' (BRANCH) COMPILE, TOP 0 COMPILE, SWAP DUP JUMP> SWAP ! ]   \ ELSE
-	S" Word not found" ABORT
-    [ DUP JUMP> SWAP ! ] ;                                         \ THEN
+\ Re-map a deferred word
+: (IS) \ ( xt dxt -- )
+    >BODY XT! ;
 
-	
+\ Re-map a deferred word from the input stream
+: IS \ ( xt "name" -- )
+    PARSE-WORD 2DUP FIND IF
+	ROT 2DROP (IS)
+    ELSE
+	TYPE S" ?" ABORT
+    THEN ;
+

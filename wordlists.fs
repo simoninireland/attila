@@ -23,14 +23,14 @@
 \ weak fashion. A word list order controls the search order for words
 \ at compile-time, allowing one definition to mask another.
 \
-\ The ROOT-WORDLIST contains the wordlist words and  is always the base
-\ vocabulary in the search order. Since this will include the wordlist
+\ The ROOT-WORDLIST contains the wordlist words and is always the base
+\ wordlist in the search order. Since this will include the wordlist
 \ management words themselves, we can't forget the core of the system by
 \ accident. The FORTH-WORDLIST contains the rest of the words defined
 \ up until this file is included, and is made current so it gets all subsequent
 \ words (unless you choose to change the current wordlist). This
 \ separation means it's possible to not search the main system (by not having
-\ FORSTH-WORDLIST in the search order) while still being able to get it back
+\ FORTH-WORDLIST in the search order) while still being able to get it back
 \ (by using words from the ROOT-WORDLIST, which is always accessible).
 \
 \ A vocabulary is a word that establishes a wordlist on the top of the
@@ -60,12 +60,22 @@ VARIABLE CURRENT-WORDLIST
 : (OTHER-WORDLISTS?) \ ( -- f )
     WORDLISTS #ST 0> ;
 
-\ Create a new, empty, anonymous wordlist. We use the word list's body
+\ Create a new, empty, named wordlist. We use the word list's body
 \ pointer as its identifier. The body stores the xt of the last
 \ word added to this word list
+: (NAMED-WORDLIST) \ ( addr n -- wid )
+    HERE >R
+    0 ,
+    SCOMPILE,
+    R> ; 
+
+\ Create a named wordlist from the next name in the input stream
+: NAMED-WORDLIST \ ( "name" -- wid )
+    PARSE-WORD (NAMED-WORDLIST) ;
+
+\ Create a new, empty, anonymous wordlist 
 : WORDLIST \ ( -- wid )
-    HERE
-    0 , ;     \ last xt defined in this word list
+    NULLSTRING (NAMED-WORDLIST) ;
 
 \ Retrieve the xt of the top-most word on a wordlist, or 0 if
 \ the word list is empty
@@ -81,8 +91,8 @@ VARIABLE CURRENT-WORDLIST
 
 \ A reference to the root wordlist (holding the wordlist words) and the
 \ main (Forth) wordlist holding the rest of the system 
-WORDLIST CONSTANT ROOT-WORDLIST
-WORDLIST CONSTANT FORTH-WORDLIST
+NAMED-WORDLIST ROOT  CONSTANT ROOT-WORDLIST
+NAMED-WORDLIST FORTH CONSTANT FORTH-WORDLIST
 
 \ Return the wordlist receiving definitions
 : GET-CURRENT \ ( -- wid )
@@ -93,6 +103,10 @@ WORDLIST CONSTANT FORTH-WORDLIST
 : SET-CURRENT \ ( wid -- )
     DUP CURRENT !
     WID> LAST ! ;
+
+\ Test whether the wordlist is CURRENT
+: CURRENT? \ ( wid -- f )
+    CURRENT @ = ;
 
 \ Retrieve the top-most wordlist in the search order without affecting it
 : CONTEXT
@@ -127,7 +141,7 @@ WORDLIST CONSTANT FORTH-WORDLIST
 \ Retrieve the order onto the stack topped with the number of
 \ wordlists pushed. The root wordlists is always at the bottom of
 \ the order
-: GET-ORDER \ ( -- widn-1 ...wid0 n )
+: GET-ORDER \ ( -- widn-1 ... wid0 n )
     ROOT-WORDLIST
     WORDLISTS ST-ALL> 1+ ;
 
@@ -135,6 +149,23 @@ WORDLIST CONSTANT FORTH-WORDLIST
 : >ORDER ( wid -- )
     PREVIOUS
     WORDLISTS >ST ;
+
+\ Set the order from the stack
+: SET-ORDER \ ( widn-1 ... wid0 n -- )
+    ONLY
+    DUP 1 DO
+	DUP I - PICK ALSO >ORDER 
+    LOOP
+    0 DO
+	DROP
+    LOOP ;
+
+\ Save and restore the curent wordlists state to the stack,
+\ including order and CURRENT. these are typically used as brackets
+\ around a block of code, allowing it to mess with the search
+\ order and then restore it afterwards
+: <WORDLISTS GET-ORDER   GET-CURRENT ;
+: WORDLISTS> SET-CURRENT SET-ORDER ;
 
 
 \ ---------- Finding ----------
@@ -144,8 +175,8 @@ WORDLIST CONSTANT FORTH-WORDLIST
 : SEARCH-WORDLIST \ ( addr n wid -- 0 | xt 1 | xt -1 )
     WID> ?DUP IF
 	(FIND)
-    ELSE             \ empty wordlist
-	2DROP 0
+    ELSE
+	2DROP 0   \ empty wordlist
     THEN ;
 
 \ Find the definition of a word in the current search order -- messy, messy...
@@ -167,8 +198,7 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
 		R> R>
 		LEAVE
 	    THEN
-    REPEAT
-;
+    REPEAT ;
     
 
 \ ---------- Word listing ----------
@@ -193,12 +223,41 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
     0 GET-ORDER DROP BEGIN
 	?DUP 0<>
     WHILE
-	2DUP = NOT IF
-	    .WORDLIST
-	ELSE
-	    DROP
-	THEN
+	    2DUP = NOT IF
+		.WORDLIST
+	    ELSE
+		DROP
+	    THEN
     REPEAT ;
+
+\ Print the name of a word list. Anonymous wordlists are represented
+\ by their wid in angle-brackets. If the wordlist is CURRENT, it is
+\ placed in square brackets
+: .WORDLIST-NAME \ ( wid -- )
+    DUP CURRENT? IF
+	." ["
+    THEN
+    DUP 1 CELLS + COUNT
+    ?DUP 0> IF
+	TYPE
+    ELSE
+	DROP
+	DUP ." <wid: " . ." >"
+    THEN 
+    CURRENT? IF
+	." ]"
+    THEN ;
+
+\ Print the current search order
+: ORDER \ ( -- )
+    GET-ORDER DUP 0 DO
+	DUP I - PICK
+	.WORDLIST-NAME SPACE
+    LOOP
+    0 DO
+	DROP
+    LOOP ;
+
     
 \ ---------- Vocabularies, words that select word lists ----------
 
@@ -209,13 +268,14 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
   DOES> \ ( addr -- )
     @ >ORDER ;
 
-\ Create a new vocabulary
+\ Create a new vocabulary. The underlying wordlist has the same name,
+\ and so will show up correctly when using ORDER 
 : VOCABULARY \ ( "name" -- )
-    WORDLIST
-    PARSE-WORD (VOCABULARY) ;
+    PARSE-WORD 2DUP (NAMED-WORDLIST)
+    ROT (VOCABULARY) ;
 
-\ Vocabulary words for the root and Forth wordlists
-ROOT-WORDLIST PARSE-WORD ROOT (VOCABULARY)
+\ Vocabulary words wrapped-around the ROOT and FORTH wordlists
+ROOT-WORDLIST  PARSE-WORD ROOT  (VOCABULARY)
 FORTH-WORDLIST PARSE-WORD FORTH (VOCABULARY)
 
 

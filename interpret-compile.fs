@@ -36,14 +36,21 @@
 \ reuse an existing word.
 \ Requires createdoes.fs
 
+\ Compile an anonymous word with no name, leaving its xt on the data stack
+\ after the final ;
+: :NONAME \ ( -- xt exec xt )
+    0 0 [ ' (:) CFA@ ] LITERAL (HEADER,)
+    START-DEFINITION
+    1 USERVAR ( EXECUTIVE ) @ OVER
+    ] ;
+
 \ Build a state-dependent word
 : INTERPRET/COMPILE \ ( rxt cxt "name" -- )
     CREATE
-    SWAP , ,
+    XT, XT,
     IMMEDIATE
   DOES> \ ( addr -- )
-    INTERPRETING? NOT
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
+    INTERPRETING? IF
 	1 CELLS +
-    [ DUP JUMP> SWAP ! ]                      \ THEN
+    THEN
     @ EXECUTE ;

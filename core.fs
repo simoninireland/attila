@@ -22,197 +22,221 @@
 \ ---------- Nothing ----------
 
 \ Do nothing, busily
-PRIMITIVE: NOOP ( -- )
-;PRIMITIVE
+C: NOOP ( -- )
+;C
 
 
 \ ---------- Stack manipulations ----------
 \ sd: These should be more optimised
 
 \ Duplicate the top stack item
-PRIMITIVE: DUP ( a -- a a )
-;PRIMITIVE
+C: DUP ( a -- a a )
+;C
 
 \ Duplicate the top stack item if it's non-zero
-PRIMITIVE: ?DUP ( a -- )
+C: ?DUP ( a -- )
     PUSH_CELL(a);
     if(a != 0) {
         PUSH_CELL(a);
     }
-;PRIMITIVE
+;C
 
 \ Drop the top stack item
-PRIMITIVE: DROP ( a -- )
-;PRIMITIVE
+C: DROP ( a -- )
+;C
 
 \ Remove the second stack item from under the first
-PRIMITIVE: NIP ( a b -- b )
-;PRIMITIVE
+C: NIP ( a b -- b )
+;C
 
 \ Tuck the top element below the second
-PRIMITIVE: TUCK ( a b -- b a b )
-;PRIMITIVE
+C: TUCK ( a b -- b a b )
+;C
 
 \ Swap the top two stack items
-PRIMITIVE: SWAP ( a b -- b a )
-;PRIMITIVE
+C: SWAP ( a b -- b a )
+;C
 
 \ Copy the second stack item to the top
-PRIMITIVE: OVER ( a b -- a b a )
-;PRIMITIVE
+C: OVER ( a b -- a b a )
+;C
 
 \ Rotate the top three stack items clockwise
-PRIMITIVE: ROT ( a b c -- c a b )
-;PRIMITIVE
+C: ROT ( a b c -- c a b )
+;C
 
-\ Rotate the topthree stack items counter-clockwise
-PRIMITIVE: -ROT ( a b c -- b c a )
-;PRIMITIVE
+\ Rotate the top three stack items counter-clockwise
+C: -ROT ( a b c -- b c a )
+;C
+
+\ Roll the stack clockwise. 0 ROLL is a no-op; 1 ROLL is SWAP;
+\ 2 ROLL is ROT
+C: ROLL ( n -- )
+  int t;
+  int i;
+
+  t = *(DATA_STACK_ITEM(0));
+  for(i = 0; i < n; i++)
+    *(DATA_STACK_ITEM(i)) = *(DATA_STACK_ITEM(i + 1));
+  *(DATA_STACK_ITEM(n)) = t;
+;C
+
+\ Roll the stack counter-clockwise. 0 ROLL is a no-op; 1 ROLL is SWAP;
+\ 2 ROLL is -ROT
+C: -ROLL ( n -- )
+  int b;
+  int i;
+
+  b = *(DATA_STACK_ITEM(n));
+  for(i = n; i > 0; i--) 
+    *(DATA_STACK_ITEM(i)) = *(DATA_STACK_ITEM(i - 1));
+  *(DATA_STACK_ITEM(0)) = b;
+;C
 
 \ Copy the n'th stack item to the top, counting from 0 not
-\ including n, so 0 PICK is the same as DUP
-PRIMITIVE: PICK ( n -- a )
+\ including n, so 0 PICK is the same as DUP, 1 PICK is OVER
+C: PICK ( n -- a )
     a = *(DATA_STACK_ITEM(n));
-;PRIMITIVE
+;C
 
 \ Put the depth of the stack onto the stack, not including the depth itself
-PRIMITIVE: DEPTH ( -- d )
+C: DEPTH ( -- d )
     d = DATA_STACK_DEPTH();
-;PRIMITIVE
+;C
 
 \ Drop the top two stack items
-PRIMITIVE: 2DROP ( a b -- )
-;PRIMITIVE
+C: 2DROP ( a b -- )
+;C
 
 \ Duplicate the top two stack items
-PRIMITIVE: 2DUP ( a b -- a b a b )
-;PRIMITIVE
+C: 2DUP ( a b -- a b a b )
+;C
 
 \ Swap the top two double-cells
-PRIMITIVE: 2SWAP ( a b c d -- c d a b )
-;PRIMITIVE
+C: 2SWAP ( a b c d -- c d a b )
+;C
 
 \ Copy the second double-cell to the top
-PRIMITIVE: 2OVER ( a b c d -- a b c d a b )
-;PRIMITIVE
+C: 2OVER ( a b c d -- a b c d a b )
+;C
 
 \ Move the top item on the return stack to the data stack
-PRIMITIVE: R> ( -- addr )
+C: R> ( -- addr )
     addr = (CELL) POP_RETURN();
-;PRIMITIVE
+;C
 
 \ Drop the top return stack item
-PRIMITIVE: RDROP ( -- )
+C: RDROP ( -- )
     POP_RETURN();
-;PRIMITIVE
+;C
 
 \ Copy the top item on the return stack to the data stack, without
 \ altering the return stack
-PRIMITIVE: R@ ( -- addr )
+C: R@ ( -- addr )
     addr = (CELL) PEEK_RETURN();
-;PRIMITIVE
+;C
 
 \ Move the top item on the data stack to the return stack
-PRIMITIVE: >R ( addr -- )
+C: >R ( addr -- )
     PUSH_RETURN((XT) addr);
-;PRIMITIVE
+;C
 
 \ Copy the n'th return stack item to the data stack counting from 0,
 \ so 0 PICK is the same as R>
-PRIMITIVE: RPICK ( n -- addr )
-    addr = *(RETURN_STACK_ITEM(n));
-;PRIMITIVE
+C: RPICK ( n -- addr )
+    addr = (CELL) *(RETURN_STACK_ITEM(n));
+;C
 
 
 \ ---------- Literals ----------
 
 \ Push the next cell in the instruction stream as a literal
-PRIMITIVE: (LITERAL) ( -- l ) " bracket literal"
+C: (LITERAL) ( -- l )
     CELLPTR addr;
 
     addr = (CELLPTR) ip;
     l = (*addr);
     ip++;
-;PRIMITIVE
+;C
 
 \ Push a string in the code space onto the stack as a standard
 \ address-plus-count pair
-PRIMITIVE: (SLITERAL) ( -- s n ) " ess bracket literal"
+C: (SLITERAL) ( -- s n )
     BYTEPTR addr;
 
     addr = (BYTEPTR) ip;
     n = (CELL) *addr;
     s = addr + 1;
     ip = (XTPTR) ((BYTEPTR) ip + n + 1);
-;PRIMITIVE
+;C
 
 
 \ ---------- Constants ----------
 
 \ False truth value
-PRIMITIVE: FALSE ( -- f )
+C: FALSE ( -- f )
     f = 0;
-;PRIMITIVE
+;C
 
 \ True truth valuse, the ones-complement of FALSE
-PRIMITIVE: TRUE ( -- f )
+C: TRUE ( -- f )
     f = !0;
-;PRIMITIVE
+;C
 
 \ The number of bytes needed to hold n cells
-PRIMITIVE: CELLS ( n -- bs )
+C: CELLS ( n -- bs )
     bs = n * sizeof(CELL); 
-;PRIMITIVE
+;C
 
 \ The number of bytes needed to hold n characters, which are
 \ typically - but not necessarily -- bytes
-PRIMITIVE: CHARS ( n -- bs )
+C: CHARS ( n -- bs )
     bs = n * sizeof(CHARACTER); 
-;PRIMITIVE
+;C
 
 
 \ ---------- Basic arithmetic operations ----------
 
 \ Single-precision addition
-PRIMITIVE: + ( n1 n2 -- n3 )
+C: + ( n1 n2 -- n3 )
     n3 = n1 + n2;
-;PRIMITIVE
+;C
 
 \ Single-precision subtraction
-PRIMITIVE: - ( n1 n2 -- n3 )
+C: - ( n1 n2 -- n3 )
     n3 = n1 - n2;
-;PRIMITIVE
+;C
 
 \ Single-precision multiplication
-PRIMITIVE: * ( n1 n2 -- n3 )
+C: * ( n1 n2 -- n3 )
     n3 = n1 * n2;
-;PRIMITIVE
+;C
 
 \ Single-precision integer quotient and remainder
-PRIMITIVE: /MOD ( n1 n2 -- r q ) " slash mod"
+C: /MOD ( n1 n2 -- r q )
     q = (CELL) (n1 / n2);
     r = (CELL) (n1 % n2);
-;PRIMITIVE
+;C
 
 \ Compute (n1*n2)/n3 and (n1*n2)%n3, where the multiplication
 \ term is held in double precision"
-PRIMITIVE: */MOD ( n1 n2 n3 -- r q ) " star slash mod"
+C: */MOD ( n1 n2 n3 -- r q )
     DOUBLE_CELL i;
 
     i = (DOUBLE_CELL) (n1 * n2);
     q = (CELL) (i / (DOUBLE_CELL) n3);
     r = (CELL) (i % (DOUBLE_CELL) n3);
-;PRIMITIVE
+;C
 
 \ Negate a number
-PRIMITIVE: NEGATE ( n1 -- n2 )
+C: NEGATE ( n1 -- n2 )
     n2 = -n1;
-;PRIMITIVE
+;C
 
 \ Force number to be positive
-PRIMITIVE: ABS ( n1 -- n2 )
+C: ABS ( n1 -- n2 )
     n2 = (n1 < 0) ? -n1 : n1;
-;PRIMITIVE
+;C
 
 
 \ ---------- Comparisons ----------
@@ -221,173 +245,183 @@ PRIMITIVE: ABS ( n1 -- n2 )
 \ as well make them all equally fast
 
 \ Extract the larger of two numbers
-PRIMITIVE: MAX ( n1 n2 -- n3 )
+C: MAX ( n1 n2 -- n3 )
     n3 = (n1 > n2) ? n1 : n2;
-;PRIMITIVE
+;C
 
 \ Extract the smaller of two numbers
-PRIMITIVE: MIN ( n1 n2 -- n3 )
+C: MIN ( n1 n2 -- n3 )
     n3 = (n1 < n2) ? n1 : n2;
-;PRIMITIVE
+;C
 
 \ Test whether a is strictly greater than b
-PRIMITIVE: > ( a b -- f ) " greater than"
+C: > ( a b -- f )
     f = (a > b) ? TRUE : FALSE;
-;PRIMITIVE
+;C
 
 \ Test whether a is greater than or equal to b
-PRIMITIVE: >= ( a b -- f ) " greater than or equal to"
+C: >= ( a b -- f )
     f = (a >= b) ? TRUE : FALSE;
-;PRIMITIVE
+;C
 
 \ Test whether a is strictly less than b
-PRIMITIVE: < ( a b -- f ) " less than"
+C: < ( a b -- f )
     f = (a < b) ? TRUE : FALSE;
-;PRIMITIVE
+;C
 
+\ Test whether b <= a < c
+C: WITHIN ( a b c -- f )
+    f = ((b <= a) && (a < c));
+;C
+	
 \ Test whether a is less than or equal to b
-PRIMITIVE: <= ( a b -- f ) " less than or equal to"
+C: <= ( a b -- f )
     f = (a <= b) ? TRUE : FALSE;
-;PRIMITIVE
+;C
 
 \ Test whether a and b are equal
-PRIMITIVE: = ( a b -- f ) " equals"
+C: = ( a b -- f )
     f = (a == b) ? TRUE : FALSE;
-;PRIMITIVE
+;C
 
+\ Test whether a and b are unequal
+C: <> ( a b -- f )
+    f = (a == b) ? FALSE : TRUE;
+;C
+	
 \ Test whether a is zero
-PRIMITIVE: 0= ( a -- f ) " zero equals"
+C: 0= ( a -- f )
     f = (a == 0) ? TRUE : FALSE;
-;PRIMITIVE
+;C
 
 \ Test whether a is non-zero
-PRIMITIVE: 0<> ( a -- f ) " zero not equals"
+C: 0<> ( a -- f )
     f = (a != 0) ? TRUE : FALSE;
-;PRIMITIVE
+;C
 
 \ Test whether a is less than zero
-PRIMITIVE: 0< ( a -- f ) " zero less than"
+C: 0< ( a -- f )
     f = (a < 0) ? TRUE : FALSE;
-;PRIMITIVE
+;C
 
 \ Test whether a is greater than zero
-PRIMITIVE: 0> ( a -- f ) " zero greater than"
+C: 0> ( a -- f )
     f = (a > 0) ? TRUE : FALSE;
-;PRIMITIVE
+;C
 
 
 \ ---------- Bit-level operators ----------
 
 \ Bitwise AND
-PRIMITIVE: AND ( a b -- c )
+C: AND ( a b -- c )
     c = a & b;
-;PRIMITIVE
+;C
 
 \ Bitwise OR
-PRIMITIVE: OR ( a b -- c )
+C: OR ( a b -- c )
     c = a | b;
-;PRIMITIVE
+;C
 
 \ Bitwise XOR
-PRIMITIVE: XOR ( a b -- c )
+C: XOR ( a b -- c )
     c = a ^ b;
-;PRIMITIVE
+;C
 
 \ Bitwise inversion
-PRIMITIVE: INVERT ( a -- b )
+C: INVERT ( a -- b )
     b  = ~a;
-;PRIMITIVE
+;C
 
 \ Logical negation -- kind of unnecessary, but makes code easier to read
-PRIMITIVE: NOT ( f -- nf )
+C: NOT ( f -- nf )
     nf = f ? FALSE : TRUE;
-;PRIMITIVE
+;C
     
 \ Shift a left n bits, replacing the rightmost n bits with zeros
-PRIMITIVE: LSHIFT ( a n -- b ) " el shift"
+C: LSHIFT ( a n -- b )
     b = a << n;
-;PRIMITIVE
+;C
 
 \ Shift a right n bits, replacing the leftmost n bits with zeros
-PRIMITIVE: RSHIFT ( a n -- b ) " ar shift"
+C: RSHIFT ( a n -- b )
     b = a >> n;
-;PRIMITIVE
+;C
 
 
 \ ---------- Common operations ----------
 \ sd: For these to be worthwhile defining as primitives they need to be more optimised
 
 \ Increment the top stack item    
-PRIMITIVE: 1+ ( n1 -- n2 ) " one plus"
+C: 1+ ( n1 -- n2 )
     n2 = n1 + 1;
-;PRIMITIVE
+;C
 
 \ Decrement the top stack item    
-PRIMITIVE: 1- ( n1 -- n2 ) " one minus"
+C: 1- ( n1 -- n2 )
     n2 = n1 - 1;
-;PRIMITIVE
+;C
 
 \ Double the top stack item    
-PRIMITIVE: 2* ( n1 -- n2 ) " two times"
+C: 2* ( n1 -- n2 )
     n2 = n1 << 1;
-;PRIMITIVE
+;C
 
 \ Halve the top stack item    
-PRIMITIVE: 2/ ( n1 -- n2 ) " two divide"
+C: 2/ ( n1 -- n2 )
     n2 = n1 >> 1;
-;PRIMITIVE
+;C
 
 
 \ ---------- Memory operations ----------
 
 \ Store a value in a cell
-PRIMITIVE: ! ( v addr -- ) " store"
+C: ! prim_store_cell ( v addr -- )
     (*((CELLPTR) addr)) = (CELL) v;
-;PRIMITIVE
+;C
 
 \ Retrieve the cell at the given address
-PRIMITIVE: @ ( addr -- v ) " fetch"
+C: @ prim_fetch_cell ( addr -- v )
     v = (*((CELLPTR) addr));
-;PRIMITIVE
-   
+;C
+	
 \ Increment the value at the given address
-PRIMITIVE: +! ( n addr -- ) " plus store"
+C: +! ( n addr -- )
     (*((CELLPTR) addr)) += n;
-;PRIMITIVE
+;C
     
 \ Store a character at an address
-PRIMITIVE: C! ( c addr -- ) " see store"
+C: C! ( c addr -- )
     (*((CHARACTERPTR) addr)) = (CHARACTER) c;
-;PRIMITIVE
+;C
 
 \ Store a double cell value
-PRIMITIVE: 2! ( a b addr -- ) " too store"
+C: 2! ( a b addr -- )
     CELLPTR ptr;
 
     ptr = (CELLPTR) addr;
     *ptr++ = b;
     *ptr = a;
-;PRIMITIVE
+;C
 
 \ Retrieve a double cell from the given address
-PRIMITIVE: 2@ ( addr -- a b ) " too fetch"
+C: 2@ ( addr -- a b )
     CELLPTR ptr;
 
     ptr = (CELLPTR) addr;
     b = *ptr++;
     a = *ptr;
-;PRIMITIVE
+;C
 
 \ Retrieve the character at the given address
-PRIMITIVE: C@ ( addr -- c ) " see fetch"
+C: C@ ( addr -- c )
     c = (*((CHARACTERPTR) addr));
-;PRIMITIVE
+;C
 
 \ sd: These next two words are deliberately coded without using memcpy()
 \ or bcopy() to minimise library dependencies    
     
 \ Move a block of memory from addr1 to addr2, starting from the lower address
-PRIMITIVE: CMOVE ( addr1 addr2 n -- ) " see move up"
+C: CMOVE ( addr1 addr2 n -- )
     int i;
     BYTEPTR ptr1, ptr2;
 
@@ -395,10 +429,10 @@ PRIMITIVE: CMOVE ( addr1 addr2 n -- ) " see move up"
     for(i = 0; i < n ; i++) {
         *ptr2++ = *ptr1++;
     }
-;PRIMITIVE
+;C
 
 \ Move a block of memory from addr1 to addr2, starting from the higher address
-PRIMITIVE: CMOVE> ( addr1 addr2 n -- ) " see move down"
+C: CMOVE> ( addr1 addr2 n -- )
     int i;
     BYTEPTR ptr1, ptr2;
 
@@ -406,4 +440,5 @@ PRIMITIVE: CMOVE> ( addr1 addr2 n -- ) " see move down"
     for(i = n - 1; i >= 0 ; i++) {
         *ptr2++ = *ptr1++;
     }
-;PRIMITIVE
+;C
+

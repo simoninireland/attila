@@ -28,20 +28,22 @@ include comments.fs
 \ dependencies that exist between some of the source files (clearly
 \ indicated in the comments for the files in the distribution).
 
-\ "Primitives" outside the VM core, mainly wrappers for "real" primitives
-include base.fs
+\ "Primitives" outside the VM core
+include base.fs                  \ Derived primitives
+
+\ Simple control structures
 include conditionals.fs          \ IF ... ELSE ... THEN
 
 \ Advanced compilation words
 include createdoes.fs            \ CREATE ... DOES>
 include interpret-compile.fs     \ INTERPRET-COMPILE
-include variables.fs             \ VARIABLE, CONSTANT, VALUE and USER
+include variables.fs             \ VARIABLE, CONSTANT and USER
+include values.fs                \ VALUE
+include defer.fs                 \ DEFER ... IS
 
 \ The VM
-include vm.fs
-
-\ Compilation helpers
-include defer.fs                 \ DEFER ... IS
+include vm.fs                    \ Virtual machine structures and constants 
+include ascii.fs                 \ ASCII character operations
 
 \ Data structures
 include stacks.fs                \ General stacks
@@ -49,17 +51,25 @@ include stacks.fs                \ General stacks
 \ Control structures
 include cs-stack.fs              \ Control structures stack
 include loops.fs                 \ BEGIN ... AGAIN
-                                  \ BEGIN ... UNTIL
-                                  \ BEGIN ... WHILE ... REPEAT
-include counted-loops.fs         \ DO ... LOOP
-                                  \ DO ... +LOOP
+                                 \ BEGIN ... UNTIL
+                                 \ BEGIN ... WHILE ... REPEAT
+include counted-loops-runtime.fs \ DO ... LOOP and +LOOP
+include counted-loops.fs
 include case.fs                  \ CASE ... OF ... ENDOF ... ENDCASE
+include hooks.fs                 \ Dynamic behaviour at strategic points
 
 \ Data types
-include strings.fs               \ Character and string operations
+include strings.fs               \ Character and (short) string operations
+include zstrings.fs              \ Null-terminated (long) strings
 include scratch.fs               \ String scratch area
 include formatting.fs            \ Formatted numeric output
 include lists.fs                 \ Linked lists
+
+\ File management
+include file.fs                  \ I/O re-direction
+
+\ Foreign language support
+include c.fs                     \ C definitions (check for definitions)
 
 \ Word list control
 include wordlists.fs             \ Multiple word lists

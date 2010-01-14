@@ -1,8 +1,8 @@
 \ $Id$
 
-\ The primitive cross-compiler
+\ The C-language cross-compiler
 \
-\ Primitives are stored in Attila source files alongside Attila code.
+\ C primitives are stored in Attila source files alongside Attila code.
 \ When loaded into the cross-compiler they are converted into
 \ stylised C functions and output to a file ready for later compilation.
 \
@@ -82,8 +82,8 @@ DATA (PRIMTEXT) 20 1024 * ALLOT
 
 <WORDLISTS ALSO CROSS-COMPILER DEFINITIONS
 
-\ Parse a primitive, creating a locator word that holds all its details
-: PRIMITIVE:
+\ Parse a C primitive, creating a locator word that holds all its details
+: C:
     PARSE-WORD 2DUP
     (PRIMITIVE-LOCATOR)                    \ compile a locator
     LAST-PRIMITIVE PRIMITIVE-NAME,         \ compile the primitive's name
@@ -116,7 +116,7 @@ DATA (PRIMTEXT) 20 1024 * ALLOT
     BEGIN
 	DUP
 	REFILL IF
-	    SOURCE 1- S" ;PRIMITIVE" S=CI? IF
+	    SOURCE 1- S" ;C" S=CI? IF
 		2DROP DROP
 		REFILL DROP
 		FALSE
@@ -124,7 +124,7 @@ DATA (PRIMTEXT) 20 1024 * ALLOT
 		TRUE
 	    THEN
 	ELSE
-	    S" Input ended before ;PRIMITIVE" ABORT
+	    S" Input ended before ;C" ABORT
 	THEN
     WHILE
 	    Z+S DUP Z+NL
@@ -154,14 +154,14 @@ WORDLISTS>
 
 <WORDLISTS ALSO CROSS-COMPILER DEFINITIONS
 
-\ Parse a C block, creating a block
-: C: \ ( -- )
+\ Parse a C header, creating a block
+: CHEADER: \ ( -- )
     NULL (PRIMTEXT) C!
     (PRIMTEXT)
     BEGIN
 	DUP
 	REFILL IF
-	    SOURCE 1- S" ;C" S=CI? IF
+	    SOURCE 1- S" ;CHEADER" S=CI? IF
 		2DROP DROP
 		REFILL DROP
 		FALSE
@@ -169,7 +169,7 @@ WORDLISTS>
 		TRUE
 	    THEN
 	ELSE
-	    S" Input ended before ;C" ABORT
+	    S" Input ended before ;CHEADER" ABORT
 	THEN
     WHILE
 	    Z+S DUP Z+NL
@@ -182,7 +182,6 @@ WORDLISTS>
 
 
 \ ---------- Primitive and block generation ----------
-\ sd: these should be refactored to allow non-C primitives etc
 
 <WORDLISTS ALSO CODE-GENERATOR ALSO DEFINITIONS
 

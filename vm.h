@@ -27,15 +27,15 @@
 
 // Base types
 typedef void VOID;
-typedef unsigned long CELL;
-typedef unsigned long long DOUBLE_CELL;
+typedef long CELL;
+typedef long long DOUBLE_CELL;
 typedef VOID *XT;
 typedef unsigned char BYTE;
 typedef unsigned char CHARACTER;
 
 // Sizes in bytes
 #define CELL_SIZE sizeof(CELL)
-#define MEM_SIZE (48 * 2024)
+#define MEM_SIZE (256 * 1024 * CELL_SIZE)
 #define DATA_STACK_SIZE (100 * CELL_SIZE)
 #define RETURN_STACK_SIZE (100 * CELL_SIZE)
 #define USER_SIZE (20 * CELL_SIZE)

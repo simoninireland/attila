@@ -23,9 +23,7 @@
 \ complement rather than replace the data and return stack words,
 \ which have been retained for performance reasons.
 \
-\ Since we're used by control structures we can't use them ourselves,
-\ which explains the manual construction of conditionals to handle errors
-\ and loops to handle mass popping.
+\ Since we're used by control structures we can't use them ourselves.
 \ Requires: createdoes.fs
 
 \ ---------- Stack creation and layout ----------
@@ -73,37 +71,33 @@
 
 \ Push an element from the data stack to the given stack
 : >ST \ ( v st  -- )
-    DUP ROT ST-OVERFLOW?
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	S" Stack overflow" ABORT
-    [ DUP JUMP> SWAP ! ]                      \ THEN
+    DUP ROT ST-OVERFLOW? IF
+	S" >ST Stack overflow" ABORT
+    THEN
     OVER ST>TOPADDR !
     1 SWAP +STN ;
 
 \ Pop the top entry from the given stack
 : ST> \ ( st -- v )
-    DUP ST-UNDERFLOW?
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	S" Stack underflow" ABORT
-    [ DUP JUMP> SWAP ! ]                      \ THEN
+    DUP ST-UNDERFLOW? IF
+	S" ST> Stack underflow" ABORT
+    THEN
     DUP ST>TOPADDR 1 CELLS - @
     1 NEGATE -ROT +STN ;
 
 \ Peek at the top entry of the given stack
 : ST@ \ ( st -- v )
-    DUP #ST 0=
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	S" Stack underflow" ABORT
-    [ DUP JUMP> SWAP ! ]                      \ THEN
+    DUP #ST 0= IF
+	S" ST@ Stack underflow" ABORT
+    THEN
     ST>TOPADDR 1 CELLS - @ ;
 
 \ Return the address of the i-th cell, counting from 0
 \ Very un-TIL-like, but useful....
 : ST>ADDR \ ( i st -- addr )
-    2DUP #ST >=
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	S" Stack pick underflow" ABORT
-    [ DUP JUMP> SWAP ! ]                      \ THEN
+    2DUP #ST >= IF
+	S" ST>ADDR stack underflow" ABORT
+    THEN
     ST>TOPADDR SWAP 1+ CELLS - ;
 
 \ Pick the i'th item from the stack, counting from 0
@@ -117,13 +111,12 @@
 
 \ Drop n items, or empty the stack, whichever is smaller
 : ST-NDROP \ ( n st -- )
-    OVER 0>
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]                        \ IF
-        DUP ST>N -ROT MIN
+    OVER 0> IF
+        DUP #ST -ROT MIN
         NEGATE SWAP +STN
-    [ ' (BRANCH) COMPILE, TOP 0 COMPILE, SWAP DUP JUMP> SWAP ! ]   \ ELSE
+    ELSE
         2DROP
-    [ DUP JUMP> SWAP ! ] ;                                         \ THEN
+    THEN ;
 
 \ Drop 1 item
 : ST-DROP \ ( st -- )

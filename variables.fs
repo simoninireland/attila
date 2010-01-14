@@ -23,29 +23,14 @@
 : VARIABLE \ ( "name" -- )
     DATA 0 , ;
     
-\ Create a real constant, which substitutes its value immediately
+\ Create a constant, which substitutes its value immediately
 \ as a literal
 : CONSTANT \ ( v "name" -- )
     CREATE IMMEDIATE ,
   DOES> @
-    INTERPRETING? NOT
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
+    INTERPRETING? NOT IF
         POSTPONE LITERAL
-    [ DUP JUMP> SWAP ! ] ;                    \ THEN
- 
-\ Create a value, which returns its value when executed
-: VALUE \ ( v "name" -- )
-    CREATE ,
-  DOES> @ ;
-
-\ Re-assign a value
-' !
-:NONAME POSTPONE LITERAL [COMPILE] ! ;
-INTERPRET/COMPILE (TO)
-
-\ Top-level TO
-: TO \ ( v "name" -- )
-    ' >BODY POSTPONE (TO) ; IMMEDIATE
+    THEN ;
 
 \ Create a user variable, returning the address of an indexed location
 \ within the user area

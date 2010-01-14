@@ -41,7 +41,7 @@
 #
 # primgen synthesises, for each primitive, a C routine of the form:
 # void
-# primname() {
+# primname( XT _xt ) {
 #    parameters
 #    code
 #    results
@@ -62,11 +62,11 @@
 # Some sets of primitives need support code, headers etc. primgen recognises
 # literal C text bracketed, i.e.:
 #
-# C:
+# CHEADER:
 # #include <stdlib.h>
 #
 # #define VERSION "0.1"
-# ;C
+# ;CHEADER
 #
 # which will be emitted directly into the C file. 
 
@@ -93,7 +93,7 @@ sub parsePrimitives {
 
     # process each primitive or declaration
     while($line = <PRIMS>) {
-	if($line =~ /^PRIMITIVE:\s+([^\s]+)\s+(([a-zA-Z0-9_]+)\s+)?\(([^-]*)--([^-]*)\)(\s*"([^"]+))?/) {
+	if($line =~ /^C:\s+([^\s]+)\s+(([a-zA-Z0-9_]+)\s+)?\(([^-]*)--([^-]*)\)(\s*"([^"]+))?/) {
 	    # we're in a primitive to extract the elements
 	    $word = $1;
 	    $prim = $3;   $prim = primName($word) unless($prim);
@@ -112,7 +112,7 @@ sub parsePrimitives {
 	    # read the code and/or declarations for the primitive
 	    $code = $decl = "";
 	  codeline: while($line = <PRIMS>) {
-	      if($line =~ /^;PRIMITIVE/) {
+	      if($line =~ /^;C/) {
 		  # we're done
 		  last codeline;
 	      } elsif(($line =~ /^\s*$/) && !$decl) {
@@ -130,11 +130,11 @@ sub parsePrimitives {
 	    ($f, $summary) = generatePrimitive($word, $pronounce, $prim, \@in, \@out, $decl, $code);
 	    $functions .= $f;
 	    print "$summary\n" if($verbose);
-	} elsif($line =~ /^C:/) {
+	} elsif($line =~ /^CHEADER:/) {
 	    # we're in a header declaration, extract the code
 	    $code = "";
 	  declline: while($line = <PRIMS>) {
-	      if($line =~ /^;C/) {
+	      if($line =~ /^;CHEADER/) {
 		  last declline;
 	      } else {
 		  $code .= $line;

@@ -1,5 +1,4 @@
 : \ REFILL DROP ; IMMEDIATE
-: ( 41 PARSE 2DROP ; IMMEDIATE
 
 \ $Id$
 
@@ -21,4 +20,7 @@
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 \ Standard comment behaviour
+
+\ Treat as a comment everything until the next closing bracket
+: ( 41 PARSE 2DROP ; IMMEDIATE
 

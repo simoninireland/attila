@@ -36,7 +36,7 @@
 \ This isn't an especially  sensible layout, but it *is* simple for
 \ bootstrapping purposes.
 
-C:
+CHEADER:
 #include "bootstrap.h"
 
 // ---------- Initialisation ----------
@@ -45,6 +45,9 @@ BYTEPTR
 init_memory( CELL len ) {
     return (BYTEPTR) malloc(len);
 }
+
+XT master_executive = NULL;
+jmp_buf env;
 
 
 // ---------- Assorted hacks to call underlying primitives from C level ----------
@@ -189,61 +192,61 @@ show_execute( XT xt ) {
         free(buf);
     }
 }
-;C
+;CHEADER
 
 
 \ ---------- Memory and compilation primitives ----------
 
 \ We don't do alignment for boostrapping
-PRIMITIVE: ALIGNED ( addr -- addr )
-;PRIMITIVE
+C: ALIGNED ( addr -- addr )
+;C
 PRIMITIVE ALIGN ( -- )
-;PRIMITIVE
-PRIMITIVE: CALIGNED ( addr -- addr )
-;PRIMITIVE
+;C
+C: CALIGNED ( addr -- addr )
+;C
 PRIMITIVE CALIGN ( -- )
-;PRIMITIVE
+;C
 
 \ Compile a character into the body of a word
-PRIMITIVE: C, compile_char ( c -- )
+C: C, compile_char ( c -- )
     *top++ = (BYTE) c;
-;PRIMITIVE
-
+;C
+    
 \ Compile a cell into the body of a word
-PRIMITIVE: , ( v -- )
+C: , prim_memory_cell ( v -- )
     CELLPTR t;
 
     t = (CELLPTR) top;
     *t = (CELL) v;
     top += CELL_SIZE;
-;PRIMITIVE
+;C
 
+\ Compile an xt into the body of a word
+C: XT, ( -- )
+    prim_memory_cell(_xt);
+;C
+    
 \ Allocate some body memory
-PRIMITIVE: ALLOT allot ( n -- )
+C: ALLOT allot ( n -- )
     top += n;
-;PRIMITIVE
-
-\ Return the address of the top of the dictionary
-PRIMITIVE: TOP ( -- addr )
-    addr = (CELL) top;
-;PRIMITIVE
+;C
 
 \ Compile a cell (generally an xt) into the code of a word
-PRIMITIVE: COMPILE, prim_compile_cell ( xt -- )
+C: COMPILE, prim_compile_cell ( xt -- )
     CELLPTR t;
 
     t = (CELLPTR) top;
     *t = (CELL) xt;
     top += CELL_SIZE;
-;PRIMITIVE
+;C
 
 \ Compile a character into the code of a word
-PRIMITIVE: CCOMPILE, prim_compile_char ( c -- )
+C: CCOMPILE, prim_compile_char ( c -- )
     *top++ = (BYTE) c;
-;PRIMITIVE
+;C
 
 \ Compile a string into the code of a word
-PRIMITIVE: SCOMPILE, prim_compile_string ( addr n -- )
+C: SCOMPILE, prim_compile_string ( addr n -- )
     int i;
     CHARACTERPTR str;
 
@@ -252,53 +255,84 @@ PRIMITIVE: SCOMPILE, prim_compile_string ( addr n -- )
     for(i = 0; i < n; i++ ) {
         compile_byte(str[i]);
    }
-;PRIMITIVE
+;C
 
 \ Compile an xt into the code of a word -- same as COMPILE,
-PRIMITIVE: XTCOMPILE, ( -- )
+C: XTCOMPILE, ( -- )
     prim_compile_cell(_xt);
-;PRIMITIVE
+;C
+
+\ Compile a cfa into the code of a word -- same as COMPILE,
+C: CFACOMPILE, ( -- )
+    prim_compile_cell(_xt);
+;C
+
+\ Compile a ct -- same as XTCOMPILE, in an indirect threaded interpreter
+C: CTCOMPILE, ( -- )
+    prim_compile_cell(_xt);
+;C
+
+\ Compile NEXT
+C: NEXT, ( -- )
+    PUSH_CELL(0);
+    prim_compile_cell(_xt);
+;C
+    
+\ Return the address of the n'th user variable
+\ sd: note USERVAR not USER -- the latter is the new-user-variable-creating word
+C: USERVAR user_variable_address ( n -- addr )
+    addr = (CELL) (((CELLPTR) user) + n);
+;C
     
 \ Return the address of the next available body word. This is the
 \ same as TOP in this memory model, but conceptually distinct
-PRIMITIVE: HERE ( -- addr )
+C: HERE ( -- addr )
     addr = (CELL) top;
-;PRIMITIVE
+;C
 
-\ Return the address of the n'th user variable
-\ sd: note USERVAR not USER -- the latter is the new-user-variable-creating word
-PRIMITIVE: USERVAR user_variable_address ( n -- addr )
-    addr = (CELL) (((CELLPTR) user) + n);
-;PRIMITIVE
+\ Return the address of the top of the dictionary
+C: TOP ( -- addr )
+    addr = (CELL) top;
+;C
 
 
 \ ---------- Navigating the header ----------
 
-\ Covert an xt to a code field address.
-PRIMITIVE: >CFA ( xt -- xt )
-;PRIMITIVE
+\ Convert an xt to a code field address.
+C: >CFA ( xt -- xt )
+;C
 
+\ Retrieve the code field of an xt
+C: CFA@ ( xt -- cfa )
+    cfa = *((CELLPTR *) xt);
+;C
+    
+\ Update the code field of an xt
+C: CFA! ( cfa xt -- )
+    *((CELLPTR) xt) = cfa;
+;C
+    
 \ Convert an xt to a link field address
-PRIMITIVE: >LFA to_lfa ( xt -- lfa )
+C: >LFA to_lfa ( xt -- lfa )
     BYTEPTR ptr;
 
     ptr = (BYTEPTR) xt;
     ptr += CELL_SIZE;
     lfa = (CELL) (ptr + 1 + *ptr);
-;PRIMITIVE
+;C
 
 \ Convert an xt to a status byte address.
-PRIMITIVE: >STATUS to_status ( -- addr )
+C: >STATUS to_status ( -- addr )
     CELLPTR lfa;
 
     to_lfa(NULL);
     lfa = (CELLPTR) POP_CELL();
     addr = (CELL) (lfa + 1);
-;PRIMITIVE
-
+;C
+    
 \ Convert an xt to the body address, accounting for the indirect
 \ boy address that's stored for CREATEd words 
-PRIMITIVE: >BODY to_body ( -- addr ) " to body"
+C: >BODY to_body ( -- addr )
     BYTEPTR st;
     BYTE status;
 
@@ -308,42 +342,50 @@ PRIMITIVE: >BODY to_body ( -- addr ) " to body"
     addr = (CELL) (st + 1);
     if(status & STATUS_REDIRECTABLE)
         addr += CELL_SIZE;
-;PRIMITIVE
+;C
 
+\ Convert an xt to its indirect body address (without checking
+\ whether this makes sense
+C: >IBA ( -- addr )
+    to_body(_xt);
+    addr = POP_CELL();
+    addr = (CELL) (((BYTEPTR) addr) - CELL_SIZE);
+;C
+    
 \ Convert an xt to the name of the corresponding word
-PRIMITIVE: >NAME to_name ( xt -- addr namelen)
+C: >NAME to_name ( xt -- addr namelen)
     BYTEPTR nla;
 
     nla = (BYTEPTR) ((CELLPTR) xt + 1);
     namelen = (BYTE) *nla;
     addr = (CELL) (nla + 1);
-;PRIMITIVE
+;C
 
 
 \ ---------- Control primitives ----------
 
 \ Jump unconditionally to the address compiled in the next cell
-PRIMITIVE: (BRANCH) ( -- )
+C: (BRANCH) ( -- )
   CELL offset = (CELL) *ip;
   ip = (XTPTR) (((BYTEPTR) ip) + offset);
-;PRIMITIVE
+;C
 
 \ Test the top of the stack and either continue (if true) or
 \ jump to the address compiled in the next cell (if false)
-PRIMITIVE: (?BRANCH) ( f -- )
+C: (?BRANCH) ( f -- )
   if(f)
     ip++;
   else {
     CELL offset = (CELL) *ip;
     ip = (XTPTR) (((BYTEPTR) ip) + offset);
   }
-;PRIMITIVE
+;C
 
 
 \ ---------- Inner interpreter ----------
 
 \ Execute an xt from the stack
-PRIMITIVE: EXECUTE execute ( xt -- )
+C: EXECUTE execute ( xt -- )
     PRIMITIVE prim;
 
     // dispatch on the instruction
@@ -362,11 +404,11 @@ PRIMITIVE: EXECUTE execute ( xt -- )
 	    (*prim)(xt);
 	}
     }
-;PRIMITIVE
+;C
 
 \ Run the virtual machine interpretation loop. This is simple, infinite,
 \ single-threaded loop to get things going
-PRIMITIVE: (:) docolon ( -- ) " bracket colon"
+C: (:) docolon ( -- ) " bracket colon"
     XT xt;
 	
     do {
@@ -382,30 +424,30 @@ PRIMITIVE: (:) docolon ( -- ) " bracket colon"
 	PUSH_CELL(xt);
 	execute(xt);
     } while(1);
-;PRIMITIVE
+;C
 
 \ The run-time behaviour of a variable, returning its body address
-PRIMITIVE: (VAR) dovar ( -- addr ) " bracket var"
+C: (VAR) dovar ( -- addr ) " bracket var"
     addr = (CELL) xt_to_body(_xt);
-;PRIMITIVE
+;C
 
 \ For a re-directable word, grab the indirect body address and jump to it,
 \ pushing the real body address onto the stack first
 \ sd: should we combine this with (VAR) and switch on redirectability?
-PRIMITIVE: (DOES) ( -- body )
+C: (DOES) ( -- body )
     CELLPTR iba;
 	
     body = (CELL) xt_to_body(_xt);
     iba = (CELLPTR) ((CELLPTR) body - 1);
     PUSH_RETURN(ip);
-    ip = (XT) *((CELLPTR *) iba);
-;PRIMITIVE
+    ip = (XT) *((XTPTR *) iba);
+;C
 
 
 \ ---------- Word compilation ----------
 
 \ Compile a word header. Note that this has to work with an empty name
-PRIMITIVE: (HEADER,) start_word ( addr len cf -- xt )
+C: (HEADER,) start_word ( addr len cf -- xt )
     XT last;
 	
     xt = (XT) top;                                     // grab the xt	
@@ -417,249 +459,12 @@ PRIMITIVE: (HEADER,) start_word ( addr len cf -- xt )
     top += CELL_SIZE;
     *top++ = (BYTE) 0;                                 // the status field
     *(user_variable(USER_LAST)) = xt;                  // LAST gets the xt we just compiled
-;PRIMITIVE
-
-
-\ ---------- Terminal I/O ----------
-
-\ Read a line into the text buffer from the input source. If the input
-\ source is a terminal, use readline(); otherwise, just read the line.
-\ Leave a flag on the stack, 0 if the input source is exhausted
-PRIMITIVE: REFILL fill_tib ( -- f )
-  char *line = NULL;
-  FILE *input_source = (FILE *) (*(user_variable(USER_INPUTSOURCE)));
-  char **tib = (char **) user_variable(USER_TIB);
-  int *offset = (int *) user_variable(USER_OFFSET);
-
-  if(input_source == stdin) {
-    // use readline() to allow line editing, copy the first non-blank
-    // line read to the TIB
-    do {
-      if(line != NULL) free(line);
-      printf(" ok ");
-      line = readline("");
-    } while((line != NULL) &&
-	    (strlen(line) == 0));
-    if(line != NULL) {
-      strcpy(*tib, line);   free(line);
-      f = 1;
-    }
-  } else {
-    // read directly into the TIB
-    do {
-      line = fgets(*tib, TIB_SIZE, input_source);
-    } while((line != NULL) &&
-	    (strlen(line) == 0));
-    if(line == NULL)
-      **tib = '\0';
-    else
-      f = 1;
-  }
-   
-  // reset input to the start of the TIB
-  *offset = 0;
-;PRIMITIVE
-
-
-\ Place the address of the current input point in the TIB and the
-\ number of remaining characters onto the stack
-PRIMITIVE: SOURCE ( -- addr n )
-  char *tib;
-  int offset;
-      
-  tib = (char *) (*(user_variable(USER_TIB)));
-  offset = (int) (*(user_variable(USER_OFFSET)));
-  addr = (CELL) ((offset == -1) ? tib : tib + offset);
-  n = (CELL) ((offset == -1) ? 0 : strlen((char *) addr));
-;PRIMITIVE
-
-
-\ Parse the next word, consuming leading whitespace. Leave either
-\ an address count pair or zero on the stack
-PRIMITIVE: PARSE-WORD ( -- )
-  CELL c = 0;
-  char *tib = (char *) (*(user_variable(USER_TIB)));
-  int *offset = (int *) user_variable(USER_OFFSET);
-  int newoffset;
-  int len;
-  char *newpoint;
-  CELL remaining;
-
-  do {
-    // fill the TIB if we need a line
-    if(*offset == -1) {
-      fill_tib(_xt);
-
-      // check for an exhausted input source, and fail if we have one
-      remaining = POP_CELL();
-      if(!remaining) {
-	PUSH_CELL(remaining);
-	return;
-      }
-    }
-    
-    // consume leading whitespace
-    len = strspn(tib + *offset, WHITESPACE);
-    *offset += len;
-  
-    // parse everything except whitespace
-    len = strcspn(tib + *offset, WHITESPACE);
-    if(len == 0)
-      *offset = -1;
-  } while(len == 0);
-  newoffset = *offset + len;
-  if(*(tib + newoffset) == '\0')
-    newoffset = -1;
-  
-  // push the result onto the stack
-  newpoint = tib + *offset;
-  PUSH_CELL(newpoint);
-  PUSH_CELL(len);
-
-  // update point
-  *offset = newoffset;
-;PRIMITIVE
-
-
-\ Consume all instances of the delimiter character in the input line
-PRIMITIVE: CONSUME ( c -- )
-  CELL remaining;
-  char *tib = (char *) (*(user_variable(USER_TIB)));
-  int *offset = (int *) user_variable(USER_OFFSET);
-  char cc;
-
-  // fill the TIB if we need a line
-  if(*offset == -1) {
-    fill_tib(_xt);
-
-    // check for an exhausted input source
-    remaining = POP_CELL();
-    if(!remaining)
-      return;
-  }
-
-  while(cc = *(tib + *offset),
-	((cc != '\0') &&
-	 (cc == (char) c)))
-    (*offset)++;
-;PRIMITIVE
-
-
-\ Parse the input stream up to the next instance of the delimiter
-\ character, returning null if there is no such delimiter before
-\ the end of the line
-PRIMITIVE: PARSE ( c -- )
-  char *ptr, *end;
-  int len;
-  CELL remaining;
-  char *tib = (char *) (*(user_variable(USER_TIB)));
-  int *offset = (int *) user_variable(USER_OFFSET);
-  char *point;
-
-  // fill the TIB if we need a line
-  if(*offset == -1) {
-    fill_tib(_xt);
-
-    // check for an exhausted input source, and fail if we have one
-    remaining = POP_CELL();
-    if(!remaining) {
-      PUSH_CELL(remaining);
-      return;
-    }
-  }
-
-  // search for the next delimiter character
-  point = tib + *offset;
-  ptr = index(point, c);
-  if(ptr == NULL) {
-    PUSH_CELL(ptr);
-    return;
-  }
-
-  // push the result onto the stack
-  len = ptr - point;
-  PUSH_CELL(point);
-  PUSH_CELL(len);
-
-  // update point
-  *offset += len + 1;
-  if(*(tib + *offset) == '\0')
-    *offset = -1;
-;PRIMITIVE
-
-\ Print the given string on the terminal
-PRIMITIVE: TYPE ( addr n -- )
-  char *buf;
-	
-  // copy string to null-terminated local buffer
-  buf = (CHARACTERPTR) malloc(n + 1);
-  memcpy(buf, (BYTEPTR) addr, n);   buf[n] = '\0';
-
-  // print and tidy up
-  printf("%s", buf);   fflush(stdout);
-  free(buf);
-;PRIMITIVE
-
-\ Print a character on the terminal
-PRIMITIVE: EMIT ( c -- )
-  printf("%c", (CHARACTER) c);
-;PRIMITIVE
-
-\ Print the top number on the stack
-PRIMITIVE: . ( n -- )	
-    printf("%d", n);
-;PRIMITIVE
-
-\ Print the whole stack
-PRIMITIVE: .S ( -- )
-    int i, n;
-
-    n = DATA_STACK_DEPTH();
-    printf("#%d", n);
-    for(i = n - 1; i >= 0; i--) {
-        printf(" %d", *(DATA_STACK_ITEM(i)));
-    }
-;PRIMITIVE
-
-	
-\ ---------- Compilation support ----------
-
-\ Convert a token to a number if possible, pushing the result
-\ (if done) and a flag
-PRIMITIVE: NUMBER? ( addr n -- )
-  char *buf;
-  char *digitptr;
-  int i, len, acc, digit;
-  int valid = 1;
-  int base = *(user_variable(USER_BASE));
-
-  buf = (CHARACTERPTR) malloc(n + 1);
-  memcpy(buf, addr, n);   buf[n] = '\0';
-
-  // convert number
-  acc = 0;
-  for(i = 0; i < n; i++) {
-    digitptr = index(digits, toupper(buf[i]));
-    digit = digitptr - digits;
-    if((digitptr == NULL) ||
-       (digit > base)) {
-      // illegal number character
-      valid = 0;
-      break;
-    }
-    acc = (acc * base) + digit;
-  }
-
-  if(valid)
-    PUSH_CELL(acc);
-  PUSH_CELL(valid);
-  free(buf);
-;PRIMITIVE
+;C
 
 \ Look up a word in a list, traversing the headers until we find the word
 \ or hit null. We return 0 if the word is not found, its xt and 1 if it
 \ is, and its xt and -1 if it is found an is immediate
-PRIMITIVE: (FIND) bracket_find ( addr namelen x -- ) " bracket find"
+C: (FIND) bracket_find ( addr namelen x -- )
     CHARACTERPTR taddr;
     BYTEPTR ha;
     CELL tlen;
@@ -685,43 +490,15 @@ PRIMITIVE: (FIND) bracket_find ( addr namelen x -- ) " bracket find"
         status = *xt_to_status(xt);
         PUSH_CELL((status & STATUS_IMMEDIATE) ? -1 : 1);
     }
-;PRIMITIVE	
-
-
-\ ---------- File I/O ----------
-
-\ Test if the input source has been exhausted, i.e. we can't do a REFILL
-PRIMITIVE: EXHAUSTED? ( -- eof )
-  FILE *f =  (FILE *) (*(user_variable(USER_INPUTSOURCE)));
-
-  if(f == stdin)
-    eof = 0;
-  else {
-    eof = feof(f);
-  }
-;PRIMITIVE
-
-\ Open a file, returning a file handle or 0
-PRIMITIVE: FILE-OPEN ( addr namelen -- fh )
-  CHARACTERPTR fn;
-
-  fn = (CHARACTERPTR) malloc(namelen + 1);
-  strncpy(fn, (CHARACTERPTR) addr, namelen);   fn[namelen] = '\0';
-  fh = (CELL) fopen(fn, "r");
-  free(fn);
-;PRIMITIVE
-
-\ Close a file
-PRIMITIVE: FILE-CLOSE ( fh -- )
-  if(((FILE *) fh) != stdin)
-    fclose((FILE *) fh);
-;PRIMITIVE
+;C
 
 
 \ ---------- Start-up and shut-down ----------
 
 \ Warm-start the system into a known state
-PRIMITIVE: WARM ( -- )
+C: WARM ( -- )
+    setjmp(env);
+	    
     // reset the stacks      
     DATA_STACK_RESET();
     RETURN_STACK_RESET();  
@@ -730,10 +507,20 @@ PRIMITIVE: WARM ( -- )
     *(user_variable(USER_STATE)) = (CELL) STATE_INTERPRETING;
     *(user_variable(USER_BASE)) = (CELL) 10;
     *(user_variable(USER_TRACE)) = (CELL) 0;
+    if(*(user_variable(USER_INPUTSOURCE)) != NULL &&
+       *(user_variable(USER_INPUTSOURCE)) != stdin)
+        fclose(*(user_variable(USER_INPUTSOURCE)));
     *(user_variable(USER_INPUTSOURCE)) = stdin;
     *(user_variable(USER_OFFSET)) = -1; // in need of a refill
-      
+    if(*(user_variable(USER_OUTPUTSINK)) != NULL &&
+       *(user_variable(USER_OUTPUTSINK)) != stdout)
+        fclose(*(user_variable(USER_OUTPUTSINK)));
+    *(user_variable(USER_OUTPUTSINK)) = stdout;
+    if(master_executive == NULL)
+        master_executive = xt_of("OUTER");
+    *(user_variable(USER_EXECUTIVE)) = (CELL) master_executive;
+	
     // point the ip at the executive and return
     ip = xt_to_body(*(user_variable(USER_EXECUTIVE)));
-;PRIMITIVE
+;C
       

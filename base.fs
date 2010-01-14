@@ -26,55 +26,6 @@
 \ but for efficiency it's probably better as a primitive. Still, the
 \ principle is clear
 
-
-\ ---------- Word status ----------
-
-\ Compile the execution semantics of an immediate word
-: POSTPONE \ ( "name" -- )
-    ' COMPILE, ; IMMEDIATE
-
-\ Grab the xt of the next word in the input at compile time and leave
-\ it on the stack at run-time
-: ['] \ ( "name" -- )
-    ' POSTPONE LITERAL ; IMMEDIATE
-
-
-\ ---------- Compilation ----------
-
-\ At run-time, compile the next word in the input source at compile time
-: [COMPILE] \ ( "word" -- )
-    POSTPONE [']
-    ['] COMPILE, COMPILE, ; IMMEDIATE
-
-\ Compile an anonymous word with no name, leaving its xt on the data stack
-: :NONAME \ ( -- xt )
-    0 0 [ ' (:) >CFA @ ] LITERAL (HEADER,) DUP START-DEFINITION ] ;
-    
-
-\ ---------- Portable address arithmetic ----------
-
-\ Compute a jump offset from a to TOP, in bytes
-: JUMP> \ ( a -- offset )
-    TOP SWAP - ;
-
-\ Compute a jump offset from TOP to a, in bytes
-: >JUMP \ ( a -- offset )
-    TOP - ;
-
-
-\ ---------- Recursion ----------
-
-\ Call the current word recursively. This is needed because the currently-defined
-\ word's name need not be present in the search order until the closing ;
-: RECURSE \ ( -- )
-    LASTXT COMPILE, ; IMMEDIATE
-
-
-\ Call the current word tail-recursively. This call doesn't return here,
-\ so use with care
-\ TBD
-
-
 \ ---------- Derived arithmetic operators ----------
     
 \ Divide a by b as integers

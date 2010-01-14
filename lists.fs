@@ -1,8 +1,9 @@
 \ $Id$
 
 \ Doubly-linked lists in data memory. These are typically used to allocate
-\ lists within the bodies of words. They should really be re-factored to
-\ allow the use of dynamic memory.
+\ lists within the bodies of words.
+\
+\ This code should really be re-factored to allow the use of dynamic memory.
 \
 \ The element value is of arbitrary size, and nothing forces all elements
 \ to be the same, as long as you can avoid overruns.
@@ -32,6 +33,22 @@
     ELEMENT-VALUE @ ;
 : CELL-ELEMENT! \ ( n elem -- )
     ELEMENT-VALUE ! ;
+
+\ Lists of words (xts)
+: XT-ELEMENT \ ( xt -- elem )
+    (LIST-ELEMENT) SWAP , ;
+: XT-ELEMENT@ \ ( elem -- xt )
+    ELEMENT-VALUE XT@ ;
+: XT-ELEMENT! \ ( xt elem -- )
+    ELEMENT-VALUE XT! ;
+
+\ Lists of addresses
+: A-ELEMENT \ ( addr -- elem )
+    (LIST-ELEMENT) SWAP , ;
+: A-ELEMENT@ \ ( elem -- addr )
+    ELEMENT-VALUE A@ ;
+: A-ELEMENT! \ ( addr elem -- )
+    ELEMENT-VALUE A! ;
 
 \ Lists of (constant) strings
 : STRING-ELEMENT \ ( addr n -- elem )

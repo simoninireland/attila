@@ -19,7 +19,7 @@
 
 \ The colon-definition compiler
 
-\ ---------- Colon-definition words ----------
+\ ---------- Literals ----------
 
 \ Compile the top of the stack as a literal
 : LITERAL \ ( n -- )
@@ -46,27 +46,23 @@
     32 CONSUME \ spaces
     [CHAR] " PARSE
     ?DUP IF
-	SLITERAL
-    ELSE
-	S" String not delimited" ABORT
+	POSTPONE SLITERAL
+\    ELSE
+\	S" String not delimited" ABORT
     THEN ; IMMEDIATE
 
-\ Enter interpretation state
-: [ \ ( -- )
-    INTERPRETATION-STATE STATE ! ;
 
-\ Enter compilation state
-: ] \ ( -- )
-    COMPILATION-STATE STATE ! ;
-
-\ Complete a colon-definition
-: ; \ ( xt -- )
-    0 COMPILE, \ NEXT
-    END_DEFINITION
-    [ DROP ; IMMEDIATE
+\ ---------- The colon-compiler ----------
 
 \ The colon-definer
 : : \ ( "name" -- xt )
     START-DEFINITION
-    PARSE-WORD [ ' (:) CFA@ ] (HEADER,)
+    PARSE-WORD ['] (:) CFA@ (HEADER,)
     ] ;
+
+\ Complete a colon-definition
+: ; \ ( xt -- )
+    NEXT,
+    END-DEFINITION
+    POSTPONE [ DROP ; IMMEDIATE
+

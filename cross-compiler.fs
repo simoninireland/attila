@@ -2,20 +2,15 @@
 
 \ The Attila cross-compiler
 
-\ ---------- The word lists ----------
+\ ---------- A new state ----------
 
-\ The word lists
-\
-\    - CROSS, used for words that build words in the target image
-\    - TARGET, used to hold locator words for words in the target
-\
-\ Any other word goes into the word list that's current when you load
-\ the cross-compiler
-ALSO ROOT DEFINITIONS
-WORDLIST CONSTANT CROSS-WORDLIST                   \ Host words
-CROSS-WORDLIST PARSE-WORD CROSS (VOCABULARY)
-WORDLIST CONSTANT TARGET-WORDLIST                  \ Target locator words
-TARGET-WORDLIST PARSE-WORD TARGET (VOCABULARY)
+2 CONSTANT CROSS-COMPILATION-STATE
+
+\ Test whether we are cross-compiling
+: CROSS-COMPILING? STATE @ CROSS-COMPILATION-STATE = ;
+
+
+\ ---------- More precise word list handling ----------
 
 \ Find a word in a given wordlist, aborting if we fail
 : FIND-IN-WORDLIST \ ( addr n wid -- xt )
@@ -27,55 +22,155 @@ TARGET-WORDLIST PARSE-WORD TARGET (VOCABULARY)
 	S" not found in word list" ABORT
     THEN ;
 
+\ Immediate look-up in a specific wordlist
+: ['WORDLIST] \ ( wid "name" -- xt )
+    PARSE-WORD -ROT FIND-IN-WORDLIST ; IMMEDIATE
+
 \ Look-up and execute/compile a word from (only) the given word list
 \ sd: This may be a common pattern: should it be moved into wordlists.fs?
 :NONAME \ ( wid "name" -- )
-    PARSE-WORD -ROT FIND-IN-WORDLIST
+    POSTPONE ['WORDLIST]
     EXECUTE ;
 :NONAME \ ( wid "name" -- )
-    PARSE-WORD -ROT FIND-IN-WORDLIST
-    XTCOMPILE, ;
+    POSTPONE ['WORDLIST]
+    DUP IMMEDIATE? IF
+	EXECUTE     \ execute any immediate words as normal
+    ELSE
+	CTCOMPILE,  \ compile normal words
+    THEN ;
 INTERPRET/COMPILE [WORDLIST]
-: [CROSS]  CROSS-WORDLIST  POSTPONE [WORDLIST] ; IMMEDIATE
-: [TARGET] TARGET-WORDLIST POSTPONE [WORDLIST] ; IMMEDIATE
+
+
+\ ---------- Helpers ----------
+
+\ Placeholder for C-level inclusions from architecture description
+: C-INCLUDE \ ( "name" -- )
+    PARSE-WORD 2DROP ;
+
+
+\ ---------- The word lists ----------
+
+\ Placed in ROOT so that we can access them even when we're not
+\ searching FORTH
+<WORDLISTS ALSO ROOT DEFINITIONS
+
+.( Cross-compiler wordlists...)
+NAMED-WORDLIST CROSS          CONSTANT CROSS-WORDLIST
+NAMED-WORDLIST TARGET         CONSTANT TARGET-WORDLIST
+NAMED-WORDLIST CROSS-COMPILER CONSTANT CROSS-COMPILER-WORDLIST
+NAMED-WORDLIST CODE-GENERATOR CONSTANT CODE-GENERATOR-WORDLIST
+
+CROSS-WORDLIST          PARSE-WORD CROSS          (VOCABULARY)
+TARGET-WORDLIST         PARSE-WORD TARGET         (VOCABULARY)
+CROSS-COMPILER-WORDLIST PARSE-WORD CROSS-COMPILER (VOCABULARY)
+CODE-GENERATOR-WORDLIST PARSE-WORD CODE-GENERATOR (VOCABULARY)
+
+\ Look-up and execute/compile the next word from the given wordlist
+: [CROSS]          CROSS-WORDLIST           POSTPONE [WORDLIST]  ; IMMEDIATE
+: [TARGET]         TARGET-WORDLIST          POSTPONE [WORDLIST]  ; IMMEDIATE
+: [CROSS-COMPILER] CROSS-COMPILER-WORDLIST  POSTPONE [WORDLIST]  ; IMMEDIATE
+: [FORTH]          FORTH-WORDLIST           POSTPONE [WORDLIST]  ; IMMEDIATE
+: [CODE-GENERATOR] CODE-GENERATOR-WORDLIST  POSTPONE [WORDLIST]  ; IMMEDIATE
+
+\ Look-up the next word in the input stream from the given wordlist
+: 'CROSS           CROSS-WORDLIST           POSTPONE ['WORDLIST] ;
+: 'TARGET          TARGET-WORDLIST          POSTPONE ['WORDLIST] ;
+: 'CROSS-COMPILER  CROSS-COMPILER-WORDLIST  POSTPONE ['WORDLIST] ;
+: 'FORTH           FORTH-WORDLIST           POSTPONE ['WORDLIST] ;
+
+\ Display the key wordlists alone, for debugging
+: TARGET-WORDS         TARGET-WORDLIST         .WORDLIST ;
+: CROSS-WORDS          CROSS-WORDLIST          .WORDLIST ;
+: CROSS-COMPILER-WORDS CROSS-COMPILER-WORDLIST .WORDLIST ;
+: CODE-GENERATOR-WORDS CODE-GENERATOR-WORDLIST .WORDLIST ;
+
+WORDLISTS>
 
 
 \ ---------- The main body of the cross-compiler ----------
 
-\ Primitive parsing
-include cross-primitives.fs
+<WORDLISTS ALSO CODE-GENERATOR ALSO DEFINITIONS
 
+\ Current version string
+: VERSION S" v0.2 alpha $Date$" ;
 
-\ The target architecture's description
+\ Generate a timestamp string
+: TIMESTAMP
+    ." Attila cross-compiler " VERSION TYPE ;
+
+WORDLISTS>
+
+<WORDLISTS ALSO CROSS ALSO DEFINITIONS
+
 \ sd: should come from elsewhere
-\ Definitions go into CROSS, but it isn't being searched, so we
-\ will have to escape all CROSS words explicitly with [CROSS]
-ALSO CROSS DEFINITIONS
+.( Loading cross compiler architecture description...)
 include x-arch-gcc-host.fs
 
 \ Return the number of bytes needed to hold n target cells
 : CELLS \ ( n -- b )
-    [CROSS] /CELL * ;
+    /CELL * ;
 
-\ The image manager
+\ Prepare for loading files with comments in them
+include comments.fs
+
+\ Pre-defining unavoidable forward references
+DEFER >CFA
+DEFER (HEADER,)
+DEFER CTCOMPILE,
+DEFER NEXT,
+
 \ sd: should come from elsewhere
+.( Loading image manager...)
 include x-image-gcc.fs
 
-\ Get ready to go
-ONLY FORTH ALSO DEFINITIONS ALSO CROSS
+WORDLISTS>
+
+.( Loading locator structures...)
+include cross-locator.fs
+.( Loading cross-compiler memory model...)
+include cross-flat-memory-model.fs
+.( Loading C language primitive compiler...)
+include cross-c.fs
+.( Loading colon cross-compiler...)
+include cross-colon.fs
+.( Loading vm description generator...)
+include cross-vm.fs
+.( Loading cross-compiler file generators...)
+include cross-generate.fs
+.( Loading cross-compiler coding environments...)
+include cross-environments.fs
+.( Loading cross defining words)
+<WORDLISTS ALSO CROSS ALSO CROSS-COMPILER DEFINITIONS
+include createdoes.fs
+include variables.fs
+WORDLISTS>
+.( Loading cross-compiler control structures...)
+<WORDLISTS ALSO CROSS ALSO CROSS-COMPILER DEFINITIONS
+include conditionals.fs
+include loops.fs
+include counted-loops.fs
+WORDLISTS>
+
+.( Initialising image...)
 (INITIALISE-IMAGE)
 
+.( Loading target image...)
+<TARGET
+include core.fs
+include itil.fs
+include x-lib-fileio-gcc-host.fs
+include x-lib-io-gcc-host.fs
+include counted-loops-runtime.fs
 
-\ ---------- Running the cross-compiler ----------
-\ sd: should come from elsewhere
-
-\ Load the words that build the image into CROSS
-ONLY FORTH ALSO CROSS ALSO DEFINITIONS
+include base.fs
 include flat-memory-model.fs
-include colon.fs
 
-\ Now load the parts of the image into TARGET, using only the
-\ words defined in CROSS and TARGET
-\ sd: this might not be enough, and we might need FORTH too
-ONLY FORTH ALSO CROSS ALSO TARGET ALSO DEFINITIONS
+include itil-compilation.fs
+: START-DEFINITION ;
+: END-DEFINITION ;
+include compilation.fs
+
+include executive.fs
+TARGET>
+
 

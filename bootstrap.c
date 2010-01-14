@@ -61,6 +61,16 @@ init_dictionary() {
   COMPILE("@");
   NEXT();
 
+  // access the IBA of a word
+  DEFINE("IBA@");
+  COMPILE(">IBA");
+  COMPILE("@");
+  NEXT();
+  DEFINE("IBA!");
+  COMPILE(">IBA");
+  COMPILE("!");
+  NEXT();
+
   
   // ---------- Compilation hooks and wrappers ----------
   // sd: these should realy be DEFERred words, but we don't necessarily
@@ -178,12 +188,47 @@ init_dictionary() {
   NEXT();
 
 
+  // ---------- Memory access ----------
+
+  // all stores and fetches are the same in the bootstrap model
+  DEFINE("XT!");
+  COMPILE("!");
+  NEXT();
+  DEFINE("XT@");
+  COMPILE("@");
+  NEXT();
+  DEFINE("A!");
+  COMPILE("!");
+  NEXT();
+  DEFINE("A@");
+  COMPILE("@");
+  NEXT();
+  DEFINE("RA!");
+  COMPILE("!");
+  NEXT();
+  DEFINE("RA@");
+  COMPILE("@");
+  NEXT();
+
+
   // ----- The colon-definition words -----
 
   // compile a literal
   DEFINE_IMMEDIATE("LITERAL");
   COMPILE_COMPILE("(LITERAL)");
   COMPILE("COMPILE,");
+  NEXT();
+
+  // compile an xt literal
+  DEFINE_IMMEDIATE("XTLITERAL");
+  COMPILE_COMPILE("(LITERAL)");
+  COMPILE("XTCOMPILE,");
+  NEXT();
+
+  // compile a cfa literal
+  DEFINE_IMMEDIATE("CFALITERAL");
+  COMPILE_COMPILE("(LITERAL)");
+  COMPILE("CFACOMPILE,");
   NEXT();
 
   // compile a string literal
@@ -226,18 +271,62 @@ init_dictionary() {
   // the colon definer
   DEFINE(":");
   COMPILE("PARSE-WORD");
+  COMPILE("2DUP");
+  STRING(": ");   COMPILE("TYPE");
+  COMPILE("TYPE");
+  LITERAL(10);   COMPILE("EMIT");
   LITERAL(&docolon);
   COMPILE("(HEADER,)");
   COMPILE("START-DEFINITION");
+  LITERAL(USER_EXECUTIVE);
+  COMPILE("USERVAR");
+  COMPILE("@");
+  COMPILE("SWAP");
   COMPILE("]");
   NEXT();
 
   // finish colon-definition
   DEFINE_IMMEDIATE(";");
   COMPILE_NEXT();
-  COMPILE("END-DEFINITION");
+  COMPILE("SWAP");
+  LITERAL(USER_EXECUTIVE);
+  COMPILE("USERVAR");
+  COMPILE("!");
   COMPILE("[");
+  COMPILE("END-DEFINITION");
   COMPILE("DROP");
+  NEXT();
+
+  // postpone an IMMEDIATE word
+  DEFINE_IMMEDIATE("POSTPONE");
+  COMPILE("'");
+  COMPILE("COMPILE,");
+  NEXT();
+
+
+  // grab the xt for the next word and leave it on the stack
+  DEFINE_IMMEDIATE("[']");
+  COMPILE("'");
+  COMPILE("LITERAL");
+  NEXT();
+
+  // compile the code to compile the next word
+  DEFINE_IMMEDIATE("[COMPILE]");
+  COMPILE("[']");
+  COMPILE_COMPILE("COMPILE,");
+  NEXT();
+
+  // compute a jump offset from a to TOP, in bytes
+  DEFINE("JUMP>");
+  COMPILE("TOP");
+  COMPILE("SWAP");
+  COMPILE("-");
+  NEXT();
+  
+  // compute a jump offset from TOP to a, in bytes
+  DEFINE(">JUMP");
+  COMPILE("TOP");
+  COMPILE("-");
   NEXT();
 
 
@@ -296,7 +385,7 @@ init_dictionary() {
   // ----- Including files -----
 
   // load a file
-  DEFINE("(LOAD)"); // fh --
+  DEFINE("(LOAD)");             // fh --
   LITERAL(USER_INPUTSOURCE);    // fh 1
   COMPILE("USERVAR");           // fh input
   COMPILE("DUP");               // fh input input
@@ -314,34 +403,31 @@ init_dictionary() {
   COMPILE("R>"); COMPILE("R>"); COMPILE("R>");
 
   COMPILE("-ROT");              // input ofh fh
-  COMPILE("FILE-CLOSE");        // input ofh
+  COMPILE("DROP");              // input ofh
   COMPILE("SWAP");              // ofh input
   COMPILE("!");                 //
   NEXT();
 
-  // find a file and open it using the given file opener
-  DEFINE("(OPEN-FILE)"); // ( addr len opener -- fh )
-  COMPILE(">R");
-  COMPILE("2DUP");                // addr len addr len
-  COMPILE("R>");
-  COMPILE("EXECUTE");             // addr len fh
-  COMPILE("DUP");                 // addr len fh fh
-  COMPILE_IF(if8,th8,el8);        // addr len fh
-    COMPILE("ROT");               // fh addr len 
-    COMPILE("2DROP");             // fh
-  COMPILE_ELSE(if8,th8,el8);      // addr len fh
-    COMPILE("DROP");              // addr len
-    COMPILE("TYPE");              //
-    STRING(" not accessible");
-    COMPILE("ABORT");
-  COMPILE_ELSETHEN(if8,th8,el8);
-  NEXT();
-
   // load a file
   DEFINE("LOAD"); // ( addr len -- ) 
-  COMPILE_REFERENCE_TO("FILE-OPEN");
-  COMPILE("(OPEN-FILE)");
-  COMPILE("(LOAD)");
+  COMPILE("2DUP");
+  COMPILE("R/O");
+  COMPILE("OPEN-FILE");
+  COMPILE_IF(if8, th8, el8);
+    COMPILE("DROP");
+    COMPILE("TYPE");
+    LITERAL(32);
+    COMPILE("EMIT");
+    STRING("not accessible");
+    COMPILE("ABORT");
+  COMPILE_ELSE(if8, th8, el8);
+    COMPILE("ROT");
+    COMPILE("2DROP");
+    COMPILE("DUP");
+    COMPILE("(LOAD)");
+    COMPILE("CLOSE-FILE");
+    COMPILE("DROP");
+  COMPILE_ELSETHEN(if8, th8, el8);
   NEXT();
 
   // load a file -- same as LOAD
@@ -350,7 +436,7 @@ init_dictionary() {
   NEXT();
    
   // compiler directive to include (load) a file
-  DEFINE_IMMEDIATE("INCLUDE");
+  DEFINE("INCLUDE");
   COMPILE("PARSE-WORD");
   COMPILE("INCLUDED");
   NEXT();
@@ -361,5 +447,4 @@ init_dictionary() {
   // put COLD into the start-up vector and set OUTER as the executive
   startup = (XTPTR) bottom;
   *startup = xt_of("COLD");
-  *(user_variable(USER_EXECUTIVE)) = xt_of("OUTER");
 }

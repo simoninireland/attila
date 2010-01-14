@@ -573,18 +573,136 @@ primgen is a Perl script that generates a bootstrap virtual machine.
 
 </pre>
 </div>
-<div title="ColonCompilerWords" modifier="sd" created="200911161105" modified="200912021543" tags="words compiler (:) EXECUTE : ; [ ] (HEADER,)" changecount="9">
+<div title="CLanguageMacros" modifier="sd" created="201001131324" modified="201001131330" tags="cross-compiler primitive c" changecount="7">
+<pre>!C-language types and macros
+
+A number of types and macros are provided to simplify the creation of C-language primitives, and should be used wherever possible. This will help ensure that C code is portable across platforms.
+
+!!Types
+
+|!C name                    |!Typical C type            |!Use |
+|{{{CELL}}}                  |{{{int}}}                        |Cells |
+|{{{DOUBLE_CELL}}}   |{{{long}}}                      |Double-sized cells|
+|{{{XT}}}                       |{{{void *}}}                    |Execution tokens |
+|{{{VOID}}}                   |{{{void}}}                      |Non-value returns |
+|{{{CHARACTER}}}       |{{{unsigned char}}}       |Characters |
+|{{{BYTE}}}                  |{{{unsigned char}}}       |Bytes |
+|{{{CELLPTR}}}            |{{{unsigned int *}}}        ||
+|{{{XTPTR}}}                 |{{{void **}}}                  ||
+|{{{CHARACTERPTR}}} |{{{unsigned char *}}}    ||
+|{{{BYTEPTR}}}            |{{{unsigned char *}}}    ||
+|{{{PRIMITIVE}}}           |{{{VOID (*)( XTPTR )}}}  |Signatures of primitive methods|
+
+The reason for characters //and// bytes is to support Unicode characters eventually, which would require two bytes.
+  
+!!Macros
+
+{{{POP_CELL()}}}
+Pop a cell off the data stack and return it.
+
+{{{PUSH_CELL( v )}}}
+Push v onto the data stack.
+
+{{{POP_RETURN()}}}
+Pop an address off the return stack and return it. You should only use this if you know how the implementation treats the return stack, since it can vary.
+
+{{{PUSH_RETURN( addr )}}}
+Push addr onto the return stack. Again, this requires care.
+
+{{{CALL(prim)}}}
+Call the primitive prim. You need to manually push and pop any values it expects.
+</pre>
+</div>
+<div title="CLanguagePrimitives" modifier="sd" created="201001131306" modified="201001131316" tags="cross-compiler primitive c words C: ;C CHEADER: ;CHEADER" changecount="2">
+<pre>C is the usual language for cross-compiling, simply because C compilers are so ubiquitous. Using C to write primitives means that they can then be cross-compiled for a wide range of platforms, from micro-controllers and motes to mainframes and clouds.
+
+Attila include two structures for including C into cross-compiled systems. Individual words can be defined using the {{{C:}}} ... {{{;C}}} construct, which creates a word whose body is written in C. Some words require additional support code, which can be provided by {{{CHEADER:}}} ... {{{;CHEADER}}} which will be included at the head of any generated file. 
+
+
+!!Examples
+
+Perhaps the simplest primitive are words that provide basic stack manipulations. We can illustrate this by re-implementing {{{NIP}}}, which drops the second word on the stack. This can be implemented in Attila as:
+
+&gt; : NIP ( a b -- b )
+&gt;     SWAP DROP ;
+
+but we'll code it as a primitive. First we need to declare it as a primitive and put in its stack signature, pretty much as above:
+
+&gt; C: NIP ( a b -- b )
+
+What is the code for this primitive? Actually it doesn't need any, since the stack comment encapsulates all that it does, so that's the end of the primitive:
+
+&gt; ;C
+
+What does it mean for the stack comment to &quot;encapsulate&quot; anything? In &quot;normal&quot; Attila, stack comments are just that: comments. In primitives, though, it's helpful to treat them as a &quot;bridge&quot; between the Attila level and the primitive's behaviour in C. The cross-compiler therefore generates some code from the stack comment, to take the (Attila-level) data off the (Attila) stack and make them available as (C-level) variables before the primitive executes, and then to push the (C-level) variables back onto the (Attila-level) stack after the primitive runs. What this means is that the primitive's behaviour can //assume// it has variables whose names match those in the stack comment, and that those variables will be pushed back correctly at the end of its execution.
+
+When run through a primitive compiler, the code generated will look something like this:
+
+&gt; VOID
+&gt; prim23( XT _xt ) {
+&gt;     CELL a;
+&gt;     CELL b;
+&gt;
+&gt;     b = POP_CELL()
+&gt;     a = POP_CELL();
+&gt;
+&gt;     PUSH_CELL(b);
+&gt; }
+
+If you know C, and if you also know that {{{POP_CELL()}}} and {{{PUSH_CELL()}}} manipulate the data stack by popping and pushing cells, you can see what the primitive does: pops the top two stack cells and then pushes the first, dropping the second. It's possible to re-code this more efficiently, of course, but it illustrates the approach. The primitive is given a fairly random name at C level, and has run-time access to the xt of the word it implements at Attila level.
+
+(There are [[several types and macros|CLanguageMacros]] that are used to abstract-away from the details of the mapping from C to Attila.) 
+
+We can do a more complex primitive that actually runs real code in its body, rather than simply manipulating the stack. For example, {{{*/MOD}}} is coded as:
+
+&gt; C: */MOD ( n1 n2 n3 -- r q )
+&gt;     DOUBLE_CELL i;
+&gt;
+&gt;     i = (DOUBLE_CELL) (n1 * n2);
+&gt;     q = (CELL) (i / (DOUBLE_CELL) n3);
+&gt;     r = (CELL) (i % (DOUBLE_CELL) n3);
+&gt; ;C
+
+Here we declare a new, local variable which we then use in computing the effect of the primitive. The elements in the stack comment appear as variables in the primitive's code, and can be read and assigned to as required. The compiler will handle placing them on and off the stack.
+
+!!Naming primitives at C level
+
+It's sometimes useful to name a primitive so it can be called from inside another primitive. You can do this by adding a C-level identifier between the Attila identifier and the stack comment, for example:
+
+&gt; C: &gt;BODY prim_to_body ( xt -- addr )
+&gt;     addr = (CELL) ((CELLPTR) xt + 1);
+&gt; ;C
+
+which will generate code like:
+
+&gt; VOID
+&gt; prim_to_body( XT _xt ) {
+&gt;     CELL xt;
+&gt;     CELL addr;
+&gt;
+&gt;     xt = POP_CELL()
+&gt;     addr = (CELL) ((CELLPTR) xt + 1);
+&gt;     PUSH_CELL(addr);
+&gt; }
+
+
+</pre>
+</div>
+<div title="ColonCompilerWords" modifier="sd" created="200911161105" modified="201001081155" tags="words compiler (:) EXECUTE : ; :NONAME [ ] (HEADER,)" changecount="14">
 <pre>!Colon-compiler words
 
 These words form the heart of the compiler, allowing new words to be defined. (The concepts behind colon-definitions is explained [[here|ColonDefinition]].)
 
 !!User-level words
 
-{{{:}}} ( &quot;word&quot; -- ) &quot;colon&quot;
+{{{:}}} ( &quot;word&quot; -- xt ) &quot;colon&quot;
 Start a [[colon-definition|ColonDefinition]], the main way of defining new words. The next word in the input stream is used to create the new word, and the system switches into [[compilation state|CompileInterpretState]].
 
-{{{;}}} ( -- ) &quot;semi colon&quot;
+{{{;}}} ( xt -- ) &quot;semi colon&quot;
 End the current colon-definition and switch the system into [[interpretation state|CompileInterpretState]].
+
+{{{:NONAME}}} ( -- xt xt ) &quot;colon no name&quot;
+Start an anonymous [[colon-definition|ColonDefinition]] that leaves its xt on the stack after its closing {{{;}}}. Anonymous words can be used to define functions that are only needed as (for example) part of a single data structure, and don't need to clutter the namespace.  
 
 {{{EXECUTE}}} ( xt -- )
 Execute the word represented by the xt on the stack.
@@ -595,6 +713,7 @@ Place the system into [[interpretation state|CompileInterpretState]]. Words read
 {{{]}}} ( -- ) &quot;close square&quot;
 Place the system into [[compilation state|CompileInterpretState]]. Words read from the input stream will be compiled into the dictionary. 
 
+
 !!Implementation words
 
 {{{(:)}}} ( -- ) &quot;bracket colon&quot;
@@ -602,7 +721,6 @@ Execute the inner interpreter for the Attila system, running colon-definitions a
 
 {{{(HEADER,)}}} ( addr n prim -- xt ) &quot;bracket header comma&quot;
 Compile a header for a word with the given name using prim as its primitive behaviour, returning the xt for the new word.
-
 </pre>
 </div>
 <div title="ColonDefinition" modifier="sd" created="200911161730" modified="200911191615" tags="compiler [[colon definition]]" changecount="3">
@@ -645,11 +763,11 @@ The process the compiler follows when it executes a colon definition begins with
 
 </pre>
 </div>
-<div title="Copyright" modifier="sd" created="200911151816" modified="200911271535" changecount="4">
+<div title="Copyright" modifier="sd" created="200911151816" modified="201001061014" changecount="5">
 <pre>!Copyright
 
 This file is part of Attila, a retargetable threaded interpreter
-Copyright (c) 2007 -- 2009, [[Simon Dobson|mailto:simon.dobson@computer.org]]. All rights reserved.
+Copyright (c) 2007 -- 20010, [[Simon Dobson|mailto:simon.dobson@computer.org]]. All rights reserved.
 
 Attila is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 
@@ -659,7 +777,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 </pre>
 </div>
-<div title="CrossCompiler" modifier="sd" created="200911161003" modified="200912021601" tags="compiler cross-compiler [[virtual machine]]" changecount="12">
+<div title="CrossCompiler" modifier="sd" created="200911161003" modified="201001131257" tags="compiler cross-compiler [[virtual machine]]" changecount="13">
 <pre>!The Attila cross-compiler
 
 The main goal of Attila is to be re-targetable, to be used to create languages and services for systems other than regular development platforms. This particularly includes small systems like wireless sensor network nodes and embedded sensors, which are traditionally programmed in C: using Attila we hope to be able to experiment with more advancaed, alternative language designs for these systems, using Attila as a target for programming language research.
@@ -688,17 +806,21 @@ The design and implementation of a cross-compiler are conceptually quite delicat
 
 The stages of cross-compilation are as follows. Firstly we need a full, working Attila ''host system''. This includes words for allocating and accessing memory, defining words and other core features. On top of this, we construct a ''target image'' which will hold the image of the Attila system we are attempting to cross-compile. Essentially the target image is a representation of the target system, held in the memory of the host, and will be initially empty.
 
-We then define the words needed to ''populate'' the target image. This typically includes low-level memory access and compilation words like {{{COMPILE,}}} and {{{,}}}, and also any higher-level compilation words like {{{CREATE}}} and {{{:}}} -- the words we normally associate with a compiler. Executing these words will compile code and data -- but into the target image rather than into the host. Clearly these ''cross-compilation'' words should have the same names as the &quot;normal&quot; ''compilation'' words to avoid our having to learn a new vocabulary; equally clearly this is a source of potential confusion. We place the cross-compilation words into their own word list, {{{CROSS}}}. Words in {{{CROSS}}} will build code and data in the target image, never in the host.
+We then define the words needed to ''populate'' the target image. This typically includes low-level memory access and compilation words like {{{COMPILE,}}} and {{{,}}}, and also any higher-level compilation words like {{{CREATE}}} and {{{:}}} -- the words we normally associate with a compiler. Executing these words will compile code and data -- but into the target image rather than into the host. Clearly these ''cross-compilation'' words should have the same names as the &quot;normal&quot; ''compilation'' words to avoid our having to learn a new vocabulary; equally clearly this is a source of potential confusion.
 
-We can then use the {{{CROSS}}} words to compile our target code, simply by loading the relevant source code using {{{INCLUDE}}}. We load //all// the code we want to land in the target image, including the complete base system and virtual machine. The cross-compiler includes definitions for {{{PRIMITIVE:}}} and other words that allow virtual machine primitives to be defined. The result is that the target image is ''populated'' with the words we want to include -- and //only// those words.
+We place the words that manipulate the target image into their own word list, {{{CROSS}}}. Words in {{{CROSS}}} will build code and data in the target image, never in the host. We place cross-compiler words used at &quot;normal&quot; code level into a word list {{{CROSS-COMPILER}}}. These words are used to build target code: they in turn use the words in {{{CROSS}}} to actually access the image. Typically we find words like {{{COMPILE,}}} and {{{CELLS}}} in {{{CROSS}}} -- they refer to the low-level details of the image -- and words like {{{CREATE}}} and {{{:}}} in {{{CROSS-COMPILER}}}. 
 
-We need to be able to find words we've definined in the target for use in later words in the target, so we maintain a word list called {{{TARGET}}} that holds ''locator words'' for each word we define in the target image. So {{{TARGET}}} essentially holds the dictionary that the //target// will have access to,  held in a form that the //host//, and more specifically the //cross-compiler//, can use. 
+We can then use these words to compile our target code, simply by loading the relevant source code using {{{INCLUDE}}}. We load //all// the code we want to land in the target image, including the complete base system and virtual machine. The cross-compiler includes definitions for primitives, typically written in C using {{{C:}}}, and other words that allow virtual machine primitives to be defined. The result is that the target image is ''populated'' with the words we want to include -- and //only// those words.
 
-The code we load will generally include the words like {{{#CELL}}} that define the architecture of the system. These need not -- and typically //will// not -- be the same as the host: we might be cross-compiling on a workstation for deployment on a microcontroller, for example.
+We need to be able to find words we've defined in the target for use in later words in the target, so we maintain a word list called {{{TARGET}}} that holds ''locator words'' for each word we define in the target image. So {{{TARGET}}} essentially holds the dictionary that the //target// will have access to, held in a form that the //host//, and more specifically the //cross-compiler//, can use. The advantage of this is that the host might not retain the names of the words compiled into it. Normally a word that doesn't have a name  is pretty much inaccessible without its xt, but because of {{{TARGET}}} we could locate //all// the target's words even if //none// of its words have headers. This is handy for cross-compiling embedded systems.
 
-Since the target image is not &quot;real&quot; Attila code as far as the host is concerned, it clearly can't be executed: it might be intended for a completely different machine architecture. For most languages this wouldn't be a problem, but for Attila it is, since a lot of Forth code involves defining new defining words. If we define a new defining word for the target, we can't use it to define //more// target words because that would involve executing it on the host. The solution to this is to load the defining words into the cross-compiler -- into {{{CROSS}}} -- so that they can be used. We can then load them into the target too, so we both define //and// use the //same// defining words. (Actually you can use the new defining words without loading into the target if you don't need them later: a lot of defining words are only needed at compile-time, so an embedded system probably wouldn't need them.) We usually load the words that define the target architecture and any defining words we want into {{{CROSS}}} early on, and then load and compile all the target code.
+The code we load will generally include the words like {{{/CELL}}} that define the architecture of the system. These need not -- and typically //will// not -- be the same as the host: we might be cross-compiling on a workstation for deployment on a microcontroller, for example.
+
+Since the target image is not &quot;real&quot; Attila code as far as the host is concerned, it clearly can't be executed: it might be intended for a completely different machine architecture. For most languages this wouldn't be a problem, but for Attila it is, since a lot of Forth code involves defining new defining words. If we define a new defining word for the target, we can't use it to define //more// target words because that would involve executing it on the host. The solution to this is to load the defining words into the cross-compiler -- into {{{CROSS-COMPILER}}} -- so that they can be used. We can then load them into the target too, so we both define //and// use the //same// defining words. (Actually you can use the new defining words without loading into the target if you don't need them later: a lot of defining words are only needed at compile-time, so an embedded system probably wouldn't need them.) We usually load the words that define the target architecture and any defining words we want into {{{CROSS-COMPILER}}} early on, and then load and compile all the target code.
 
 All this means that we can often end up with the same word defined three times: in the main body of Attila, in the cross-compiler, and then again in the target image. Keeping these three definitions separate, and making sure we find the right one each time, is the job of the cross-compiler. It does this using [[word lists|Wordlists]], and as a consequence word lists are very hairy to cross-compile.
+
+The final stage of cross-compilation is to output the final image of the target ready to be loaded using additional tools. Most of the time primitives and the like are written in C, and the cross-compiler therefore uses words that generate C code to output the final image. These live in yet another wordlist, {{{CODE-GENERATOR}}}, which also includes words that can be used to pre-process virtual mchine and architecture descriptions.
 
 
 </pre>
@@ -718,19 +840,20 @@ The cross-compiler is intended to use as much &quot;normal&quot; code as possibl
 <div title="DefaultTiddlers" modifier="sd" created="200911151809" modified="200911151810" changecount="2">
 <pre>[[Home]]</pre>
 </div>
-<div title="FlatMemoryModel" modifier="sd" created="200911161048" modified="200911241040" tags="[[memory model]] compiler" changecount="10">
+<div title="FlatMemoryModel" modifier="sd" created="200911161048" modified="201001061232" tags="[[memory model]] compiler" changecount="14">
 <pre>!The flat memory model
 
 The flat memory model is the &quot;standard&quot; Forth memory model, in which all data lives in a single contiguous block that is statically managed as a dictionary.
 
-|!Access word    |!Field name |!Description                                     |!Size in bytes|
-|                         |name           |name of word                                   |namelen|
-|                         |namelen      |length of name                                 |1|
+|!Access word    |!Field name |!Description                                     |!Size in bytes|!Alignment|
+|                         |name           |name of word                                   |namelen|{{{CALIGNED}}}|
+|                         |namelen      |length of name                                 |1|{{{CALIGNED}}}|
 |{{{&gt;STATUS}}}  |status          |status flags                                       |1|
-|{{{&gt;LFA}}}         |link               |link to previous word in word list      |1 cell|
+|{{{&gt;LFA}}}         |link               |link to previous word in word list      |1 cell|{{{CALIGNED}}}|
 |xt -&gt; {{{&gt;CFA}}} |cf                 |pointer to primitive code to execute |1 cell|
-|{{{&gt;IBA}}}          |iba               |pointer to the indirect body             |1 cell ({{{REDIRECTABLE}}} words only)|
+|{{{&gt;IBA}}}          |iba               |pointer to the indirect body             |1 cell*|
 |{{{&gt;BODY}}}       |code           |the code of the word                         ||
+ *  ({{{REDIRECTABLE}}} words only)
 
 The execution token (xt) for a word is the address of its code field.
 
@@ -883,94 +1006,26 @@ Align the {{{TOP}}} and {{{HERE}}} pointers to cell boundaries. May be a no-op o
 Align addr to the next cell boundary. May be a no-op on some architectures.
  </pre>
 </div>
-<div title="PrimitiveWords" modifier="sd" created="200911241038" modified="200911241352" tags="words PRIMITIVE: ;PRIMITIVE C: ;C [[virtual machine]]" changecount="3">
-<pre>!Primitive words
+<div title="NamingConvention" modifier="sd" created="200912140806" modified="201001061235" tags="notation" changecount="3">
+<pre>!Naming conventions
 
-Primitives live in ordinary Attila source code, but are handled subtly differently by the [[compiler|Compiler]] and the [[cross-compiler|CrossCompiler]].
+Attila consists of a lot of [[words|Words]], some of which have a different relationship to interpretation and compilation. To help keep these clear, the language adopts the following loose naming conventions for words:
 
-{{{PRIMITIVE:}}} ( &quot;name&quot; [&quot;primname&quot;] &quot;stack-comment&quot; -- ) &quot;primitive colon&quot;
-Start a primitive definition for the named primitive, with an optional primitive (C-level) name for the generated function, and a stack comment (see below).
-
-{{{;PRIMITIVE}}} ( -- ) &quot;semi primitive&quot;
-End a primitive definition.
-
-{{{C:}}} ( -- ) &quot;see colon&quot;
-Start a literal block of C text that will be passed through &quot;as is&quot; to the virtual machine.
-
-{{{;C}}} ( -- ) &quot;semi see&quot;
-End a literal block
-
-
-!!Stack comments
-
-Stack comments take the usual form, with the proviso that each element must be a valid C identifier and so should only for safety include letters and (trailing) numbers. For example:
-
-&gt; ( a1 a2 b -- c )
-
-but not
-
-&gt; ( a-1 a2 b-1 -- c )
-
-Future versions of Attila may assign special meaning to leading capital letters, so for the moment avoid elements like Da as they might &quot;inherit&quot; a meaning you didn't intend.
-
+* All words are by default spelt using capital letters, for example {{{DUP}}} not {{{dup}}} -- although the parser recognises either case as equivalent
+* Immediate words, or immediate variants of &quot;normal&quot; (non-immediate) words, are in square brackets, for example {{{[']}}}
+* Helper words not expected to be used in normal code are in round brackets, for example {{{(:)}}}
+* Words that store and retrieve values from memory end in {{{!}}} and {{{@}}} respectively with the rest of the word indicating what's being manipulated, for example {{{C@}}} for fetching characters
+* Words that compile data into a word body end in {{{,}}}, for example {{{XT,}}}
 </pre>
 </div>
-<div title="Primitives" modifier="sd" created="200911241037" modified="200911241353" tags="compiler primitive" changecount="4">
+<div title="Primitives" modifier="sd" created="200911241037" modified="201001131315" tags="compiler cross-compiler primitive" changecount="6">
 <pre>!Primitives
 
 Attila is programmed in itself as far as possible, with the features of the language written in itself and then cross-compiled. At the lowest level, however, Attila needs to perform basic operations that reference &quot;real&quot; machine operations and facilities. This link is provided by ''primitives''.
 
-A primitive is simply a fragment of code in another. lower-level language (typically C) that is compiled into the Attila [[virtual machine|VirtualMachine]] and made accessible as an Attila [[word|Words]]. The [[syntax of primitives|PrimitiveWords]] allows primitives to be coded within ordinary Attila source code, but still be recognised and handled appropriately by the (cross-)compiler.
+A primitive is simply a fragment of code in another. lower-level language that is compiled into the Attila [[virtual machine|VirtualMachine]] and made accessible as an Attila [[word|Words]]: so the word behaves like it's written in Attila, but is actually coded at a lower level. The syntax of primitives allows primitives to be coded within ordinary Attila source code, but still be recognised and handled appropriately by the (cross-)compiler.
 
-
-!!Writing primitives
-
-Primitives are written using the {{{PRIMITIVE:}}} construct. This takes the name of the word the primitive provides code for, an optional C-level name for the  primitive (seldom used), and a standard-ish stack comment to show how the primitive affects the data stack.The stack comment is important: unlike in ordinary Attila where it's typically //just// a comment, in primitives it is used to synthesise code that converts Attila-style stack parameters into C-style local parameters.
-
-The code of a primitive is just C code, written in terms of the parameters in the stack comment (and possibly introducing its own local variables.
-
-
-!!Example
-
-Perhaps the simplest primitive are words that provide basic stack manipulations. We can illustrate this by re-implementing {{{NIP}}}, which drops the second word on the stack. This can be implemented in Attila as:
-
-&gt; : NIP ( a b -- b )
-&gt;     SWAP DROP ;
-
-but we'll code it as a primitive. First we need to declare it as a primitive and put in its stack signature, pretty much as above:
-
-&gt; PRIMITIVE: NIP ( a b -- b )
-
-What is the code for this primitive? Actually it doesn't need any, since the stack comment encapsulates all that it does, so that's the end of the primitive:
-
-&gt; ;PRIMITIVE
-
-When run through a primitive compiler, the code generated will look something like this:
-
-&gt; VOID
-&gt; prim23( XT _xt ) {
-&gt;     CELL a;
-&gt;     CELL b;
-&gt;
-&gt;     b = POP_CELL()
-&gt;     a = POP_CELL();
-&gt;
-&gt;     PUSH_CELL(b);
-&gt; }
-
-If you know C, and if you also know that {{{POP_CELL()}}} and {{{PUSH_CELL()}}} manipulate tthe data stack, you can see what the primitive does: pops the top two stack cells and then pushes the first, dropping the second. It's possible to re-code this more efficiently, of course, but it illustrates the approach. The primitive is given a fairly random name at C level, and has run-time access to the xt of the word it implements at Attila level.
-
-We can do a more complex primitive that actually runs real code in its body, rather than simply manipulating the stack. For example, {{{*/MOD}}} is coded as:
-
-&gt; PRIMITIVE: */MOD ( n1 n2 n3 -- r q )
-&gt;     DOUBLE_CELL i;
-&gt;
-&gt;     i = (DOUBLE_CELL) (n1 * n2);
-&gt;     q = (CELL) (i / (DOUBLE_CELL) n3);
-&gt;     r = (CELL) (i % (DOUBLE_CELL) n3);
-&gt; ;PRIMITIVE
-
-Here we declare a new, local variable which we then use in computing the effect of the primitive. The elements in the stack comment appear as variables in the primitive's code, and can be read and assigned to aas required. The compiler will handle placing them on and off the stack.
+Primitives are typically coded with their bodies in [[C|CLanguagePrimitives]].
 
 
 !!Caveat implementor
@@ -978,6 +1033,7 @@ Here we declare a new, local variable which we then use in computing the effect 
 * Make primitives non-blocking. This will be important for the future when we have multi-tasked Attila implementations.
 * Liberal use of casts reduces compiler warnings and makes genuine errors easier to spot.
 * It's possible to speed-up primitives by bypassing the stack-comment-based generation of parameters. However, it's almost certainly //not// worthwhile for any but the most core primitives. It's occasionally necessary for &quot;odd&quot; words that have a variable stack effect like {{{(FIND)}}}, though.
+
 </pre>
 </div>
 <div title="RealMemoryWords" modifier="sd" created="200911201129" modified="200911201131" tags="words R! R@ RC! RC@" changecount="2">

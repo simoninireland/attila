@@ -24,10 +24,18 @@
 
 VARIABLE MAX-BASE
 DATA NUMERIC-CHARACTER-SET
-SCRATCH SCRATCH-POINTER !                                  \ manually initialise
+SCRATCH SCRATCH-POINTER A!                                 \ manually initialise
 PARSE-WORD 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ >SCRATCH   \ copy to scratch area
-#SCRATCH MAX-BASE !                                        \ avoid overruns
+#SCRATCH MAX-BASE A!                                       \ avoid overruns
 SCRATCH> DUP ALLOT NUMERIC-CHARACTER-SET SWAP CMOVE        \ move into character set
+
+
+\ ---------- Standard number bases ----------
+\ By convention the system is in DECIMAL when it boots
+
+: BINARY   2 BASE ! ;
+: DECIMAL 10 BASE ! ;
+: HEX     16 BASE ! ;
 
 
 \ ---------- Formatted numbers ----------
@@ -80,6 +88,7 @@ SCRATCH> DUP ALLOT NUMERIC-CHARACTER-SET SWAP CMOVE        \ move into character
 : .HEX BASE @ SWAP HEX     . BASE ! ;
 : .BIN BASE @ SWAP BINARY  . BASE ! ;
 
+.s
 \ Print the contents of the stack, top item on the right
 : .S \ ( -- )
     DEPTH DUP [CHAR] < EMIT <# #S #> TYPE [CHAR] > EMIT SPACE
@@ -88,5 +97,3 @@ SCRATCH> DUP ALLOT NUMERIC-CHARACTER-SET SWAP CMOVE        \ move into character
 	    DUP I - PICK . SPACE
 	LOOP
     THEN DROP ;
-
-
