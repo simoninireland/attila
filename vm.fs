@@ -23,16 +23,23 @@
 \ definitions, typically in C. It should contain only
 \ simple code such as CONSTANT and USER declarations
 
+\ Sizes
+24 1024 * CONSTANT IMAGE-SIZE           \ initial image size in cells
+50        CONSTANT DATA-STACK-SIZE      \ data stack size in cells
+50        CONSTANT RETURN-STACK-SIZE    \ return stack size in cells
+25        CONSTANT USER-SIZE            \ number of user variables allowed
+256       CONSTANT TIB-SIZE             \ terminal input buffer size
+
 \ Status masks
-1 CONSTANT IMMEDIATE-MASK
-2 CONSTANT REDIRECTABLE-MASK
+1 CONSTANT IMMEDIATE-MASK          \ IMMEDIATE words, executed even when compiling
+2 CONSTANT REDIRECTABLE-MASK       \ REDIRECTABLE words, amenable to DOES>
 
 \ States
-0 CONSTANT INTERPRETATION-STATE
-1 CONSTANT COMPILATION-STATE
+0 CONSTANT INTERPRETATION-STATE    \ interpretation state
+1 CONSTANT COMPILATION-STATE       \ (standard) compilation state
 
 \ User variables
- 0 USER COLDSTART             \ xt of the word that cold-starts the system
+ 0 USER COLDSTART             \ xt of the word that cold-starts the system (REQUIRED)
  1 USER EXECUTIVE             \ xt of outer executive
 2 USER (TOP)                 \ first free code address
 \  USER (CEILING)             \ highest code address currently available

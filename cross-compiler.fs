@@ -44,7 +44,7 @@ INTERPRET/COMPILE [WORDLIST]
 \ ---------- Helpers ----------
 
 \ Placeholder for C-level inclusions from architecture description
-: C-INCLUDE \ ( "name" -- )
+: CINCLUDE \ ( "name" -- )
     PARSE-WORD 2DROP ;
 
 
@@ -102,14 +102,6 @@ WORDLISTS>
 
 <WORDLISTS ALSO CROSS ALSO DEFINITIONS
 
-\ sd: should come from elsewhere
-.( Loading cross compiler architecture description...)
-include x-arch-gcc-host.fs
-
-\ Return the number of bytes needed to hold n target cells
-: CELLS \ ( n -- b )
-    /CELL * ;
-
 \ Prepare for loading files with comments in them
 include comments.fs
 
@@ -119,9 +111,15 @@ DEFER (HEADER,)
 DEFER CTCOMPILE,
 DEFER NEXT,
 
-\ sd: should come from elsewhere
+\ Sizes of architectural elements, and other characteristics
+4 VALUE /CELL
+4 VALUE /CHARACTER
+0 VALUE BIGENDIAN?
+: CELLS \ ( n -- bs )
+    /CELL * ;
+
 .( Loading image manager...)
-include x-image-gcc.fs
+include x-image-gcc.fs    \ sd: should come from elsewhere
 
 WORDLISTS>
 
@@ -151,26 +149,6 @@ include loops.fs
 include counted-loops.fs
 WORDLISTS>
 
-.( Initialising image...)
-(INITIALISE-IMAGE)
-
-.( Loading target image...)
-<TARGET
-include core.fs
-include itil.fs
-include x-lib-fileio-gcc-host.fs
-include x-lib-io-gcc-host.fs
-include counted-loops-runtime.fs
-
-include base.fs
-include flat-memory-model.fs
-
-include itil-compilation.fs
-: START-DEFINITION ;
-: END-DEFINITION ;
-include compilation.fs
-
-include executive.fs
-TARGET>
+.( Cross-compiler loaded)
 
 

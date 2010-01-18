@@ -15,15 +15,24 @@
 \ Generate the image, complete with primitives
 : GENERATE-IMAGE \ ( -- )
     ." // " TIMESTAMP CR CR
-    \ ." #include " QUOTES ." vm.h" QUOTES CR CR 
 
-    S" vm.fs" GENERATE-VM
-    S" x-arch-gcc-host.fs" GENERATE-VM CR
-    
-    GENERATE-CBLOCKS
-    GENERATE-PRIMITIVES
-    
-    EMIT-IMAGE ;
+    ." // Primitives table" CR
+    GENERATE-PRIMITIVE-DECLARATIONS CR CR
+
+    ." // VM definition" CR
+    S" vm.fs" GENERATE-VM CR CR
+
+    ." // Architecture definition" CR
+    ." #include " QUOTES ." x-arch-gcc-host.h" QUOTES CR CR 
+
+    ." // C support" CR
+    GENERATE-CBLOCKS CR CR
+
+    ." // Primitives" CR
+    GENERATE-PRIMITIVES CR CR
+
+    ." // Image" CR
+    EMIT-IMAGE CR CR ;
 
 WORDLISTS>
 

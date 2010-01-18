@@ -25,15 +25,6 @@
 
 \ ---------- Memory management ----------
 
-\ The base of the user area. This is constant for unthreaded implementations
-C: USERBASE ( -- addr )
-  addr = user;
-;C
-
-\ User variables are held at the bottom of memory
-: USERVAR \ ( n -- addr )
-    CELLS USERBASE + ;
-
 \ TOP and HERE are the same in this model
 : TOP  2 USERVAR @ ; \ (TOP)
 : HERE TOP ;
@@ -131,7 +122,7 @@ C: >CFA xt_to_cfa ( xt -- xt )
 \ : >IBA \ ( xt -- iba )
 \     1 CELLS + ;
 C: >IBA xt_to_iba ( xt -- iba )
-    iba = (CELL) ((BYTEPTR) xt + CELL_SIZE);
+    iba = (CELL) ((BYTEPTR) xt + sizeof(CELL));
 ;C
 
 \ Manipulate the IBA of a word
@@ -187,7 +178,7 @@ C: >BODY xt_to_body ( xt -- addr )
   BYTEPTR statusptr;
   BYTE status;
 
-  statusptr = ((BYTEPTR) xt) - 2 * CELL_SIZE + 1;
+  statusptr = ((BYTEPTR) xt) - 2 * sizeof(CELL) + 1;
   status = *statusptr;
   addr = xt + 1;
   if(status & 1)
@@ -221,7 +212,7 @@ C: >BODY xt_to_body ( xt -- addr )
 \ Find the named word in the word list starting from the given
 \ xt. Return 0 if the word can't be found, or it's xt and either
 \ 1 for normal or -1 for IMMEDIATE words
-C: (FIND) ( addr namelen x -- )
+C: (FIND) bracket_find ( addr namelen x -- )
     CHARACTERPTR taddr;
     CELL tlen;
     XT xt;
@@ -241,7 +232,8 @@ C: (FIND) ( addr namelen x -- )
             PUSH_CELL(x);
             xt_to_lfa(_xt);
 	    link = POP_CELL();
-	    x = (XT) (XTPTR) (*link);	}
+	    x = (XT) (XTPTR) (*link);
+	}
     }
 
     PUSH_CELL(xt);
@@ -249,7 +241,6 @@ C: (FIND) ( addr namelen x -- )
 	PUSH_CELL(xt);
 	xt_to_status(_xt);
 	status = POP_CELL();
-        PUSH_CELL((status & STATUS_IMMEDIATE) ? -1 : 1);
+        PUSH_CELL((status & IMMEDIATE_MASK) ? -1 : 1);
     }
 ;C
-	    

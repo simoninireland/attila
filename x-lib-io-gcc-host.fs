@@ -3,6 +3,14 @@
 \ Terminal I/O primitives using host gcc
 \ sd: should be refactored into Attila once debugged
 
+CHEADER:
+
+// Character sets
+static CHARACTERPTR digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static CHARACTERPTR whitespace = " \n\t";
+
+;CHEADER
+
 
 \ ---------- Terminal I/O ----------
 
@@ -12,7 +20,7 @@
 C: REFILL fill_tib ( -- f )
   FILE *input_source = (FILE *) (*(user_variable(USER_INPUTSOURCE)));
   char **tib = (char **) user_variable(USER_TIB);
-  int *offset = (int *) user_variable(USER_OFFSET);
+  int *offset = (int *) user_variable(USER__IN);
 
   if(input_source == stdin)
     printf(" ok ");
@@ -36,7 +44,7 @@ C: SOURCE ( -- addr n )
   int offset;
       
   tib = (char *) (*(user_variable(USER_TIB)));
-  offset = (int) (*(user_variable(USER_OFFSET)));
+  offset = (int) (*(user_variable(USER__IN)));
   addr = (CELL) ((offset == -1) ? tib : tib + offset);
   n = (CELL) ((offset == -1) ? 0 : strlen((char *) addr));
 ;C
@@ -47,7 +55,7 @@ C: SOURCE ( -- addr n )
 C: PARSE-WORD ( -- )
   CELL c = 0;
   char *tib = (char *) (*(user_variable(USER_TIB)));
-  int *offset = (int *) user_variable(USER_OFFSET);
+  int *offset = (int *) user_variable(USER__IN);
   int newoffset;
   int len;
   char *newpoint;
@@ -67,11 +75,11 @@ C: PARSE-WORD ( -- )
     }
     
     // consume leading whitespace
-    len = strspn(tib + *offset, WHITESPACE);
+    len = strspn(tib + *offset, whitespace);
     *offset += len;
   
     // parse everything except whitespace
-    len = strcspn(tib + *offset, WHITESPACE);
+    len = strcspn(tib + *offset, whitespace);
     if(len == 0)
       *offset = -1;
   } while(len == 0);
@@ -93,7 +101,7 @@ C: PARSE-WORD ( -- )
 C: CONSUME ( c -- )
   CELL remaining;
   char *tib = (char *) (*(user_variable(USER_TIB)));
-  int *offset = (int *) user_variable(USER_OFFSET);
+  int *offset = (int *) user_variable(USER__IN);
   char cc;
 
   // fill the TIB if we need a line
@@ -121,7 +129,7 @@ C: PARSE ( c -- )
   int len;
   CELL remaining;
   char *tib = (char *) (*(user_variable(USER_TIB)));
-  int *offset = (int *) user_variable(USER_OFFSET);
+  int *offset = (int *) user_variable(USER__IN);
   char *point;
 
   // fill the TIB if we need a line
@@ -180,7 +188,7 @@ C: EMIT ( c -- )
 C: . ( n -- )
   FILE *output_sink = (FILE *) (*(user_variable(USER_OUTPUTSINK)));
 
-  fprintf(output_sink, "%d", n);   fflush(output_sink);
+  fprintf(output_sink, "%ld", n);   fflush(output_sink);
 ;C
 
 \ Print the whole stack
@@ -189,9 +197,9 @@ C: .S prim_dot_s ( -- )
     int i, n;
 
     n = DATA_STACK_DEPTH();
-    fprintf(output_sink, "#%d", n);
+    fprintf(output_sink, "#%ld", n);
     for(i = n - 1; i >= 0; i--) {
-        fprintf(output_sink, " %d", *(DATA_STACK_ITEM(i)));
+        fprintf(output_sink, " %ld", *(DATA_STACK_ITEM(i)));
     }
     fflush(output_sink);
 ;C
@@ -209,14 +217,13 @@ C: .S prim_dot_s ( -- )
 \ Convert a token to a number if possible, pushing the result
 \ (if done) and a flag
 C: NUMBER? ( addr n -- )
-  char *buf;
-  char *digitptr;
+  CHARACTERPTR buf;
+  CHARACTERPTR digitptr;
   int i, len, acc, digit;
   int valid = 1;
-  int base = *(user_variable(USER_BASE));
+  int base = (int) *(user_variable(USER_BASE));
 
-  buf = (CHARACTERPTR) malloc(n + 1);
-  memcpy(buf, addr, n);   buf[n] = '\0';
+  buf = create_unix_string(addr, n);
 
   // convert number
   acc = 0;

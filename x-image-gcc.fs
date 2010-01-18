@@ -206,7 +206,7 @@ WORDLISTS>
 \ ---------- Initialising and finalising the image ----------
 
 \ Initialise the image
-: (INITIALISE-IMAGE) \ ( -- )
+: INITIALISE-IMAGE \ ( -- )
     \ allocate the image and point IMAGE at it
     HERE TO IMAGE
     MAXIMAGECELLS /IMAGECELL * ALLOT
@@ -225,12 +225,14 @@ WORDLISTS>
     ['] EMIT-CELL [CROSS] TOP E! ;
 
 \ Finalise the image prior to being output
-: (FINALISE-IMAGE) ;
-\ sd TBD: fis user variables in the image
+: FINALISE-IMAGE
+  \  [CROSS-COMPILER] ['] COLD 0 [CROSS] !    \ cold-start vector 
+  \  [CROSS] TOP 2 [CROSS] !                  \ (TOP)
+;
 
 \ Emit the image as a C data structure
 : EMIT-IMAGE \ ( -- )
-    ." static CELL image[] = {" CR
+    ." CELL image[] = {" CR
     IMAGECELLS 0 DO
 	I [CROSS] /CELL * [CROSS] @
 	I [CROSS] /CELL * E@ EXECUTE ." ," CR

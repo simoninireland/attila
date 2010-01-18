@@ -22,7 +22,7 @@
     [CODE-GENERATOR] PARSE-IDENTIFIER
     ." #define USER_" TYPE SPACE . CR ;
 
-\ We allow C inclusions
+\ C inclusions are inserted literally or by #include
 : CHEADER: \ ( -- )
     BEGIN
 	REFILL IF

@@ -12,19 +12,10 @@ CHEADER:
 #include <fcntl.h>
 #include <errno.h>
 
-// Filename management
-CHARACTERPTR
-create_unix_string( CELL addr, CELL namelen ) {
-  static CHARACTER namebuf[256];
-
-  strncpy(namebuf, (CHARACTERPTR) addr, namelen);   namebuf[namelen] = '\0';
-  return namebuf;
-}
-
 // File mode conversions
 CHARACTERPTR
 mode_string( CELL m ) {
-  static CHARACTERPTR mode[3];
+  static CHARACTER mode[3];
   CHARACTERPTR s;
 
   mode[0] = mode[1] = mode[2] = '\0';   s = mode;
@@ -92,40 +83,40 @@ C: CREATE-FILE ( addr namelen m -- fh ior )
 
   fn = create_unix_string(addr, namelen);
   fh = (CELL) fopen(fn, mode_string(m | O_TRUNC));
-  ior = (fh == -1) ? errno : 0;
+  ior = (fh == -1) ? (CELL) errno : 0;
 ;C
 
 \ Close a file
 C: CLOSE-FILE ( fh -- ior )
-  ior = fclose(fh);
+  ior = (CELL) fclose((FILE *) fh);
 ;C
 
 \ Read characters from the given file into a buffer
 C: READ-FILE ( addr n fh -- m ior )
-  m = fread(addr, n, 1, fh);
-  ior = ferror(fh);
+  m = fread((CHARACTERPTR) addr, n, 1, (FILE *) fh);
+  ior = (CELL) ferror((FILE *) fh);
 ;C
 
 \ Write characters to the given file from the buffer
 C: WRITE-FILE ( addr n fh -- ior )
   int m;
       
-  m = fwrite(addr, n, 1, fh);
-  ior = ferror(fh);
+  m = fwrite((CHARACTERPTR) addr, n, 1, (FILE *) fh);
+  ior = (CELL) ferror((FILE *) fh);
 ;C
 
 \ Set the positon of the next read/write action
 C: REPOSITION-FILE ( off fh -- ior )      
   int m;
 
-  m = fseek(fh, off, SEEK_SET);
-  ior = (off == -1) ? errno : 0;
+  m = fseek((FILE *) fh, off, SEEK_SET);
+  ior = (off == -1) ? (CELL) errno : 0;
 ;C
 
 \ Return the current read/write offset
 C: FILE-POSITION ( fh -- off ior ) 
-  off = fseek(fh, 0, SEEK_CUR);
-  ior = (off == -1) ? errno : 0;      
+  off = fseek((FILE *) fh, 0, SEEK_CUR);
+  ior = (off == -1) ? (CELL) errno : 0;      
 ;C
 
       
@@ -135,19 +126,19 @@ C: FILE-POSITION ( fh -- off ior )
 C: READ-LINE prim_read_line ( addr n fh -- m f ior )
   CHARACTERPTR ptr;
 
-  if(feof(fh) || ((ptr = fgets(addr, n, fh)) == 0)) {
+  if(feof((FILE*) fh) || ((ptr = fgets((CHARACTERPTR) addr, n, (FILE *) fh)) == 0)) {
     m = 0;   f = 0;   ior = 0;
   } else {    
     m = strlen(ptr);
     f = 1;
-    ior = ferror(fh);      
+    ior = (CELL) ferror((FILE *) fh);      
   }
 ;C
 
 \ Write a line of text
 C: WRITE-LINE ( addr n fh -- ior )
-  fprintf(fh, "%s\n", create_unix_string(addr, n));
-  ior = ferror(fh);
+  fprintf((FILE *) fh, "%s\n", create_unix_string(addr, n));
+  ior = (CELL) ferror((FILE *) fh);
 ;C
 
 

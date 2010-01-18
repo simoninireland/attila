@@ -33,15 +33,15 @@ C: (?BRANCH) ( f -- )
 
 \ Execute an xt from the stack
 C: EXECUTE execute ( xt -- )
-    C prim;
+    PRIMITIVE prim;
 
     // dispatch on the instruction
-    if(xt == (XT) NULL) {
+    if(xt == (CELL) NULL) {
         // NEXT, return from this word
-	ip = POP_RETURN();
+	ip = (XTPTR) POP_RETURN();
     } else {
-	prim = (C) (*((CELLPTR) xt));
-	if(prim == docolon) {
+	prim = (PRIMITIVE) (*((CELLPTR) xt));
+	if(prim == (PRIMITIVE) docolon) {
 	    // another colon-definition, push the return address
 	    // and re-point the instruction pointer
 	    PUSH_RETURN(ip);
@@ -126,24 +126,39 @@ C: (DOES) bracket_does ( -- body )
 WORDLISTS>
 
 
-\ ---------- (Re-starting the interpreter ----------
+\ ---------- (Re)-starting the interpreter ----------
+
+CHEADER:
+PRIMITIVE uservar;
+
+CELLPTR
+user_variable( int n ) {
+    XT _xt;
+
+    PUSH_CELL(n);
+    CALL(uservar);
+    return (CELLPTR) POP_CELL();
+}
+;CHEADER
 
 \ Warm-start the interpreter
-C: WARM ( -- )
+C: WARM warm_start ( -- )
     // reset the stacks      
     DATA_STACK_RESET();
     RETURN_STACK_RESET();  
 
     // reset user variables
-    *(user_variable(USER_STATE)) = (CELL) STATE_INTERPRETING;
+    *(user_variable(USER_STATE)) = (CELL) INTERPRETATION_STATE;
     *(user_variable(USER_BASE)) = (CELL) 10;
     *(user_variable(USER_TRACE)) = (CELL) 0;
-    *(user_variable(USER_INPUTSOURCE)) = stdin;
-    *(user_variable(USER_OFFSET)) = -1; // in need of a refill
-    if(master_executive == NULL)
-        master_executive = xt_of("OUTER");
-    *(user_variable(USER_EXECUTIVE)) = (CELL) master_executive;
+    *(user_variable(USER_INPUTSOURCE)) = (CELL) stdin;
+    *(user_variable(USER__IN)) = -1;                // in need of a refill
 	
     // point the ip at the executive and return
-    ip = xt_to_body(*(user_variable(USER_EXECUTIVE)));
+    ip = (XTPTR) xt_to_body((XT) *(user_variable(USER_EXECUTIVE)));
+;C
+
+\ Cold-start (same as WARM, for the moment)
+C: COLD cold_start ( -- ) 
+    CALL(warm_start);
 ;C
