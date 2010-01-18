@@ -34,8 +34,10 @@
 \ User variables
  0 USER COLDSTART             \ xt of the word that cold-starts the system
  1 USER EXECUTIVE             \ xt of outer executive
- 2 USER CODETOP               \ first free code address
- 3 USER DATATOP               \ first free data address
+2 USER (TOP)                 \ first free code address
+\  USER (CEILING)             \ highest code address currently available
+ 3 USER (HERE)                \ first free data address
+\  USER (THERE)               \ highest data address currently available
  4 USER STATE                 \ compiler state
  5 USER BASE                  \ number base
  6 USER INPUTSOURCE           \ pointer to internal structure for terminal input

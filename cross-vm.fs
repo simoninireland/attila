@@ -14,15 +14,30 @@
 : PARSE-IDENTIFIER \ ( "name" -- addr n )
     PARSE-WORD [CODE-GENERATOR] SAFE-IDENTIFIER ;
 
-\ The defining words used in the vm.fs and arch.fs files
+\ The defining words used in the vm and arch files
 : CONSTANT \ ( n "name" -- )
     [CODE-GENERATOR] PARSE-IDENTIFIER
     ." #define " TYPE SPACE . CR ;
 : USER \ ( n "name" -- )
     [CODE-GENERATOR] PARSE-IDENTIFIER
     ." #define USER_" TYPE SPACE . CR ;
-: C-INCLUDE \ ( "name" -- )
-    PARSE-WORD
-    ." #include " QUOTES TYPE QUOTES CR ;
-    
+
+\ We allow C inclusions
+: CHEADER: \ ( -- )
+    BEGIN
+	REFILL IF
+	    SOURCE 1- S" ;CHEADER" S=CI? IF
+		2DROP
+		REFILL DROP
+		FALSE
+	    ELSE
+		TRUE
+	    THEN
+	ELSE
+	    S" Input ended before ;CHEADER" ABORT
+	THEN
+    WHILE
+	    TYPE CR
+    REPEAT ;
+
 WORDLISTS>

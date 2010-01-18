@@ -21,30 +21,28 @@
 \  - xt_to_iba    >IBA
 \  - xt_to_status >STATUS
 \  - xt_to_name   >NAME
-\
-\ ...as well as one initialisation routine to allocate and set
-\ up the memory model:
-\
-\  - init()
-
-\ ---------- Initialise the memory model ----------
 
 
 \ ---------- Memory management ----------
 
+\ The base of the user area. This is constant for unthreaded implementations
+C: USERBASE ( -- addr )
+  addr = user;
+;C
+
 \ User variables are held at the bottom of memory
 : USERVAR \ ( n -- addr )
-    CELLS ;
+    CELLS USERBASE + ;
 
 \ TOP and HERE are the same in this model
-: TOP  2 USERVAR ( CODETOP )  @ ;
+: TOP  2 USERVAR @ ; \ (TOP)
 : HERE TOP ;
-: LASTXT 9 USERVAR ( LAST ) @ ;
+: LASTXT 9 USERVAR @ ; \ LAST
 
 \ Compile a character
 : CCOMPILE, \ ( c -- )
     TOP C!
-    1 2 USERVAR ( CODETOP ) +! ;
+    1 2 USERVAR +! ; \ (TOP)
 
 \ Align code address on cell boundaries
 : CALIGN \ ( addr -- aaddr )
