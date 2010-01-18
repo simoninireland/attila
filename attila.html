@@ -938,7 +938,7 @@ Legalities
 <pre>* [[Flat, single block for all code and data|FlatMemoryModel]]
 </pre>
 </div>
-<div title="MemoryWords" modifier="sd" created="200911200939" modified="200912021545" tags="words ! C! @ C@ , ALLOT CELLS CHARS COMPILE, CCOMPILE, ALIGN ALIGNED XTCOMPILE, ACOMPILE," changecount="4">
+<div title="MemoryWords" modifier="sd" created="200911200939" modified="201001171208" tags="words ! C! @ C@ , ALLOT CELLS CHARS COMPILE, CCOMPILE, ALIGN ALIGNED CALIGN CALIGNED XTCOMPILE, ACOMPILE," changecount="7">
 <pre>!Memory words
 
 These are the normal words for accessing any memory allocated or managed within Attila. If you need to access real memory addresses, use the [[real memory access words|RealMemoryWords]].
@@ -966,10 +966,10 @@ Retrieve the character from the given address
 {{{ALLOT}}} ( b -- )
 Allot b bytes of memory in the body of the current word.
 
-{{{,}}} ( n -- )
+{{{,}}} ( n -- ) &quot;comma&quot;
 Compile the cell from the top of the stack into body memory at the next free cell-aligned address.
 
-{{{C,}}} ( c -- )
+{{{C,}}} ( c -- ) &quot;see comma&quot;
 Compile the character from the top of the stack into body memory at the next free character-aligned address.
 
 
@@ -993,18 +993,23 @@ Compile an address. This is typically the same as {{{COMPILE,}}}, but may be dif
 {{{CELLS}}} ( n -- b)
 Return the number of bytes needed to accommodate n cells of data.
 
-{{{CHARS}}} ( n -- b )
+{{{CHARECTERS}}} ( n -- b )
 Return the number of bytes needed to accommodate n characters of data.
 
 
 !!Alignment
 
 {{{ALIGN}}} ( -- )
-Align the {{{TOP}}} and {{{HERE}}} pointers to cell boundaries. May be a no-op on some architectures.
+Align the  {{{HERE}}} pointer so that a cell can be stored. Some architectures require that cells live on particular address boundaries; for others, this will be a no-op.
 
 {{{ALIGNED}}} ( addr -- addr1 )
-Align addr to the next cell boundary. May be a no-op on some architectures.
- </pre>
+Align addr as required to store a cell.
+
+{{{CALIGN}}} ( -- ) &quot;see align&quot;
+Align the  {{{TOP}}} pointer so that a cell can be stored or a word compiled. May be a no-op on some architectures.
+
+{{{CALIGNED}}} ( addr -- addr1 ) &quot;see aligned&quot;
+Code-align addr. May be a no-op on some architectures. </pre>
 </div>
 <div title="NamingConvention" modifier="sd" created="200912140806" modified="201001061235" tags="notation" changecount="3">
 <pre>!Naming conventions
