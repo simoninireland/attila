@@ -39,4 +39,8 @@
 #define POP_RETURN() (XT) (*(--return_stack))
 #define PEEK_RETURN() (XT) (*return_stack)
 
+// ---------- Primitive calling ----------
+
+#define CALL( p ) p(_xt)
+
 #endif
