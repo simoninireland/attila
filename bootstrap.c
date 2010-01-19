@@ -303,6 +303,11 @@ init_dictionary() {
   COMPILE("COMPILE,");
   NEXT();
 
+  // recursively call the current word
+  DEFINE_IMMEDIATE("RECURSE");
+  COMPILE("LASTXT");
+  COMPILE("CTCOMPILE,");
+  NEXT();
 
   // grab the xt for the next word and leave it on the stack
   DEFINE_IMMEDIATE("[']");
