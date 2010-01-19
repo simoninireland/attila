@@ -28,11 +28,11 @@ include comments.fs
 \ dependencies that exist between some of the source files (clearly
 \ indicated in the comments for the files in the distribution).
 
-\ "Primitives" outside the VM core
-include base.fs                  \ Derived primitives
-
 \ Simple control structures
 include conditionals.fs          \ IF ... ELSE ... THEN
+
+\ "Primitives" outside the VM core
+include base.fs                  \ Derived primitives
 
 \ Advanced compilation words
 include createdoes.fs            \ CREATE ... DOES>
@@ -65,8 +65,12 @@ include scratch.fs               \ String scratch area
 include formatting.fs            \ Formatted numeric output
 include lists.fs                 \ Linked lists
 
+\ Additional compiler functions
+include evaluate.fs              \ Execute code from strings
+
 \ File management
 include file.fs                  \ I/O re-direction
+include file-templates.fs        \ File templates
 
 \ Foreign language support
 include c.fs                     \ C definitions (check for definitions)
