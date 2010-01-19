@@ -147,6 +147,30 @@ C: RPICK ( n -- addr )
     addr = (CELL) *(RETURN_STACK_ITEM(n));
 ;C
 
+\ Stash a number of items on the return stack
+C: N>R ( n -- )
+    int i;
+    CELL v;
+
+    for(i = 0; i < n; i++) {
+         v = POP_CELL();
+         PUSH_RETURN((XT) v);
+    }
+    PUSH_RETURN((CELL) n);
+;C
+
+\ De-stash the last stash
+C: NR> ( -- n )
+    int i;
+    CELL v;
+
+    n = (CELL) POP_RETURN();
+    for(i = 0; i < n; i++) {
+        v = (CELL) POP_RETURN();
+        PUSH_CELL(v);
+    }
+;C
+
 
 \ ---------- Literals ----------
 
