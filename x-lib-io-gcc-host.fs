@@ -14,8 +14,7 @@ static CHARACTERPTR whitespace = " \n\t";
 
 \ ---------- Terminal I/O ----------
 
-\ Read a line into the text buffer from the input source. If the input
-\ source is a terminal, use readline(); otherwise, just read the line.
+\ Read a line into the text buffer from the input source.
 \ Leave a flag on the stack, 0 if the input source is exhausted
 C: REFILL fill_tib ( -- f )
   FILE *input_source = (FILE *) (*(user_variable(USER_INPUTSOURCE)));
@@ -24,13 +23,16 @@ C: REFILL fill_tib ( -- f )
 
   if(input_source == stdin)
     printf(" ok ");
-
-  // read line from underlying file
-  PUSH_CELL(*tib);
-  PUSH_CELL(256);
-  PUSH_CELL(input_source);
-  prim_read_line(_xt);
-  POP_CELL();   f = POP_CELL();   POP_CELL();
+  if(input_source == (FILE *) -1)
+    f = FALSE;
+  else {
+    // read line from underlying file
+    PUSH_CELL(*tib);
+    PUSH_CELL(256);
+    PUSH_CELL(input_source);
+    prim_read_line(_xt);
+    POP_CELL();   f = POP_CELL();   POP_CELL();
+  }
 
   // reset input to the start of the TIB
   *offset = f ? 0 : -1;
@@ -242,7 +244,6 @@ C: NUMBER? ( addr n -- )
   if(valid)
     PUSH_CELL(acc);
   PUSH_CELL(valid);
-  free(buf);
 ;C
 
 \ Test if the input source has been exhausted, i.e. we can't do a REFILL
@@ -250,7 +251,7 @@ C: EXHAUSTED? ( -- eof )
     FILE *f;
 
     f = (FILE *) (*(user_variable(USER_INPUTSOURCE)));
-    eof = feof(f);
+    eof = (f == ((FILE *) -1)) ? TRUE : feof(f);
 ;C
 
 
