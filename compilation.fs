@@ -33,7 +33,7 @@
 
 \ Look up a word, returning its xt
 : ' \ ( "name" -- xt )
-    PARSE-WORD 2DUP (FIND) ( sd: should be FIND ) 0= IF
+    PARSE-WORD 2DUP FIND 0= IF
 	TYPE S" ?" ABORT
     ELSE
 	ROT 2DROP
