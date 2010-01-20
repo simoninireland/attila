@@ -226,9 +226,7 @@ WORDLISTS>
 
 \ Finalise the image prior to being output
 : FINALISE-IMAGE
-  \  [CROSS-COMPILER] ['] COLD 0 [CROSS] !    \ cold-start vector 
-  \  [CROSS] TOP 2 [CROSS] !                  \ (TOP)
-;
+    [CROSS] TOP 2 [CROSS] USERVAR [CROSS] ! ;            \ (TOP)
 
 \ Emit the image as a C data structure
 : EMIT-IMAGE \ ( -- )
@@ -242,18 +240,21 @@ WORDLISTS>
 \ Emit a small part of the image around the given target address
 : EMIT-AROUND \ ( taddr -- )
     11 0 DO
-	DUP I 5 - DUP 0= IF
-	    [CHAR] > EMIT
+	I 5 - 2DUP [CROSS] CELLS + DUP 0< IF
+	    2DROP
 	ELSE
-	    SPACE
+	    SWAP 0= IF
+		[CHAR] > EMIT
+	    ELSE
+		SPACE
+	    THEN
+	    DUP .HEX SPACE
+	    DUP [CROSS] TOP < IF 
+		DUP [CROSS] @
+		SWAP E@ EXECUTE
+	    THEN
+	    CR
 	THEN
-	[CROSS] CELLS +
-	DUP .HEX SPACE
-	DUP [CROSS] TOP < IF 
-	    DUP [CROSS] @
-	    SWAP E@ EXECUTE
-	THEN
-	CR
     LOOP
     DROP ;
 
