@@ -9,26 +9,6 @@
 \  - xt_to_cfa   >CFA
 \  - xt_to_iba   >IBA
 
-\ ---------- Control primitives ----------
-
-\ Jump unconditionally to the address compiled in the next cell
-C: (BRANCH) ( -- )
-  CELL offset = (CELL) *ip;
-  ip = (XTPTR) (((BYTEPTR) ip) + offset);
-;C
-
-\ Test the top of the stack and either continue (if true) or
-\ jump to the address compiled in the next cell (if false)
-C: (?BRANCH) ( f -- )
-  if(f)
-    ip++;
-  else {
-    CELL offset = (CELL) *ip;
-    ip = (XTPTR) (((BYTEPTR) ip) + offset);
-  }
-;C
-
-
 \ ---------- The inner interpreter ---------- 
 
 \ Execute an xt from the stack
@@ -44,8 +24,10 @@ C: EXECUTE execute ( xt -- )
 	if(prim == (PRIMITIVE) docolon) {
 	    // another colon-definition, push the return address
 	    // and re-point the instruction pointer
-	    PUSH_RETURN(ip);
-            ip = (XTPTR) xt_to_body((XT) xt);
+            PUSH_RETURN(ip);
+            PUSH_CELL(xt);
+            CALL(xt_to_body);
+            ip = (XTPTR) POP_CELL();
 	} else {
 	    // a primitive, execute it
 	    (*prim)(xt);
@@ -61,7 +43,17 @@ C: (:) docolon ( -- )
 	// grab the next instruction
 	xt = (*((XTPTR) ip++));
 
-		
+	// print word (for debugging)
+	if(xt != (XT) NULL) { 
+	    PUSH_CELL(xt);
+	    CALL(xt_to_name);
+	    static char buf[20];
+	    CELL n = POP_CELL();
+	    BYTEPTR addr = (BYTEPTR) POP_CELL();
+	    strncpy(buf, addr, n);   buf[n] = '\0';
+	    printf("%x %s\n", (CELL) (((BYTEPTR) xt - (BYTEPTR) image) / 8), buf);
+	}
+	
 	// EXECUTE it
 	PUSH_CELL(xt);
 	execute(xt);
@@ -87,11 +79,78 @@ C: (:) docolon ( -- )
 WORDLISTS>
 
 
+\ ---------- Literals ----------
+
+\ Push the next cell in the instruction stream as a literal
+C: (LITERAL) ( -- l )
+    CELLPTR addr;
+
+    addr = (CELLPTR) ip;
+    l = (*addr);
+    ip++;
+;C
+
+\ Push a string in the code space onto the stack as a standard
+\ address-plus-count pair
+C: (SLITERAL) ( -- s n )
+    BYTEPTR addr;
+
+    addr = (BYTEPTR) ip;
+    n = (CELL) *addr;
+    s = addr + 1;
+    ip = (XTPTR) ((BYTEPTR) ip + n + 1);
+    PUSH_CELL(ip);
+    CALL(calign)
+    ip = POP_CELL();
+;C
+
+
+\ ---------- Control primitives ----------
+
+\ Jump unconditionally to the address compiled in the next cell
+C: (BRANCH) ( -- )
+  CELL offset = (CELL) *ip;
+  ip = (XTPTR) (((BYTEPTR) ip) + offset);
+;C
+
+\ Test the top of the stack and either continue (if true) or
+\ jump to the address compiled in the next cell (if false)
+C: (?BRANCH) ( f -- )
+  if(f)
+    ip++;
+  else {
+    CELL offset = (CELL) *ip;
+    ip = (XTPTR) (((BYTEPTR) ip) + offset);
+  }
+;C
+
+\ Compute a jump offset from a to TOP, in bytes
+: JUMP> \ ( a -- offset )
+    2 USERVAR @ SWAP - ;
+\ Compute a jump offset from TOP to a, in bytes
+: >JUMP \ ( a -- offset )
+    2 USERVAR @ - ;
+
+\ We also want the same code in CROSS for use by control structures
+<WORDLISTS ONLY FORTH ALSO CROSS DEFINITIONS
+\ Compute a jump offset from a to TOP, in bytes
+: JUMP> \ ( a -- offset )
+    [CROSS] TOP SWAP - ;
+
+\ Compute a jump offset from TOP to a, in bytes
+: >JUMP \ ( a -- offset )
+    ." >JUMP " dup .hex space [cross] top .hex
+    [CROSS] TOP -  ;
+WORDLISTS>
+
+
 \ ---------- Common behaviours ----------
       
 \ The run-time behaviour of a variable, returning its body address
 C: (VAR) dovar ( -- addr )
-    addr = (CELL) xt_to_body(_xt);
+    PUSH_CELL(_xt);
+    CALL(xt_to_body);
+    addr = POP_CELL();
 ;C
 
 \ For a re-directable word, grab the indirect body address and jump to it,
@@ -100,36 +159,17 @@ C: (VAR) dovar ( -- addr )
 C: (DOES) bracket_does ( -- body )
     CELLPTR iba;
 
-    xt_to_iba(_xt);
+    PUSH_CELL(_xt);
+    CALL(xt_to_iba);
     iba = (CELLPTR) POP_CELL();
     PUSH_RETURN(ip);
     ip = (XT) *iba;
 ;C
 
 
-\ ---------- Portable address arithmetic ----------
-	
-\ Compute a jump offset from a to TOP, in bytes
-: JUMP> \ ( a -- offset )
-    [CROSS] TOP SWAP - ;
-
-\ Compute a jump offset from TOP to a, in bytes
-: >JUMP \ ( a -- offset )
-    [CROSS] TOP - ;
-
-\ We also want the same code in CROSS
-<WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
-: JUMP> \ ( a -- offset )
-    [CROSS] TOP SWAP - ;
-: >JUMP \ ( a -- offset )
-    [CROSS] TOP - ;
-WORDLISTS>
-
-
 \ ---------- (Re)-starting the interpreter ----------
 
 CHEADER:
-PRIMITIVE uservar;
 
 CELLPTR
 user_variable( int n ) {
@@ -143,6 +183,8 @@ user_variable( int n ) {
 
 \ Warm-start the interpreter
 C: WARM warm_start ( -- )
+    setjmp(env);
+
     // reset the stacks      
     DATA_STACK_RESET();
     RETURN_STACK_RESET();  
@@ -155,10 +197,13 @@ C: WARM warm_start ( -- )
     *(user_variable(USER__IN)) = -1;                // in need of a refill
 	
     // point the ip at the executive and return
-    ip = (XTPTR) xt_to_body((XT) *(user_variable(USER_EXECUTIVE)));
+    PUSH_CELL(*(user_variable(USER_EXECUTIVE)));
+    CALL(xt_to_body);
+    ip = (XTPTR) POP_CELL();
 ;C
 
 \ Cold-start (same as WARM, for the moment)
+\ sd: COLD *must* be a primitive 
 C: COLD cold_start ( -- ) 
     CALL(warm_start);
 ;C
