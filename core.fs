@@ -172,29 +172,6 @@ C: NR> ( -- n )
 ;C
 
 
-\ ---------- Literals ----------
-
-\ Push the next cell in the instruction stream as a literal
-C: (LITERAL) ( -- l )
-    CELLPTR addr;
-
-    addr = (CELLPTR) ip;
-    l = (*addr);
-    ip++;
-;C
-
-\ Push a string in the code space onto the stack as a standard
-\ address-plus-count pair
-C: (SLITERAL) ( -- s n )
-    BYTEPTR addr;
-
-    addr = (BYTEPTR) ip;
-    n = (CELL) *addr;
-    s = addr + 1;
-    ip = (XTPTR) ((BYTEPTR) ip + n + 1);
-;C
-
-
 \ ---------- Constants ----------
 
 \ False truth value
