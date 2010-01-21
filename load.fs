@@ -6,14 +6,14 @@
 
 \ Load a file
 : (LOAD) \ ( fh -- )
-    (<INPUT)
-    EXECUTIVE @ EXECUTE
-    INPUT> ;
+    (<FROM)
+    1 USERVAR ( EXECUTIVE ) @ EXECUTE
+    FROM> ;
 
 \ Load a file
 : LOAD \ ( addr len -- )
-    2DUP OPEN-FILE IF
-	TYPE SPACE S" can't be loaded" ABORT
+    2DUP R/O OPEN-FILE IF
+	TYPE 32 EMIT S" can't be loaded" ABORT
     ELSE
 	ROT 2DROP
 	(LOAD)
