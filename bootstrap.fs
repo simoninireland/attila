@@ -52,6 +52,14 @@ jmp_buf env;
 
 // ---------- Assorted hacks to call underlying primitives from C level ----------
 
+CHARACTERPTR
+create_unix_string( CELL addr, CELL namelen ) {
+  static CHARACTER namebuf[256];
+
+  strncpy(namebuf, (CHARACTERPTR) addr, namelen);   namebuf[namelen] = '\0';
+  return namebuf;
+}
+
 VOID user_variable_address( XT );    
 CELLPTR
 user_variable( int n ) {
@@ -362,6 +370,29 @@ C: >NAME to_name ( xt -- addr namelen)
 ;C
 
 
+\ ---------- Literals ----------
+
+\ Push the next cell in the instruction stream as a literal
+C: (LITERAL) ( -- l )
+    CELLPTR addr;
+
+    addr = (CELLPTR) ip;
+    l = (*addr);
+    ip++;
+;C
+
+\ Push a string in the code space onto the stack as a standard
+\ address-plus-count pair
+C: (SLITERAL) ( -- s n )
+    BYTEPTR addr;
+
+    addr = (BYTEPTR) ip;
+    n = (CELL) *addr;
+    s = addr + 1;
+    ip = (XTPTR) ((BYTEPTR) ip + n + 1);
+;C
+
+
 \ ---------- Control primitives ----------
 
 \ Jump unconditionally to the address compiled in the next cell
@@ -511,7 +542,7 @@ C: WARM ( -- )
        *(user_variable(USER_INPUTSOURCE)) != stdin)
         fclose(*(user_variable(USER_INPUTSOURCE)));
     *(user_variable(USER_INPUTSOURCE)) = stdin;
-    *(user_variable(USER_OFFSET)) = -1; // in need of a refill
+    *(user_variable(USER__IN)) = -1; // in need of a refill
     if(*(user_variable(USER_OUTPUTSINK)) != NULL &&
        *(user_variable(USER_OUTPUTSINK)) != stdout)
         fclose(*(user_variable(USER_OUTPUTSINK)));
