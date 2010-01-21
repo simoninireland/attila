@@ -13,7 +13,7 @@
 \  [ iba -> altbody    1 cell ]      (REDIRECTABLE words only)
 \   body -> body       n bytes
 \
-\ The model has to export five routines as named primitives, that then
+\ The model has to export six routines as named primitives, that then
 \ get called from within the inner interpreter:
 \
 \  - xt_to_body   >BODY
@@ -21,6 +21,7 @@
 \  - xt_to_iba    >IBA
 \  - xt_to_status >STATUS
 \  - xt_to_name   >NAME
+\  - xt_to_lfa    >LFA
 
 
 \ ---------- Memory management ----------
@@ -28,7 +29,7 @@
 \ TOP and HERE are the same in this model
 : TOP  2 USERVAR @ ; \ (TOP)
 : HERE TOP ;
-: LASTXT 9 USERVAR @ ; \ LAST
+: LASTXT 10 USERVAR @ ; \ LAST
 
 \ Compile a character
 : CCOMPILE, \ ( c -- )
@@ -36,8 +37,13 @@
     1 2 USERVAR +! ; \ (TOP)
 
 \ Align code address on cell boundaries
-: CALIGN \ ( addr -- aaddr )
-    DUP /CELL MOD ?DUP 0<> IF /CELL SWAP - + THEN ;
+\ : CALIGN \ ( addr -- aaddr )
+\     DUP /CELL MOD ?DUP 0<> IF /CELL SWAP - + THEN ;
+C: CALIGN calign ( addr -- aaddr )
+  aaddr = addr;
+  if((aaddr % sizeof(CELL)) > 0)
+    aaddr = aaddr + (sizeof(CELL) - (aaddr % sizeof(CELL)));
+;C
 : CALIGNED \ ( -- )
     TOP CALIGN TOP - ?DUP IF
 	0 DO
@@ -101,21 +107,43 @@ C: >CFA xt_to_cfa ( xt -- xt )
 
 \ Convert an xt to a link pointer containing the xt of the next word in the
 \ definition chain
-: >LFA \ ( xt -- lfa )
-    1 CELLS - ;
+\ : >LFA \ ( xt -- lfa )
+\     1 CELLS - ;
+C: >LFA xt_to_lfa ( xt -- lfa )
+  lfa = (CELL) ((BYTEPTR) xt - sizeof(CELL));
+;C
 
 \ Convert xt to its status field. The namelen and status are adjacent and
 \ CALIGNED
-: >STATUS \ ( xt -- addr )
-    2 CELLS - 1+ ;
+\ : >STATUS \ ( xt -- addr )
+\     2 CELLS - 1+ ;
+C: >STATUS xt_to_status ( xt -- addr )
+  addr = (CELL) ((BYTEPTR) xt - 2 * sizeof(CELL) + 1);
+;C
 
 \ Convert an xt to a name string. addr will be CALIGNED
-: >NAME \ ( xt -- addr namelen )
-    >LFA 1 CELLS - DUP C@
-    DUP >R
-    - 1-
-    1 CELLS - CALIGN        \ ensure we're aligned on the previous cell boundary
-    R> ;
+\ : >NAME \ ( xt -- addr namelen )
+\     >LFA 1 CELLS - DUP C@
+\     DUP >R
+\     -
+\     DUP /CELL MOD 0<> IF
+\         /CELL -
+\     THEN CALIGN                \ ensure we're aligned on the previous cell boundary
+\     R> ;
+C: >NAME xt_to_name ( -- addr n )
+  BYTEPTR a;
+
+  CALL(xt_to_lfa)
+  a = (BYTEPTR) POP_CELL();
+  a -= sizeof(CELL);
+  n = (CELL) *a;
+  a -= n;
+  if((n % sizeof(CELL)) > 0)
+    a -= sizeof(CELL);
+  PUSH_CELL(a);
+  CALL(calign);
+  addr = POP_CELL();
+;C
 
 \ Convert xt to indirect body (DOES> behaviour) if present
 \ (We don't check whether there actually *is* an IBA)
@@ -180,9 +208,9 @@ C: >BODY xt_to_body ( xt -- addr )
 
   statusptr = ((BYTEPTR) xt) - 2 * sizeof(CELL) + 1;
   status = *statusptr;
-  addr = xt + 1;
+  addr = xt + sizeof(CELL);
   if(status & 1)
-    addr += 1;
+    addr += sizeof(CELL);
 ;C
 
 
@@ -190,21 +218,22 @@ C: >BODY xt_to_body ( xt -- addr )
 
 \ Create a header for the named word with the given code field
 : (HEADER,) \ ( addr n cf -- xt )
-    CALIGNED         \ align TOP on the next cell boundary 
-    >R               \ stash the code field
-    DUP >R           \ compile the name
+    CALIGNED                 \ align TOP on the next cell boundary 
+    >R                       \ stash the code field
+    DUP >R                   \ compile the name
     0 DO
 	DUP C@ CCOMPILE,
 	1+
     LOOP
     DROP
     CALIGNED      
-    R> CCOMPILE,     \ compile the name length
-    0 CCOMPILE,      \ status byte
+    R> CCOMPILE,             \ compile the name length
+    0 CCOMPILE,              \ status byte
     CALIGNED
-    0 COMPILE,       \ compile an empty link pointer
-    TOP              \ the txt
-    R> CFACOMPILE, ; \ the code pointer
+    10 USERVAR @ ACOMPILE,   \ compile the link pointer
+    TOP                      \ the txt
+    R> CFACOMPILE,           \ the code pointer
+    DUP 10 USERVAR ! ;       \ update LAST
 
 
 \ ---------- Basic finding ----------
@@ -222,7 +251,7 @@ C: (FIND) bracket_find ( addr namelen x -- )
     xt = (XT) NULL;
     while(x != (BYTEPTR) NULL) {
         PUSH_CELL(x);
-        xt_to_name(_xt);
+        CALL(xt_to_name);
         tlen = POP_CELL();
         taddr = POP_CELL();
 	if((namelen == tlen) &&
@@ -230,7 +259,7 @@ C: (FIND) bracket_find ( addr namelen x -- )
 	    xt = x;   x = NULL;
 	} else {
             PUSH_CELL(x);
-            xt_to_lfa(_xt);
+            CALL(xt_to_lfa);
 	    link = POP_CELL();
 	    x = (XT) (XTPTR) (*link);
 	}
@@ -239,7 +268,7 @@ C: (FIND) bracket_find ( addr namelen x -- )
     PUSH_CELL(xt);
     if(xt != (XT) NULL) {
 	PUSH_CELL(xt);
-	xt_to_status(_xt);
+	CALL(xt_to_status);
 	status = POP_CELL();
         PUSH_CELL((status & IMMEDIATE_MASK) ? -1 : 1);
     }
