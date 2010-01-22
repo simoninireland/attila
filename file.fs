@@ -15,8 +15,8 @@
 
 \ Save the current input state
 : SAVE-INPUT \ ( -- fh pos 2 )
-    INPUTSOURCE @
-    DUP FILE-POSITION
+    6 USERVAR ( INPUTSOURCE ) @
+    DUP FILE-POSITION DROP
     2 ;
 
 \ Restore the previously-save input state, if possible
@@ -25,7 +25,7 @@
     OVER REPOSITION-FILE ?DUP IF
 	NIP
     ELSE
-	INPUTSOURCE !
+	6 USERVAR ( INPUTSOURCE )  !
 	TRUE
     THEN ;
 
@@ -34,35 +34,35 @@
 
 \ Re-direct subsequent output to the given file
 : (<TO) \ ( fh -- ofh )
-    OUTPUTSINK @
-    SWAP OUTPUTSINK ! ;
+    7 USERVAR ( OUTPUTSINK ) @
+    SWAP 7 USERVAR ( OUTPUTSINK ) ! ;
 : <TO \ ( "name" -- ofh )
     PARSE-WORD 2DUP W/O CREATE-FILE IF
 	DROP
-	TYPE SPACE S" cannot be re-directed to" ABORT
+	TYPE 32 EMIT S" cannot be re-directed to" ABORT
     ELSE
 	ROT 2DROP (<TO)
     THEN ;
 
 \ Restore previous output stream
 : TO> \ ( ofh -- ) 
-    OUTPUTSINK @ CLOSE-FILE DROP
-    OUTPUTSINK ! ;
+    7 USERVAR ( OUTPUTSINK ) @ CLOSE-FILE DROP
+    7 USERVAR ( OUTPUTSINK ) ! ;
 
 \ Re-direct subsequent input from the given file
 : (<FROM) \ ( fh -- )
-    INPUTSOURCE @
-    SWAP INPUTSOURCE ! ;
+    6 USERVAR ( INPUTSOURCE ) @
+    SWAP 6 USERVAR ( INPUTSOURCE ) ! ;
 : <FROM \ ( "name" -- )
     PARSE-WORD 2DUP R/O OPEN-FILE IF
 	DROP
-	TYPE SPACE S" cannot be re-directed from" ABORT
+	TYPE 32 EMIT S" cannot be re-directed from" ABORT
     ELSE
 	ROT 2DROP (<FROM)
     THEN ;
 
 \ Restore previous output stream
 : FROM> \ ( ofh -- ) 
-    INPUTSOURCE @ CLOSE-FILE DROP
-    INPUTSOURCE ! ;
+    6 USERVAR ( INPUTSOURCE ) @ CLOSE-FILE DROP
+    6 USERVAR ( INPUTSOURCE ) ! ;
 

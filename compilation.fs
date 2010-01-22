@@ -5,26 +5,42 @@
 \ These words are used to assist compilation. They may not be
 \ needed on stand-alone embedded systems.
 
-\ ---------- Literal creation ----------
+\ ---------- Literals ----------
 
-: LITERAL
-    ['] (LITERAL) CTCOMPILE,
+\ Compile the top of the stack as a literal
+: LITERAL \ ( n -- )
+    [COMPILE] XTCOMPILE,
     COMPILE, ; IMMEDIATE
-: XTLITERAL
-    ['] (XTLITERAL) CTCOMPILE,
+
+\ Compile the address on the top of the stack as a literal
+: ALITERAL \ ( addr -- )
+    ['] (LITERAL) XTCOMPILE,
+    ACOMPILE, ; IMMEDIATE
+
+\ Compile the xt on the top of the stack as a literal
+: XTLITERAL \ ( xt -- )
+    ['] (LITERAL) XTCOMPILE,
     XTCOMPILE, ; IMMEDIATE
-: SLITERAL
-    ['] (SLITERAL) CTCOMPILE,
+
+\ Compile the string on the tp of the stack as a literal
+: SLITERAL \ ( addr len -- )
+    ['] (SLITERAL) XTCOMPILE,
     SCOMPILE, ; IMMEDIATE
+
+\ Compile a "-delimited string from the input source as a literal
+: S" \ ( "string" -- )
+    32 CONSUME \ spaces
+    [CHAR] " PARSE
+    ?DUP IF
+	POSTPONE SLITERAL
+\    ELSE
+\	S" String not delimited" ABORT
+    THEN ; IMMEDIATE
 
 
 \ ---------- Word status ----------
 
 \ VARIABLE (FIND-BEHAVIOUR)
-
-\ Basic finder
-: (FLAT-FIND) \ ( addr n -- 0 | xt 1 | xt -1 )
-    LASTXT (FIND) ;
 
 \ Top-level word-finder
 \ : FIND \ ( addr n -- 0 | xt 1 | xt -1 )
@@ -55,6 +71,11 @@
 : [COMPILE] \ ( "word" -- )
     POSTPONE [']
     ['] CTCOMPILE, CTCOMPILE, ; IMMEDIATE
+
+\ Extract the first character of the next word in the input stream
+: [CHAR] \ ( "word" -- )
+    PARSE-WORD CHAR
+    POSTPONE LITERAL ; IMMEDIATE
 
 
 \ ---------- Recursion ----------

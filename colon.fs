@@ -19,39 +19,6 @@
 
 \ The colon-definition compiler
 
-\ ---------- Literals ----------
-
-\ Compile the top of the stack as a literal
-: LITERAL \ ( n -- )
-    ['] (LITERAL) XTCOMPILE,
-    COMPILE, ; IMMEDIATE
-
-\ Compile the address on the top of the stack as a literal
-: ALITERAL \ ( addr -- )
-    ['] (LITERAL) XTCOMPILE,
-    ACOMPILE, ; IMMEDIATE
-
-\ Compile the xt on the top of the stack as a literal
-: XTLITERAL \ ( xt -- )
-    ['] (LITERAL) XTCOMPILE,
-    XTCOMPILE, ; IMMEDIATE
-
-\ Compile the string on the tp of the stack as a literal
-: SLITERAL \ ( addr len -- )
-    ['] (SLITERAL) XTCOMPILE,
-    SCOMPILE, ; IMMEDIATE
-
-\ Compile a "-delimited string from the input source as a literal
-: S" \ ( "string" -- )
-    32 CONSUME \ spaces
-    [CHAR] " PARSE
-    ?DUP IF
-	POSTPONE SLITERAL
-\    ELSE
-\	S" String not delimited" ABORT
-    THEN ; IMMEDIATE
-
-
 \ ---------- The colon-compiler ----------
 
 \ The colon-definer
@@ -62,6 +29,8 @@
 
 \ Complete a colon-definition
 : ; \ ( xt -- )
+    [ IMMEDIATE ]                 \ to ensure we pick up the right
+                                  \ version when cross-compiling
     NEXT,
     END-DEFINITION
     POSTPONE [ DROP ; IMMEDIATE
