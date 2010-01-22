@@ -1,6 +1,6 @@
 \ $Id$
 
-\ Character operations, ASCII version 
+\ Basic character operations, ASCII version 
 
 \ ASCII characters are 1 byte long
 1 CONSTANT /CHAR
@@ -12,30 +12,24 @@
 32 CONSTANT BL
 10 CONSTANT NL
 
+\ Case testing
+: UC? 65 ( A )  90 ( Z ) 1+ WITHIN ;
+: LC? 97 ( a ) 122 ( z )  1+ WITHIN ;
+
+\ Case conversion
+: >UC \ ( c -- uc )
+    DUP LC? IF
+	97 ( a ) -  65 ( A ) +
+    THEN ;
+: >LC \ ( c -- lc )
+    DUP UC? IF
+	65 ( A )  - 97 ( a ) +
+    THEN ;
+
 \ Push the first character of a string onto the stack
 : CHAR \ ( addr len -- c )
     DROP C@ ;
 
-\ Extract the first character of the next word in the input stream
-: [CHAR] \ ( "word" -- )
-    PARSE-WORD CHAR
-    POSTPONE LITERAL ; IMMEDIATE
-
-\ Convert character to upper case
-: C>UC \ ( c -- uc )
-    DUP [CHAR] a [CHAR] z 1+ WITHIN IF
-	[CHAR] a - [CHAR] A +
-    THEN ;
-
-\ Convert character to lower case
-: C>LC \ ( c -- lc )
-    DUP [CHAR] A [CHAR] Z 1+ WITHIN IF
-	[CHAR] A - [CHAR] a +
-    THEN ;
-    
-\ Test characters for equality
+\ Test characters for equality. This is sometimes character-set dependent (although
+\ we're probably just being overly picky)
 : C= = ;
-
-\ Test characters for case-insensitive equality
-: C=CI \ ( c1 c2 -- f )
-    C>UC SWAP C>UC C= ;
