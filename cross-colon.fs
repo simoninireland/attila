@@ -29,28 +29,17 @@
 	1 OVER [CROSS] IMMEDIATE? IF NEGATE THEN   \ check immediacy on target
     THEN ;
 
+\ Look up a word in the target, failing if we don't find it
+: (') \ ( addr n -- txt )
+    2DUP [CROSS-COMPILER] FIND IF
+	ROT 2DROP
+    ELSE
+	TYPE S" ?" ABORT
+    THEN ;
+
 \ Look up the next word in the input stream in the target
 : ' \ ( "name" -- txt )
-    PARSE-WORD 2DUP [CROSS-COMPILER] FIND IF
-	ROT 2DROP
-    ELSE
-	TYPE SPACE S" ?" ABORT
-    THEN ;
-
-\ Look-up the txt of the given word on the target
-: ([']) \ ( addr n -- )
-    2DUP [CROSS-COMPILER] FIND 0= IF
-	TYPE SPACE S" cannot be found on the target" ABORT
-    ELSE
-	ROT 2DROP
-    THEN ;
-
-\ Compile the txt of the next word as a literal. Note that the lookup
-\ occurs at run-time *not* (as usual) at compile-time, to allow the image
-\ to be populated
-: ['] \ ( "name" -- )
-    PARSE-WORD POSTPONE SLITERAL
-    [ 'CROSS-COMPILER ([']) ] LITERAL CTCOMPILE, ; IMMEDIATE 
+    PARSE-WORD [CROSS-COMPILER] (') ;
 
 \ Include using the underlying operation
 : INCLUDE [FORTH] INCLUDE ;
@@ -64,21 +53,28 @@ WORDLISTS>
 
 \ ---------- Cross-compiling words ----------
 
-<WORDLISTS ALSO CROSS DEFINITIONS
+<WORDLISTS ONLY FORTH ALSO CROSS DEFINITIONS
 
 \ Compile the code needed to cross-compile at run-time the next
 \ word in the input stream
 : [COMPILE] \ ( "name" -- )
-    [ 'CROSS-COMPILER ['] CTCOMPILE, ]
+    PARSE-WORD POSTPONE SLITERAL
+    [ 'CROSS-COMPILER (') ] LITERAL CTCOMPILE,
     [ 'CROSS CTCOMPILE, ] LITERAL CTCOMPILE, ; IMMEDIATE
+
+\ Compile the txt of the next word as a literal. The lookup is done at
+\ run-time, not (as is usual) at compile-time, so that control words can be
+\ defined before the image is populated
+: ['] \ ( "name" -- )
+    PARSE-WORD POSTPONE SLITERAL
+    [ 'CROSS-COMPILER (') ] LITERAL CTCOMPILE, ; IMMEDIATE
 
 WORDLISTS>
 
 
 \ ---------- Literals ----------
 
-<WORDLISTS ALSO CROSS-COMPILER DEFINITIONS
-
+<WORDLISTS ALSO CROSS DEFINITIONS
 \ Compile the top of the stack as a literal
 : LITERAL \ ( n -- )
     [CROSS] [COMPILE] (LITERAL)
@@ -109,10 +105,18 @@ WORDLISTS>
     32 CONSUME \ spaces
     [CHAR] " PARSE
     ?DUP IF
-	[ 'CROSS-COMPILER SLITERAL CTCOMPILE, ]
+	[ 'CROSS SLITERAL CTCOMPILE, ]
     ELSE
 	S" String not delimited" ABORT
     THEN ; IMMEDIATE
+WORDLISTS>
+
+<WORDLISTS ALSO CROSS-COMPILER DEFINITIONS
+
+\ Cross-compile the txt of the next word as a literal
+: ['] \ ( "name" -- )
+    [CROSS-COMPILER] '
+    [ 'CROSS XTLITERAL CTCOMPILE, ] ; IMMEDIATE 
 
 WORDLISTS>
 
@@ -142,7 +146,7 @@ WORDLISTS>
 	    2DUP FIND
 	    CASE
 		1 NEGATE OF
-		    ROT TYPE SPACE ." executed from host" CR
+		    ROT ( 2DROP ) TYPE SPACE ." shadowed by host, xt=" DUP . CR
 		    EXECUTE
 		ENDOF
 		1 OF
@@ -156,16 +160,16 @@ WORDLISTS>
 	0 OF
 	    2DUP FIND CASE
 		1 OF
-		    DROP SPACE TYPE S" not found on target, and not IMMEDIATE on host" ABORT
+		    DROP TYPE SPACE S" not shadowed by host" ABORT
 		ENDOF
 		1 NEGATE OF
-		    ROT 2DROP
+		    ROT 2DROP \ TYPE SPACE ." executed from host" CR
 		    EXECUTE
 		ENDOF
 		0 OF
 		    2DUP NUMBER? IF
 			ROT 2DROP
-			[ 'CROSS-COMPILER LITERAL CTCOMPILE, ]
+			[ 'CROSS LITERAL CTCOMPILE, ]
 		    ELSE
 			TYPE S" ?" ABORT
 		    THEN
@@ -202,7 +206,7 @@ VARIABLE NEXT-:-ACTION
 \ The colon-definer
 : : \ ( "name" -- txt )
     PARSE-WORD
-    2DUP [CROSS-COMPILER] ['] (:) [CROSS] CFA@ [CROSS] (HEADER,)
+    2DUP [CROSS] ['] (:) [CROSS] CFA@ [CROSS] (HEADER,)
     (WORD-LOCATOR)
     [CROSS-COMPILER] ]
     BEGIN
@@ -221,7 +225,7 @@ VARIABLE NEXT-:-ACTION
 \ Compile an anonymous word with no name, which will leave its txt
 \ on the data stack when completed with ;
 : :NONAME \ ( -- xt xt )
-    NULLSTRING [CROSS-COMPILER] ['] (:) [CROSS] CFA@ [CROSS] (HEADER,)
+    NULLSTRING [CROSS] ['] (:) [CROSS] CFA@ [CROSS] (HEADER,)
     DUP
     [CROSS-COMPILER] ]
     BEGIN

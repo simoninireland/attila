@@ -12,26 +12,26 @@
     INCLUDED
     WORDLISTS> ;
 
-\ Generate the image, complete with primitives
+\ Generate the image from a template file
 : GENERATE-IMAGE \ ( -- )
     ." // " TIMESTAMP CR CR
-
-    ." // Primitives table" CR
-    GENERATE-PRIMITIVE-DECLARATIONS CR CR
 
     ." // VM definition" CR
     S" vm.fs" GENERATE-VM CR CR
 
     ." // Architecture definition" CR
-    ." #include " QUOTES ." x-arch-gcc-host.h" QUOTES CR CR 
+    ." #include " QUOTES ." x-arch-gcc-host.h" QUOTES CR CR
+
+    ." // Primitives table" CR
+    GENERATE-PRIMITIVE-DECLARATIONS CR CR
 
     ." // C support" CR
     GENERATE-CBLOCKS CR CR
 
-    ." // Primitives" CR
+    ." // Primitives"
     GENERATE-PRIMITIVES CR CR
 
-    ." // Image" CR
+    ." // Initial image" CR
     EMIT-IMAGE CR CR ;
 
 WORDLISTS>

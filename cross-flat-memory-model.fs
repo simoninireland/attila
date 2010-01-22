@@ -77,7 +77,7 @@ WORDLISTS>
 : (CROSS-HEADER,) \ ( addr n cf -- xt )
     [CROSS] CALIGNED         \ align TOP on the next cell boundary 
     >R                       \ stash the code field
-    \ 2DUP ." Compiling " TYPE CR
+    2DUP ." Compiling " TYPE CR
     DUP >R                   \ compile the name
     0 DO
 	DUP C@ [CROSS] CCOMPILE,
@@ -88,7 +88,7 @@ WORDLISTS>
     R> [CROSS] CCOMPILE,              \ compile the name length
     0 [CROSS] CCOMPILE,               \ status byte
     [CROSS] CALIGNED
-    [CROSS] LAST @ [CROSS] COMPILE,   \ compile a link pointer
+    [CROSS] LAST @ [CROSS] ACOMPILE,  \ compile a link pointer
     [CROSS] TOP                       \ the txt
     R> [CROSS] CFACOMPILE,            \ the code pointer
     DUP [CROSS] LAST ! ;              \ update LAST

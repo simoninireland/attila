@@ -28,7 +28,7 @@
 
 \ Create a data block that returns its body address when executed
 : (DATA) \ ( addr n -- )
-    2DUP [CROSS-COMPILER] ['] (VAR) [CROSS] CFA@ [CROSS] (HEADER,)
+    2DUP [CROSS] ['] (VAR) [CROSS] CFA@ [CROSS] (HEADER,)
     (WORD-LOCATOR) DROP ; \ create a locator for the new word
     
 \ Create a data block from the next word in the input
@@ -41,10 +41,6 @@
     1 [CROSS] CELLS [CROSS] ALLOT    \ the indirect body address (iba)
     [CROSS-COMPILER] REDIRECTABLE ;  \ fix status
     
-\ Create a data block from the next word in the input
-: CREATE \ ( "name" -- )
-    PARSE-WORD [CROSS] (CREATE) ;
-
 
 \ ---------- DOES> ----------
 
@@ -54,12 +50,16 @@
 \ set the IBA of the created word
 \
 \ (DOES) is provided by the inner interpreter
-\ (DOES> is assumed to be available on the target
+\ (DOES>) is assumed to be available on the target
+
+\ Create a data block from the next word in the input
+: CREATE \ ( "name" -- )
+    PARSE-WORD (CREATE) ;
 
 \ Compile the setting behaviour
 : DOES> \ ( -- )
-    [CROSS-COMPILER] ['] LASTXT  [CROSS] CTCOMPILE,
-    [CROSS-COMPILER] ['] (DOES>) [CROSS] CTCOMPILE, ; IMMEDIATE
+    [CROSS] ['] LASTXT  [CROSS] CTCOMPILE,
+    [CROSS] ['] (DOES>) [CROSS] CTCOMPILE, ; IMMEDIATE
 
 WORDLISTS>
 
@@ -75,12 +75,17 @@ WORDLISTS>
 \ DOES> part will set the word to use the right target code
 \ when it is executed.
 
+\ Create a data block from the next word in the input
+: CREATE \ ( "name" -- )
+    ." CCC"
+    PARSE-WORD [CROSS] (CREATE) ;
+
 \ Find the target address of the code following (DOES) in the target word
 : FIND-IBA \ ( txt -- taddr )
     [CROSS] >BODY
     BEGIN
 	DUP [CROSS] XT@
-	[CROSS-COMPILER] ['] (DOES) <>
+	[CROSS] ['] (DOES) <>
     WHILE
 	    1 CELLS +
     REPEAT
@@ -88,17 +93,16 @@ WORDLISTS>
 
 \ Set the CFA and IBA of the created target word
 : (DOES>) \ ( taddr txt -- )
-    [CROSS-COMPILER] ['] (DOES) [CROSS] CFA@ OVER [CROSS] CFA!  \ cfa
+    [CROSS] ['] (DOES) [CROSS] CFA@ OVER [CROSS] CFA!  \ cfa
     IBA!                                                        \ iba
     R> DROP ;                                                   \ jump out
 
 \ Compile the code to cross-compile the behaviour. Note that we still
 \ compile (on the host) the run-time behaviour to ensure that any
-\ side-efects are executed
+\ side-effects are executed
 : DOES> \ ( -- )
-    LASTXT >NAME [CROSS-COMPILER] ([']) [CROSS] FIND-IBA [ 'CROSS-COMPILER LITERAL CTCOMPILE, ]
+    LASTXT >NAME [CROSS-COMPILER] (') [CROSS] FIND-IBA [ 'CROSS LITERAL CTCOMPILE, ]
     [ 'CROSS LASTXT ] LITERAL CTCOMPILE,
     [ 'CROSS (DOES>) ] LITERAL CTCOMPILE, ; IMMEDIATE
-
 
 WORDLISTS>

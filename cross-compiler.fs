@@ -105,6 +105,9 @@ WORDLISTS>
 \ Prepare for loading files with comments in them
 include comments.fs
 
+\ Target is ASCII-based
+include ascii.fs
+
 \ Pre-defining unavoidable forward references
 DEFER >CFA
 DEFER (HEADER,)
@@ -131,23 +134,14 @@ include cross-flat-memory-model.fs
 include cross-c.fs
 .( Loading colon cross-compiler...)
 include cross-colon.fs
+.( Loading cross create-does...)
+include cross-createdoes.fs
 .( Loading vm description generator...)
 include cross-vm.fs
 .( Loading cross-compiler file generators...)
 include cross-generate.fs
 .( Loading cross-compiler coding environments...)
 include cross-environments.fs
-.( Loading cross defining words)
-<WORDLISTS ALSO CROSS ALSO CROSS-COMPILER DEFINITIONS
-include createdoes.fs
-include variables.fs
-WORDLISTS>
-.( Loading cross-compiler control structures...)
-<WORDLISTS ALSO CROSS ALSO CROSS-COMPILER DEFINITIONS
-include conditionals.fs
-include loops.fs
-include counted-loops.fs
-WORDLISTS>
 
 .( Cross-compiler loaded)
 
