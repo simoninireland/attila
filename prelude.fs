@@ -37,7 +37,8 @@ include base.fs                  \ Derived primitives
 \ Advanced compilation words
 include createdoes.fs            \ CREATE ... DOES>
 include interpret-compile.fs     \ INTERPRET-COMPILE
-include variables.fs             \ VARIABLE, CONSTANT and USER
+include variables.fs             \ VARIABLE and USER
+include constants.fs             \ CONSTANT
 include values.fs                \ VALUE
 include defer.fs                 \ DEFER ... IS
 
@@ -59,18 +60,17 @@ include case.fs                  \ CASE ... OF ... ENDOF ... ENDCASE
 include hooks.fs                 \ Dynamic behaviour at strategic points
 
 \ Data types
-include strings.fs               \ Character and (short) string operations
+include chars.fs                 \ Character operations
+include strings.fs               \ Counted (short) strings
 include zstrings.fs              \ Null-terminated (long) strings
 include scratch.fs               \ String scratch area
 include formatting.fs            \ Formatted numeric output
 include lists.fs                 \ Linked lists
 
-\ Additional compiler functions
-include evaluate.fs              \ Execute code from strings
-
 \ File management
 include file.fs                  \ I/O re-direction
-include file-templates.fs        \ File templates
+include evaluate.fs              \ Execute code from strings
+\ include file-templates.fs        \ File templates
 
 \ Foreign language support
 include c.fs                     \ C definitions (check for definitions)
