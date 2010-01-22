@@ -91,6 +91,17 @@ C: CALIGN calign ( addr -- aaddr )
 	0 C,
     LOOP ;
 
+\ Memory access also doesn't distinguish between address types
+\ !, @, C@, C!, 2@ amd 2! are in core.fs: these words are the "manipulators"
+\ for architectures that need to handle the different types differently
+: A!   ! ;          \ addresses
+: A@   @ ;
+: R!   ! ;          \ "real" (hardware) addresses
+: R@   @ ;
+: XT!  ! ;          \ xts
+: XT@  @ ;
+\ See also CFA! and CFA@, IBA! and IBA@ below, which manipulate word headers
+
 
 \ ---------- Header access ----------
 
@@ -233,7 +244,7 @@ C: >BODY xt_to_body ( xt -- addr )
     10 USERVAR @ ACOMPILE,   \ compile the link pointer
     TOP                      \ the txt
     R> CFACOMPILE,           \ the code pointer
-    DUP 10 USERVAR ! ;       \ update LAST
+    DUP 10 USERVAR XT! ;     \ update LAST
 
 
 \ ---------- Basic finding ----------

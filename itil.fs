@@ -9,12 +9,41 @@
 \  - xt_to_cfa   >CFA
 \  - xt_to_iba   >IBA
 
+\ ---------- Very low-level debugging suppprt ----------
+
+CHEADER:
+#define ITIL_DEBUGGING 1
+
+#ifdef ITIL_DEBUGGING
+static int indent;
+static char buf[256];
+#endif
+;CHEADER
+
 \ ---------- The inner interpreter ---------- 
 
 \ Execute an xt from the stack
 C: EXECUTE execute ( xt -- )
     PRIMITIVE prim;
 
+    #ifdef ITIL_DEBUGGING
+        // print word
+	int i;
+	if(xt == (XT) NULL) { 
+            indent -= 3;
+        } else {
+	    PUSH_CELL(xt);
+	    CALL(xt_to_name);
+	    CELL n = POP_CELL();
+	    BYTEPTR addr = (BYTEPTR) POP_CELL();
+	    strncpy(buf, addr, n);   buf[n] = '\0';
+            for(i = 0; i < indent; i++) printf(" ");
+	    printf("%x %s\n", (CELL) (((BYTEPTR) xt - (BYTEPTR) image) / 8), buf);
+            if((PRIMITIVE) (*((CELLPTR) xt)) == (PRIMITIVE) docolon)
+                indent += 3;
+	}
+    #endif
+	
     // dispatch on the instruction
     if(xt == (CELL) NULL) {
         // NEXT, return from this word
@@ -42,17 +71,6 @@ C: (:) docolon ( -- )
     do {
 	// grab the next instruction
 	xt = (*((XTPTR) ip++));
-
-	// print word (for debugging)
-	if(xt != (XT) NULL) { 
-	    PUSH_CELL(xt);
-	    CALL(xt_to_name);
-	    static char buf[20];
-	    CELL n = POP_CELL();
-	    BYTEPTR addr = (BYTEPTR) POP_CELL();
-	    strncpy(buf, addr, n);   buf[n] = '\0';
-	    printf("%x %s\n", (CELL) (((BYTEPTR) xt - (BYTEPTR) image) / 8), buf);
-	}
 	
 	// EXECUTE it
 	PUSH_CELL(xt);
@@ -200,6 +218,10 @@ C: WARM warm_start ( -- )
     PUSH_CELL(*(user_variable(USER_EXECUTIVE)));
     CALL(xt_to_body);
     ip = (XTPTR) POP_CELL();
+
+    #ifdef ITIL_DEBUGGING
+        indent = 0;
+    #endif
 ;C
 
 \ Cold-start (same as WARM, for the moment)
