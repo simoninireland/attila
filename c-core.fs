@@ -270,9 +270,10 @@ C: < ( a b -- f )
     f = (a < b) ? TRUE : FALSE;
 ;C
 
-\ Test whether b <= a < c
+\ Test whether a lies in the range of [b..c]
 C: WITHIN ( a b c -- f )
-    f = ((b <= a) && (a < c));
+   f = (((b < c) && ((b <= a) && (a < c))) ||
+        ((b > c) && ((b <= a) || (a < c))));
 ;C
 	
 \ Test whether a is less than or equal to b
