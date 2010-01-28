@@ -17,20 +17,11 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Data blocks, variables, user variables, constants and values
+\ Data blocks, variables and user variables
 
 \ Create a variable holding a single-precision cell
 : VARIABLE \ ( "name" -- )
     DATA 0 , ;
-    
-\ Create a constant, which substitutes its value immediately
-\ as a literal
-: CONSTANT \ ( v "name" -- )
-    CREATE IMMEDIATE ,
-  DOES> @
-    INTERPRETING? NOT IF
-        POSTPONE LITERAL
-    THEN ;
 
 \ Create a user variable, returning the address of an indexed location
 \ within the user area

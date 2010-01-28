@@ -9,22 +9,22 @@
 
 \ Compile the top of the stack as a literal
 : LITERAL \ ( n -- )
-    [COMPILE] XTCOMPILE,
+    [COMPILE] (LITERAL)
     COMPILE, ; IMMEDIATE
 
 \ Compile the address on the top of the stack as a literal
 : ALITERAL \ ( addr -- )
-    ['] (LITERAL) XTCOMPILE,
+    [COMPILE] (LITERAL)
     ACOMPILE, ; IMMEDIATE
 
 \ Compile the xt on the top of the stack as a literal
 : XTLITERAL \ ( xt -- )
-    ['] (LITERAL) XTCOMPILE,
+    [COMPILE] (LITERAL)
     XTCOMPILE, ; IMMEDIATE
 
 \ Compile the string on the tp of the stack as a literal
 : SLITERAL \ ( addr len -- )
-    ['] (SLITERAL) XTCOMPILE,
+    [COMPILE] (LITERAL)
     SCOMPILE, ; IMMEDIATE
 
 \ Compile a "-delimited string from the input source as a literal
@@ -100,6 +100,6 @@
 : ] \ ( -- )
     1 ( COMPILATION-STATE ) 4 USERVAR ( STATE ) ! ;
 
-\ Check whether we're interpretting
+\ Check whether we're interpreting
 : INTERPRETING? \ ( -- f )
     4 USERVAR ( STATE ) @ 0 ( INTERPRETATION-STATE ) = ;

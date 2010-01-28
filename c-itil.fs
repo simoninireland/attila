@@ -12,7 +12,7 @@
 \ ---------- Very low-level debugging suppprt ----------
 
 CHEADER:
-#define ITIL_DEBUGGING 1
+// #define ITIL_DEBUGGING 1
 
 #ifdef ITIL_DEBUGGING
 static int indent;

@@ -102,9 +102,6 @@ WORDLISTS>
 
 <WORDLISTS ALSO CROSS ALSO DEFINITIONS
 
-\ Prepare for loading files with comments in them
-include comments.fs
-
 \ Target is ASCII-based
 include ascii.fs
 
@@ -122,7 +119,14 @@ DEFER NEXT,
     /CELL * ;
 
 .( Loading image manager...)
-include x-image-gcc.fs    \ sd: should come from elsewhere
+include c-image-fixedsize.fs    \ sd: should come from elsewhere
+
+WORDLISTS>
+
+<WORDLISTS ALSO CROSS-COMPILER DEFINITIONS
+
+\ Prepare for loading files with comments in them
+include comments.fs
 
 WORDLISTS>
 

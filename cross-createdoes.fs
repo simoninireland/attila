@@ -101,7 +101,7 @@ WORDLISTS>
 \ compile (on the host) the run-time behaviour to ensure that any
 \ side-effects are executed
 : DOES> \ ( -- )
-    LASTXT >NAME [CROSS-COMPILER] (') [CROSS] FIND-IBA [ 'CROSS LITERAL CTCOMPILE, ]
+    LASTXT >NAME [CROSS-COMPILER] (') [CROSS] FIND-IBA [ 'CROSS-COMPILER LITERAL CTCOMPILE, ]
     [ 'CROSS LASTXT ] LITERAL CTCOMPILE,
     [ 'CROSS (DOES>) ] LITERAL CTCOMPILE, ; IMMEDIATE
 

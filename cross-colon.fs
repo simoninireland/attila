@@ -39,21 +39,28 @@
 
 \ Look up the next word in the input stream in the target
 : ' \ ( "name" -- txt )
-    PARSE-WORD [CROSS-COMPILER] (') ;
+    PARSE-WORD 2DUP ." CROSS-COMPILER ' " TYPE [CROSS-COMPILER] (') DUP SPACE .HEX CR ;
 
 \ Include using the underlying operation
 : INCLUDE [FORTH] INCLUDE ;
 
 \ Postpone dynamically
 : POSTPONE
+    ." CROSS-COMPILER POSTPONE" CR 
     [CROSS-COMPILER] ' [CROSS] CTCOMPILE, ; IMMEDIATE
 
 WORDLISTS>
 
+<WORDLISTS ALSO CROSS DEFINITIONS
 
-\ ---------- Cross-compiling words ----------
+\ Postpone dynamically
+: POSTPONE
+    POSTPONE 'CROSS-COMPILER CTCOMPILE, ; IMMEDIATE
 
-<WORDLISTS ONLY FORTH ALSO CROSS DEFINITIONS
+\ Place the txt of the next word on the stack at run-time
+: ['] \ ( "name" -- )
+    PARSE-WORD POSTPONE SLITERAL
+    [ 'CROSS-COMPILER (') ] LITERAL CTCOMPILE, ; IMMEDIATE   
 
 \ Compile the code needed to cross-compile at run-time the next
 \ word in the input stream
@@ -62,19 +69,12 @@ WORDLISTS>
     [ 'CROSS-COMPILER (') ] LITERAL CTCOMPILE,
     [ 'CROSS CTCOMPILE, ] LITERAL CTCOMPILE, ; IMMEDIATE
 
-\ Compile the txt of the next word as a literal. The lookup is done at
-\ run-time, not (as is usual) at compile-time, so that control words can be
-\ defined before the image is populated
-: ['] \ ( "name" -- )
-    PARSE-WORD POSTPONE SLITERAL
-    [ 'CROSS-COMPILER (') ] LITERAL CTCOMPILE, ; IMMEDIATE
-
 WORDLISTS>
 
 
 \ ---------- Literals ----------
 
-<WORDLISTS ALSO CROSS DEFINITIONS
+<WORDLISTS ALSO CROSS-COMPILER DEFINITIONS
 \ Compile the top of the stack as a literal
 : LITERAL \ ( n -- )
     [CROSS] [COMPILE] (LITERAL)
@@ -105,9 +105,9 @@ WORDLISTS>
     32 CONSUME \ spaces
     [CHAR] " PARSE
     ?DUP IF
-	[ 'CROSS SLITERAL CTCOMPILE, ]
+	[ 'CROSS-COMPILER SLITERAL CTCOMPILE, ]
     ELSE
-	S" String not delimited" ABORT
+	[FORTH] S" String not delimited" ABORT
     THEN ; IMMEDIATE
 WORDLISTS>
 
@@ -116,8 +116,22 @@ WORDLISTS>
 \ Cross-compile the txt of the next word as a literal
 : ['] \ ( "name" -- )
     [CROSS-COMPILER] '
-    [ 'CROSS XTLITERAL CTCOMPILE, ] ; IMMEDIATE 
+    [ 'CROSS-COMPILER XTLITERAL CTCOMPILE, ] ; IMMEDIATE 
 
+\ Compile the next character as a literal
+: [CHAR] \ ( "name" -- )
+    PARSE-WORD CHAR
+    [ 'CROSS-COMPILER LITERAL CTCOMPILE, ] ; IMMEDIATE
+
+\ Compile the code to compile the next word in the target at run-time
+: [COMPILE]
+\    [ 'CROSS-COMPILER ['] CTCOMPILE, ]
+\    [CROSS] ['] CTCOMPILE, [CROSS] CTCOMPILE, ; IMMEDIATE
+    [CROSS-COMPILER] '
+    S" (LITERAL)" [CROSS-COMPILER] (') DUP ." >>>>>>> " .HEX [CROSS] CTCOMPILE,
+    DUP ." >>>>>>> " .HEX [CROSS] XTCOMPILE,
+    S" CTCOMPILE," [CROSS-COMPILER] (') DUP ." >>>>>>> " .HEX [CROSS] CTCOMPILE, ; IMMEDIATE
+    
 WORDLISTS>
 
 
@@ -169,7 +183,7 @@ WORDLISTS>
 		0 OF
 		    2DUP NUMBER? IF
 			ROT 2DROP
-			[ 'CROSS LITERAL CTCOMPILE, ]
+			[ 'CROSS-COMPILER LITERAL CTCOMPILE, ]
 		    ELSE
 			TYPE S" ?" ABORT
 		    THEN

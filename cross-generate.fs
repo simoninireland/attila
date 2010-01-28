@@ -20,7 +20,7 @@
     S" vm.fs" GENERATE-VM CR CR
 
     ." // Architecture definition" CR
-    ." #include " QUOTES ." x-arch-gcc-host.h" QUOTES CR CR
+    ." #include " QUOTES ." x-host.h" QUOTES CR CR
 
     ." // Primitives table" CR
     GENERATE-PRIMITIVE-DECLARATIONS CR CR

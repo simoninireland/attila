@@ -45,5 +45,5 @@
     [COMPILE] (+LOOP)
     [COMPILE] (?BRANCH) >BEGIN
     (CS-END) ; IMMEDIATE
-\ sd: This is repetetous to facilitate cross-compilation, where a defining
+\ sd: This is repetitous to facilitate cross-compilation, where a defining
 \ word can't make use of other defining words

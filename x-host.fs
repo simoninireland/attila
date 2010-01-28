@@ -27,14 +27,16 @@ include cross-compiler.fs
 : CONSTANT
     CREATE ,
   DOES>
+    @
     INTERPRETING? NOT IF
-	[ 'CROSS LITERAL CTCOMPILE, ]
+	[ 'CROSS-COMPILER LITERAL CTCOMPILE, ]
     THEN ;
 : USER
     CREATE ,
   DOES>
+    @
     INTERPRETING? NOT IF
-	[ 'CROSS LITERAL CTCOMPILE, ]
+	[ 'CROSS-COMPILER LITERAL CTCOMPILE, ]
 	[CROSS] [COMPILE] USERVAR
     THEN ;
 WORDLISTS>
@@ -67,8 +69,8 @@ C: USERVAR uservar ( n -- addr )
   addr = (CELL) &image[n];
 ;C
 
-include core.fs
-include itil.fs
+include c-core.fs
+include c-itil.fs
 TARGET>
 
 .( Loading cross-compiler control structures...)
@@ -77,7 +79,6 @@ include chars.fs
 include cross-cs.fs
 WORDLISTS>
 <WORDLISTS ALSO CROSS ALSO CROSS-COMPILER DEFINITIONS
-: [CHAR] PARSE-WORD CHAR POSTPONE LITERAL ; IMMEDIATE
 include conditionals.fs
 include loops.fs
 include counted-loops.fs
@@ -86,8 +87,8 @@ WORDLISTS>
 .( Loading rest of image...) 
 <TARGET
 include ascii.fs
-include x-lib-fileio-gcc-host.fs
-include x-lib-io-gcc-host.fs
+include c-fileio.fs
+include c-io.fs
 include counted-loops-runtime.fs
 
 include base.fs
