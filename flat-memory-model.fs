@@ -220,7 +220,7 @@ C: >BODY xt_to_body ( xt -- addr )
   statusptr = ((BYTEPTR) xt) - 2 * sizeof(CELL) + 1;
   status = *statusptr;
   addr = xt + sizeof(CELL);
-  if(status & 2)
+  if(status & REDIRECTABLE_MASK)
     addr += sizeof(CELL);
 ;C
 
