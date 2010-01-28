@@ -257,7 +257,7 @@ C: (FIND) bracket_find ( addr namelen x -- )
     CELL tlen;
     XT xt;
     CELLPTR link;
-    BYTE status;
+    BYTEPTR status;
 	
     xt = (XT) NULL;
     while(x != (BYTEPTR) NULL) {
@@ -280,7 +280,7 @@ C: (FIND) bracket_find ( addr namelen x -- )
     if(xt != (XT) NULL) {
 	PUSH_CELL(xt);
 	CALL(xt_to_status);
-	status = POP_CELL();
-        PUSH_CELL((status & IMMEDIATE_MASK) ? -1 : 1);
+	status = (BYTEPTR) POP_CELL();
+        PUSH_CELL((*status & IMMEDIATE_MASK) ? -1 : 1);
     }
 ;C
