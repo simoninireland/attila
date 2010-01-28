@@ -206,7 +206,7 @@ C: >IBA xt_to_iba ( xt -- iba )
 \ Convert xt to body address, accounting for iba if present. This
 \ has to be coded as a primitive called xt_to_body, which is used
 \ by the inner interpreter, and it *has* to match the other
-\ definitions (>STATUS, IMEDIATE-MASK, IMMEDIATE?)  even though
+\ definitions (>STATUS, REDIRECTABLE-MASK, IMMEDIATE?)  even though
 \ it doesn't use them directly 
 \ : >BODY \ ( xt -- addr )
 \     DUP >IBA
@@ -220,7 +220,7 @@ C: >BODY xt_to_body ( xt -- addr )
   statusptr = ((BYTEPTR) xt) - 2 * sizeof(CELL) + 1;
   status = *statusptr;
   addr = xt + sizeof(CELL);
-  if(status & 1)
+  if(status & 2)
     addr += sizeof(CELL);
 ;C
 
@@ -231,8 +231,8 @@ C: >BODY xt_to_body ( xt -- addr )
 : (HEADER,) \ ( addr n cf -- xt )
     CALIGNED                 \ align TOP on the next cell boundary 
     >R                       \ stash the code field
-    DUP >R                   \ compile the name
-    0 DO
+    DUP >R                   \ ...and the name length
+    0 DO                     \ compile the name
 	DUP C@ CCOMPILE,
 	1+
     LOOP
@@ -241,7 +241,7 @@ C: >BODY xt_to_body ( xt -- addr )
     R> CCOMPILE,             \ compile the name length
     0 CCOMPILE,              \ status byte
     CALIGNED
-    10 USERVAR @ ACOMPILE,   \ compile the link pointer
+    LASTXT ACOMPILE,         \ compile the link pointer
     TOP                      \ the txt
     R> CFACOMPILE,           \ the code pointer
     DUP 10 USERVAR XT! ;     \ update LAST
