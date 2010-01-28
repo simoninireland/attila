@@ -17,53 +17,89 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-# ----- Primitives table builder script, filled-in by configure -----
+# ----- Bootstrapping the interpreter -----
 
-BOOTSTRAP = @BUILDBOOTSTRAP@
+BOOTSTRAP = @BOOTSTRAP@
 
 
 # ----- Main program -----
 
-bin_PROGRAMS = attila
+bin_PROGRAMS = bootattila
 
 
 # ----- Sources -----
 
-attila_SOURCES = attila.h \
-	memory.c util.c \
-	stack.c dictionary.c bootstrapping.c \
-	vm.c arithmetic.c interactive.c vocabulary.c \
-	initial.c \
+bootattila_SOURCES = vm.h \
+	primgen.h \
+	bootstrap.h \
+	bootstrap.c \
 	attila.c
-attila_LDDADD = @READLINELIB@
 
 
-# ----- The generated primitives table -----
+# ----- The bootstrapped interpreter -----
 
-BUILT_SOURCES = bootstrap.c
-nodist_attila_SOURCES = bootstrap.c
+BUILT_SOURCES = primitives.c
+nodist_bootattila_SOURCES = primitives.c
 
-bootstrap.c: vm.c arithmetic.c interactive.c vocabulary.c
-	$(BOOTSTRAP) bootstrap.c $(srcdir)/vm.c $(srcdir)/arithmetic.c $(srcdir)/interactive.c $(srcdir)/vocabulary.c
+primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
+	$(BOOTSTRAP) -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/c-core.fs $(srcdir)/c-fileio.fs $(srcdir)/c-io.fs
 
 
-# ----- The prelude and other source files -----
+# ----- The system sources -----
 
-prelude = vm.fs colon.fs base.fs createdoes.fs variables.fs \
+prelude = conditionals.fs \
+	base.fs \
+	createdoes.fs \
 	interpret-compile.fs \
-	defer.fs stacks.fs cs-stack.fs \
-	conditionals.fs case.fs loops.fs counted-loops.fs \
-	strings.fs scratch.fs \
+	variables.fs \
+	constants.fs \
+	values.fs \
+	defer.fs \
+	vm.fs \
+	ascii.fs \
+	stacks.fs \
+	cs-stack.fs \
+	loops.fs \
+	counted-loops-runtime.fs \
+	counted-loops.fs \
+	case.fs \
+	hooks.fs \
+	chars.fs \
+	strings.fs \
+	zstrings.fs \
+	scratch.fs \
 	formatting.fs \
-	vocabularies.fs \
-	dynamic-memory.fs \
-	locals-base.fs locals.fs ans-locals.fs \
-	prelude.fs
+	lists.fs \
+	file.fs \
+	evaluate.fs \
+	c.fs \
+	wordlists.fs
 
+crosscompiler = x-host.fs \
+	x-host.h \
+	c-image-fixedsize.fs \
+	cross-locator.fs \
+	cross-flat-memory-model.fs \
+	cross-c.fs \
+	cross-colon.fs \
+	cross-createdoes.fs \
+	cross-vm.fs \
+	cross-generate.fs \
+	cross-environments.fs
+
+regular = c-core.fs \
+	c-itil.fs \
+	c-fileio.fs \
+	c-io.fs \
+	flat-memory-model.fs \
+	itil-compilation.fs \
+	compilation.fs \
+	colon.fs \
+	load.fs \
+	executive.fs
 
 # ----- Distribution -----
 
-dist_pkgdata_DATA = $(prelude)
-info_TEXINFOS = attila.texi
-DISTCLEANFILES = bootstrap.c attila.pdf
+dist_pkgdata_DATA = $(prelude) $(crosscompiler) $(regular)
+DISTCLEANFILES = primitives.c
 

@@ -20,18 +20,18 @@
 # ---------- Setup ----------
 
 # autoconf and automake magic
-AC_INIT(vm.c)
+AC_INIT(bootstrap.c)
 AC_PREREQ(2.54)
 AC_CONFIG_AUX_DIR(config)
-VERSION=0.3
+VERSION=0.4
 AC_SUBST(VERSION)
 AM_PROG_CC_STDC
 AM_INIT_AUTOMAKE(attila,$VERSION)
 AM_CONFIG_HEADER(config.h)
 
 # announcements and standard places for the C pre-processor
-AC_DEFINE_UNQUOTED(ATTILA_ANNOUNCE,["Attila v.$VERSION: an abstract multi-target threaded interpreter"],[Program announcement])
-AC_DEFINE(ATTILA_COPYRIGHT,["Copyright (c) 2007, UCD Dublin. Distributed under the GNU GPL"],[Program copyright])
+AC_DEFINE_UNQUOTED(ATTILA_ANNOUNCE,["Attila v.$VERSION: a re-targetable threaded interpreter"],[Program announcement])
+AC_DEFINE(ATTILA_COPYRIGHT,["Copyright (c) 2007 -- 2010, Simon Dobson <simon.dobson@computer.org>. Distributed under the GNU GPL"],[Program copyright])
 AC_DEFINE(ATTILA_STANDARD_PRELUDE,["prelude.fs"],[Standard prelude])
 
 
@@ -43,20 +43,11 @@ CFLAGS='-g -O -DATTILA_STANDARD_INCLUDE_DIR=\"${pkgdatadir}\"'
 AC_PROG_INSTALL
 AC_C_INLINE
 
-# bootstrapping the primitives table
-AC_PROG_AWK
-AC_CHECK_PROG(SED,sed,`which sed`)
-test -z $SED && AC_MSG_ERROR([attila needs a version of sed to bootstrap the system])
-AC_CHECK_PROG(CAT,cat,`which cat`)
-test -z $CAT && AC_MSG_ERROR([attila needs a version of cat to bootstrap the system])
-AC_CHECK_PROG(EGREP,egrep,`which egrep`)
-test -z $EGREP && AC_MSG_ERROR([attila needs a version of egrep to bootstrap the system])
-AC_CHECK_PROG(WC,wc,`which wc`)
-test -z WC && AC_MSG_ERROR([attila needs a version of wc to bootstrap the system])
-AC_CHECK_PROG(PASTE,paste,`which paste`)
-test -z PASTE && AC_MSG_ERROR([attila needs a version of paste to bootstrap the system])
-BUILDBOOTSTRAP="sh build-bootstrap.sh"
-AC_SUBST(BUILDBOOTSTRAP)
+# bootstrapping 
+AC_CHECK_PROG(PERL,perl,`which perl`)
+test -z $PERL && AC_MSG_ERROR([attila needs a version of perl to bootstrap the system])
+BOOTSTRAP=tools/primgen
+AC_SUBST(BOOTSTRAP)
 
 
 # ---------- Sizes, headers, functions and libraries ----------
@@ -79,15 +70,11 @@ AC_CHECK_FUNCS(bcopy bzero strlen strcpy strncpy strncmp strncasecmp toupper str
 AC_CHECK_FUNCS(fgets printf sprintf sscanf)
 AC_CHECK_FUNCS(getopt)
 
-# GNU readline
-AC_CHECK_LIB(readline,readline,,AC_MSG_ERROR([attila needs the GNU readline library]))
-
 
 # ---------- Create files ----------
 
 AC_CONFIG_FILES([
 Makefile
-build-bootstrap.sh
 ])
 AC_OUTPUT
 
