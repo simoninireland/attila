@@ -1,1 +1,37 @@
-bootstrap.o: bootstrap.c
+bootstrap.o bootstrap.o: bootstrap.c bootstrap.h vm.h \
+  /usr/include/stdio.h /usr/include/_types.h /usr/include/sys/_types.h \
+  /usr/include/sys/cdefs.h /usr/include/machine/_types.h \
+  /usr/include/i386/_types.h /usr/include/secure/_stdio.h \
+  /usr/include/secure/_common.h /usr/include/string.h \
+  /usr/include/secure/_string.h /usr/include/setjmp.h \
+  /usr/include/machine/setjmp.h /usr/include/i386/setjmp.h
+
+bootstrap.h:
+
+vm.h:
+
+/usr/include/stdio.h:
+
+/usr/include/_types.h:
+
+/usr/include/sys/_types.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/machine/_types.h:
+
+/usr/include/i386/_types.h:
+
+/usr/include/secure/_stdio.h:
+
+/usr/include/secure/_common.h:
+
+/usr/include/string.h:
+
+/usr/include/secure/_string.h:
+
+/usr/include/setjmp.h:
+
+/usr/include/machine/setjmp.h:
+
+/usr/include/i386/setjmp.h:

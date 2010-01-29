@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.13 2007/05/25 13:13:26 sd Exp $
+# $Id$
 
 # This file is part of Attila, a multi-targeted threaded interpreter
 # Copyright (c) 2007, UCD Dublin. All rights reserved.

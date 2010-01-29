@@ -1,4 +1,4 @@
-// $Id: attila.h,v 1.6 2007/06/13 15:57:39 sd Exp $
+// $Id$
 
 // This file is part of Attila, a multi-targeted threaded interpreter
 // Copyright (c) 2007, UCD Dublin. All rights reserved.
