@@ -321,6 +321,14 @@ init_dictionary() {
   COMPILE_COMPILE("COMPILE,");
   NEXT();
 
+  // compile the first character of the next word as a literal
+  DEFINE_IMMEDIATE("[CHAR]");
+  COMPILE("PARSE-WORD");
+  COMPILE("DROP");
+  COMPILE("C@");
+  COMPILE("LITERAL");
+  NEXT();
+
   // compute a jump offset from a to TOP, in bytes
   DEFINE("JUMP>");
   COMPILE("TOP");
