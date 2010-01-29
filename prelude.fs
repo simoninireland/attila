@@ -1,9 +1,7 @@
-: \ REFILL DROP ; IMMEDIATE
-: ( 41 PARSE 2DROP ; IMMEDIATE
-
+include comments.fs
 \ ... and now we can parse comments, we can begin ... :-)
 
-\ $Id: prelude.fs,v 1.10 2007/05/25 13:13:27 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -30,46 +28,61 @@
 \ dependencies that exist between some of the source files (clearly
 \ indicated in the comments for the files in the distribution).
 
-\ "Primitives" outside the VM core, mainly wrappers for "real" primitives
-#include base.fs
+\ Simple control structures
+include conditionals.fs          \ IF ... ELSE ... THEN
+
+\ "Primitives" outside the VM core
+include base.fs                  \ Derived primitives
 
 \ Advanced compilation words
-#include createdoes.fs            \ CREATE ... DOES>
-#include interpret-compile.fs     \ INTERPRET-COMPILE
-#include variables.fs             \ VARIABLE, CONSTANT, VALUE and USER
+include createdoes.fs            \ CREATE ... DOES>
+include interpret-compile.fs     \ INTERPRET-COMPILE
+include variables.fs             \ VARIABLE and USER
+include constants.fs             \ CONSTANT
+include values.fs                \ VALUE
+include defer.fs                 \ DEFER ... IS
 
 \ The VM
-#include vm.fs
-
-\ Compilation helpers
-#include defer.fs                 \ DEFER ... IS
+include vm.fs                    \ Virtual machine structures and constants 
+include ascii.fs                 \ ASCII character operations
 
 \ Data structures
-#include stacks.fs                \ General stacks
+include stacks.fs                \ General stacks
 
 \ Control structures
-#include conditionals.fs          \ IF ... ELSE ... THEN
-#include cs-stack.fs              \ Control structures stack
-#include loops.fs                 \ BEGIN ... AGAIN
-                                  \ BEGIN ... UNTIL
-                                  \ BEGIN ... WHILE ... REPEAT
-#include counted-loops.fs         \ DO ... LOOP
-                                  \ DO ... +LOOP
-#include case.fs                  \ CASE ... OF ... ENDOF ... ENDCASE
+include cs-stack.fs              \ Control structures stack
+include loops.fs                 \ BEGIN ... AGAIN
+                                 \ BEGIN ... UNTIL
+                                 \ BEGIN ... WHILE ... REPEAT
+include counted-loops-runtime.fs \ DO ... LOOP and +LOOP
+include counted-loops.fs
+include case.fs                  \ CASE ... OF ... ENDOF ... ENDCASE
+include hooks.fs                 \ Dynamic behaviour at strategic points
 
 \ Data types
-#include strings.fs               \ Character and string operations
-#include scratch.fs               \ String scratch area
-#include formatting.fs            \ Formatted numeric output\
+include chars.fs                 \ Character operations
+include strings.fs               \ Counted (short) strings
+include zstrings.fs              \ Null-terminated (long) strings
+include scratch.fs               \ String scratch area
+include formatting.fs            \ Formatted numeric output
+include lists.fs                 \ Linked lists
 
-\ Vocabulary control
-#include vocabularies.fs          \ Multiple vocabularies
+\ File management
+include file.fs                  \ I/O re-direction
+include evaluate.fs              \ Execute code from strings
+\ include file-templates.fs        \ File templates
+
+\ Foreign language support
+include c.fs                     \ C definitions (check for definitions)
+
+\ Word list control
+include wordlists.fs             \ Multiple word lists
 
 \ Dynamic memory
-#include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
+\ include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
 
 \ Local variables
-#include locals-base.fs           \ base definitions
-\ #include ans-locals.fs            \ LOCALS| ... | for symbolic local definitions
-#include locals.fs                \ stack-comment-style locals
+\ include locals-base.fs           \ base definitions
+\ include ans-locals.fs            \ LOCALS| ... | for symbolic local definitions
+\ include locals.fs                \ stack-comment-style locals
 

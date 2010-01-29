@@ -1,4 +1,4 @@
-\ $Id: loops.fs,v 1.1.1.1 2007/02/09 12:54:37 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.

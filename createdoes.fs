@@ -1,4 +1,4 @@
-\ $Id: createdoes.fs,v 1.6 2007/05/20 17:51:48 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -23,9 +23,12 @@
 \ at the start of their bodies to store the indirect body address. It also
 \ relies on >BODY understanding the redirectable field
 
-\ Create a data block that returns its address when executed
+\ Create a data block that returns its body address when executed
 : (DATA) \ ( addr n -- )
-    HEADER, [ ' (DOVAR) >CFA @ ] LITERAL SWAP CFA, ;
+    START-DEFINITION
+    ['] (VAR) CFA@ (HEADER,)
+    END-DEFINITION
+    DROP ;
     
 \ Create a data block from the next word in the input
 : DATA \ ( "name" -- )
@@ -34,29 +37,23 @@
 \ Create a data block that can have its run-time behaviour re-directed
 : (CREATE) \ ( addr n -- )
     (DATA)
-    CELL ALLOT              \ the indirect body address (iba)
+    1 CELLS ALLOT           \ the indirect body address (iba)
     REDIRECTABLE ;          \ fix status
     
 \ Create a data block from the next word in the input
 : CREATE \ ( "name" -- )
     PARSE-WORD (CREATE) ;
 
-\ Return the indirect body address of a CREATE'd word. This will hold
-\ the address of the list of words to be executed when the CREATE'd word
-\ exectutes
-: >IBA \ ( xt -- iba )
-    >BODY CELL - ;
-
 \ Re-direct the run-time behaviour of a word which must be created
 \ using (CREATE) or CREATE to make it redirectable
 : (DOES>) \ ( xt -- )
-    [ ' (DOES) >CFA @ ] LITERAL OVER CFA,    \ point defined word's cfa to (DOES)
-    R> SWAP >IBA ! ;                         \ store next cell in defined word's iba,
-                                             \ and then return without executing
-                                             \ that code during the defining word
+    ['] (DOES) CFA@  OVER CFA!   \ point defined word's cfa to (DOES)
+    R> SWAP IBA! ;               \ store next cell in defined word's iba,
+                                 \ and then return without executing
+                                 \ that code during the defining word
 
-\ Compile the (DOES>) behaviour plus general definition management
+\ Compile the (DOES>) behaviour, leaving the newly-defined word's xt on the
+\ stack for it to use in re-directing that word's run-time behaviour
 : DOES> \ ( -- )
-    [COMPILE] END-DEFINITION
     [COMPILE] LASTXT
     [COMPILE] (DOES>) ; IMMEDIATE

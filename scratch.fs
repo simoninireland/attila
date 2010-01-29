@@ -1,4 +1,4 @@
-\ $Id: scratch.fs,v 1.3 2007/05/18 19:02:13 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -22,8 +22,10 @@
 
 \ ---------- Scratch area ----------
 
-\ Size of the scratch area -- modify with care
-256 VALUE SCRATCH-SIZE
+\ Size of the scratch area -- modify with care. Note that the implementation
+\ allows for scratch areas greater than 256, i.e with non-byte string
+\ counts
+256 CONSTANT SCRATCH-SIZE
 
 \ The scratch area
 DATA SCRATCH SCRATCH-SIZE ALLOT
@@ -33,23 +35,29 @@ VARIABLE SCRATCH-POINTER
 
 \ Clear the scratch area
 : CLEAR-SCRATCH \ ( -- )
-    SCRATCH SCRATCH-POINTER ! ;
-
-\ Move a string into the scratch area
-: >SCRATCH \ ( addr n -- )
-    >R
-    SCRATCH-POINTER @ R@ CMOVE
-    R> SCRATCH-POINTER +! ;
+    SCRATCH SCRATCH-POINTER A! ;
 
 \ Return the number of characters in the scratch area
 : #SCRATCH \ ( -- n )
-    SCRATCH-POINTER @ SCRATCH - ;
+    SCRATCH-POINTER A@ SCRATCH - ;
+
+\ Move a string into the scratch area
+: >SCRATCH \ ( addr n -- )
+    DUP #SCRATCH + SCRATCH-SIZE >= IF
+	S" Scratch area overflow" ABORT
+    THEN
+    >R
+    SCRATCH-POINTER A@ R@ CMOVE
+    R> SCRATCH-POINTER +! ;
 
 \ Add a specific character to the scratch area
 : HOLD \ ( c -- )
     SCRATCH-POINTER @ C!
-    1 SCRATCH-POINTER +! ;
+    1 SCRATCH-POINTER +!
+    #SCRATCH SCRATCH-SIZE >= IF
+	S" Scratch area overflow" ABORT
+    THEN ;
 
 \ Represent the string in the scratch area on the stack, ready for use
 : SCRATCH> \ ( -- addr n )
-    SCRATCH SCRATCH-POINTER @ OVER - ;
+    SCRATCH #SCRATCH ;

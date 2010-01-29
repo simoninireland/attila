@@ -1,4 +1,4 @@
-\ $Id: vm.fs,v 1.5 2007/06/13 15:57:39 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -17,40 +17,45 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Virtual machine constants and other bits
+\ Virtual machine constants
 \
-\ It's vitally important these match the definitions in the underlying
-\ C code of the virtual machine -- so important, in fact, that this file
-\ should really be derived automatically...
+\ This file is pre-processed to generate the necessary
+\ definitions, typically in C. It should contain only
+\ simple code such as CONSTANT and USER declarations
+
+\ Sizes
+24 1024 * CONSTANT IMAGE-SIZE           \ initial image size in cells
+50        CONSTANT DATA-STACK-SIZE      \ data stack size in cells
+50        CONSTANT RETURN-STACK-SIZE    \ return stack size in cells
+25        CONSTANT USER-SIZE            \ number of user variables allowed
+256       CONSTANT TIB-SIZE             \ terminal input buffer size
 
 \ Status masks
-: IMMEDIATE-MASK    1 ;
-: REDIRECTABLE-MASK 2 ;
+1 CONSTANT IMMEDIATE-MASK          \ IMMEDIATE words, executed even when compiling
+2 CONSTANT REDIRECTABLE-MASK       \ REDIRECTABLE words, amenable to DOES>
 
 \ States
-: INTERPRETATION-STATE 0 ;
-: COMPILATION-STATE 1 ;
+0 CONSTANT INTERPRETATION-STATE    \ interpretation state
+1 CONSTANT COMPILATION-STATE       \ (standard) compilation state
 
 \ User variables
-0 USER EXECUTIVE             \ xt of outer executive (OUTER by default)
-1 USER STATE                 \ interpreting or compiling
-2 USER BASE                  \ number base
-3 USER INPUTSOURCE           \ pointer to internal structure for input source
-4 USER (CURRENT-VOCABULARY)  \ current vocabulary
-5 USER TIB                   \ address of the TIB
-6 USER >IN                   \ input offset
+ 0 USER COLDSTART             \ xt of the word that cold-starts the system (REQUIRED)
+ 1 USER EXECUTIVE             \ xt of outer executive
+2 USER (TOP)                 \ first free code address
+\  USER (CEILING)             \ highest code address currently available
+ 3 USER (HERE)                \ first free data address
+\  USER (THERE)               \ highest data address currently available
+ 4 USER STATE                 \ compiler state
+ 5 USER BASE                  \ number base
+ 6 USER INPUTSOURCE           \ pointer to internal structure for terminal input
+ 7 USER OUTPUTSINK            \ pointer to internal structure for terminal output
+ 8 USER >IN                   \ input offset
+ 9 USER TIB                   \ address of the TIB
+10 USER LAST                  \ xt of the most-recently-defined word
+11 USER TRACE                 \ trace (debugging) flag
+12 USER CURRENT               \ the current wordlist receiving definitions
 
-\ ---------- Truth values ----------
-
-1 CONSTANT TRUE
-0 CONSTANT FALSE
-
-
-\ ---------- Standard number bases ----------
-
-: BINARY   2 BASE ! ;
-: DECIMAL 10 BASE ! ;
-: HEX     16 BASE ! ;
-
-DECIMAL
+\ Truth values
+0        CONSTANT FALSE
+0 INVERT CONSTANT TRUE
 

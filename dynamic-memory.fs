@@ -1,4 +1,4 @@
-\ $Id: dynamic-memory.fs,v 1.5 2007/05/18 19:02:13 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.

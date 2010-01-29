@@ -1,4 +1,4 @@
-\ $Id: counted-loops.fs,v 1.2 2007/05/17 15:33:45 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -26,24 +26,7 @@
 \ index of the loop with the word I, but *only* within the *same*
 \ colon-definition as the DO ... LOOP code itself, not from any words
 \ called from that code.
-\ Requires: loops.fs, conditionals.fs
-
-\ Set up the loop, remembering the limit and initial indices
-: (DO) \ ( limit initial -- )
-    R> ROT             \ ret limit initial
-    SWAP >R >R
-    >R ;
-
-\ Increment the index and continue if it is strictly less than the limit
-: (+LOOP) \ ( inc -- f )
-    R> SWAP            \ ret inc
-    1 RPICK R>         \ ret inc limit i
-    -ROT +             \ ret limit i'
-    DUP -ROT < IF      \ ret i'
-        >R >R 0
-    ELSE
-        R> 2DROP >R 1
-    THEN ;
+\ Requires: loops.fs, conditionals.fs, counted-loops-runtime.fs
 
 \ Start the loop
 : DO
@@ -59,16 +42,8 @@
 \ Increment the index by one
 : LOOP
     1 POSTPONE LITERAL
-    POSTPONE +LOOP ; IMMEDIATE
-
-\ Retrieve the index of the loop
-: I \ ( -- i )
-    1 RPICK ;
-
-\ Retrieve the index of the surrounding loop
-: J \ ( -- j )
-    3 RPICK ;
-
-\ Retrieve the index of the surrounding, surrounding loop
-: K \ ( -- k )
-    5 RPICK ;
+    [COMPILE] (+LOOP)
+    [COMPILE] (?BRANCH) >BEGIN
+    (CS-END) ; IMMEDIATE
+\ sd: This is repetitous to facilitate cross-compilation, where a defining
+\ word can't make use of other defining words

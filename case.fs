@@ -1,4 +1,4 @@
-\ $Id: case.fs,v 1.3 2007/05/16 13:41:03 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.

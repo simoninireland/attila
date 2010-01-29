@@ -1,4 +1,4 @@
-\ $Id: interpret-compile.fs,v 1.1 2007/05/25 13:13:27 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -27,7 +27,7 @@
 \
 \ :NONAME \ the runtime behaviour
 \     ... ;
-\ :NONAME \ the compile- behaviour
+\ :NONAME \ the compile-time behaviour
 \     ... ;
 \ INTERPRET/COMPILE TOP-LEVEL-NAME
 \
@@ -36,14 +36,21 @@
 \ reuse an existing word.
 \ Requires createdoes.fs
 
+\ Compile an anonymous word with no name, leaving its xt on the data stack
+\ after the final ;
+: :NONAME \ ( -- xt exec xt )
+    0 0 [ ' (:) CFA@ ] LITERAL (HEADER,)
+    START-DEFINITION
+    1 USERVAR ( EXECUTIVE ) @ OVER
+    ] ;
+
 \ Build a state-dependent word
 : INTERPRET/COMPILE \ ( rxt cxt "name" -- )
     CREATE
-    SWAP , ,
+    XT, XT,
     IMMEDIATE
   DOES> \ ( addr -- )
-    INTERPRETING? NOT
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	CELL+
-    [ DUP JUMP> SWAP ! ]                      \ THEN
+    INTERPRETING? IF
+	1 CELLS +
+    THEN
     @ EXECUTE ;

@@ -1,4 +1,4 @@
-\ $Id: stacks.fs,v 1.6 2007/05/24 21:51:03 sd Exp $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -23,9 +23,7 @@
 \ complement rather than replace the data and return stack words,
 \ which have been retained for performance reasons.
 \
-\ Since we're used by control structures we can't use them ourselves,
-\ which explains the manual construction of conditionals to handle errors
-\ and loops to handle mass popping.
+\ Since we're used by control structures we can't use them ourselves.
 \ Requires: createdoes.fs
 
 \ ---------- Stack creation and layout ----------
@@ -41,7 +39,11 @@
 
 \ Return the address of the number of stack elements
 : ST>N \ ( st -- iaddr )
-    CELL - ;
+    1 CELLS - ;
+
+\ Return the depth of the stack in cells
+: #ST \ ( st -- n )
+    ST>N @ ;
 
 \ Return the maximum number of cells
 : ST>MAXN \ ( st -- imax )
@@ -49,62 +51,53 @@
 
 \ Check if a push will result in an overflow
 : ST-OVERFLOW? \ ( st -- f )
-    DUP ST>N @ SWAP ST>MAXN = ;
+    DUP #ST SWAP ST>MAXN >= ;
 
 \ Check if a pop will result in an underflow
 : ST-UNDERFLOW? \ ( st -- f )
-    ST>N @ 0 = ;
+    #ST 0= ;
 
 \ Return the address of the top of the stack, where the
-\ next element will be pushed to
+\ next element will be pushed to (*not* that of the top element)
 : ST>TOPADDR \ ( st -- addr )
-    DUP ST>N @ CELLS + ;
+    DUP #ST CELLS + ;
 
 \ Update the value of the stack index
 : +STN \ ( n st -- )
-    ST>N DUP
-    @ -ROT + SWAP ! ;
+    ST>N +! ;
 
 
 \ ---------- Access ----------
 
 \ Push an element from the data stack to the given stack
 : >ST \ ( v st  -- )
-    DUP ROT ST-OVERFLOW?
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	2DROP S" Stack overflow" ABORT
-    [ DUP JUMP> SWAP ! ]                      \ THEN
+    DUP ROT ST-OVERFLOW? IF
+	S" >ST Stack overflow" ABORT
+    THEN
     OVER ST>TOPADDR !
     1 SWAP +STN ;
 
 \ Pop the top entry from the given stack
 : ST> \ ( st -- v )
-    DUP ST-UNDERFLOW?
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	2DROP S" Stack underflow" ABORT
-    [ DUP JUMP> SWAP ! ]                      \ THEN
-    DUP ST>TOPADDR CELL - @
+    DUP ST-UNDERFLOW? IF
+	S" ST> Stack underflow" ABORT
+    THEN
+    DUP ST>TOPADDR 1 CELLS - @
     1 NEGATE -ROT +STN ;
 
 \ Peek at the top entry of the given stack
 : ST@ \ ( st -- v )
-    DUP ST>N @ 0 =
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	2DROP S" Stack underflow" ABORT
-    [ DUP JUMP> SWAP ! ]                      \ THEN
-    ST>TOPADDR CELL - @ ;
-    
-\ Return the depth of the stack in cells
-: #ST \ ( st -- n )
-    ST>N @ ;
+    DUP #ST 0= IF
+	S" ST@ Stack underflow" ABORT
+    THEN
+    ST>TOPADDR 1 CELLS - @ ;
 
 \ Return the address of the i-th cell, counting from 0
 \ Very un-TIL-like, but useful....
 : ST>ADDR \ ( i st -- addr )
-    2DUP ST>N @ >
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]   \ IF
-	2DROP S" Stack pick underflow" ABORT
-    [ DUP JUMP> SWAP ! ]                      \ THEN
+    2DUP #ST >= IF
+	S" ST>ADDR stack underflow" ABORT
+    THEN
     ST>TOPADDR SWAP 1+ CELLS - ;
 
 \ Pick the i'th item from the stack, counting from 0
@@ -118,13 +111,12 @@
 
 \ Drop n items, or empty the stack, whichever is smaller
 : ST-NDROP \ ( n st -- )
-    OVER 0>
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]                        \ IF
-        DUP ST>N -ROT MIN
-    NEGATE SWAP +STN
-    [ ' (BRANCH) COMPILE, TOP 0 COMPILE, SWAP DUP JUMP> SWAP ! ]   \ ELSE
+    OVER 0> IF
+        DUP #ST -ROT MIN
+        NEGATE SWAP +STN
+    ELSE
         2DROP
-    [ DUP JUMP> SWAP ! ] ;                                         \ THEN
+    THEN ;
 
 \ Drop 1 item
 : ST-DROP \ ( st -- )
