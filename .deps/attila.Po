@@ -1,3 +1,0 @@
-attila.o attila.o: attila.c vm.h
-
-vm.h:
