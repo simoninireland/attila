@@ -12,13 +12,13 @@
 include cross-compiler.fs
 
 \ Sizes in bytes. These must match the values from the underlying architecture
-8 'CROSS /CELL (IS)
-1 'CROSS /CHARACTER (IS)
+@CELLSIZE@ 'CROSS /CELL (IS)
+@SIZEOF_CHAR@ 'CROSS /CHARACTER (IS)
 
 \ Endianness of the processor:
 \   0 = little-endian
 \   1 = big-endian
-0 'CROSS BIGENDIAN? (IS)
+@BIGENDIAN@ 'CROSS BIGENDIAN? (IS)
 
 
 \ ---------- The image ----------
