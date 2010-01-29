@@ -1,4 +1,4 @@
-# $Id: configure.in,v 1.8 2007/05/22 08:31:43 sd Exp $
+# $Id$
 
 # This file is part of Attila, a multi-targeted threaded interpreter
 # Copyright (c) 2007, UCD Dublin. All rights reserved.
@@ -55,13 +55,33 @@ AC_SUBST(BOOTSTRAP)
 # standard C types
 AC_HEADER_STDC
 AC_TYPE_SIZE_T
-AC_CHECK_SIZEOF(void *)
-AC_CHECK_SIZEOF(long)
-AC_CHECK_SIZEOF(long long)
-AC_CHECK_SIZEOF(unsigned char)
 
-CELLSIZE=ac_cv_sizeof_LONG
-AC_SUBST(CELLSIZE)
+# sd: we need to expose these at autoconf level to expand x-host.fs.in so we
+# can't use AC_CHECK_SIZEOF
+AC_TRY_RUN([#include <stdio.h>
+main() {
+    FILE *f=fopen("conftestval", "w");
+    if(!f) exit(1);
+    fprintf(f, "%d\n", sizeof(long));
+    exit(0);
+}], CELL_SIZE=`cat conftestval`)
+AC_TRY_RUN([#include <stdio.h>
+main() {
+    FILE *f=fopen("conftestval", "w");
+    if(!f) exit(1);
+    fprintf(f, "%d\n", sizeof(long long));
+    exit(0);
+}], DOUBLE_CELL_SIZE=`cat conftestval`, DOUBLE_SIZE=CELL_SIZE)
+AC_TRY_RUN([#include <stdio.h>
+main() {
+    FILE *f=fopen("conftestval", "w");
+    if(!f) exit(1);
+    fprintf(f, "%d\n", sizeof(unsigned char));
+    exit(0);
+}], CHARACTER_SIZE=`cat conftestval`)
+AC_SUBST(CELL_SIZE)
+AC_SUBST(DOUBLE_CELL_SIZE)
+AC_SUBST(CHARACTER_SIZE) 
 
 # endian-ness
 AC_C_BIGENDIAN(BIGENDIAN=1, BIGENDIAN=0)
@@ -75,7 +95,6 @@ AC_CHECK_FUNCS(setjmp longjmp)
 AC_CHECK_FUNCS(malloc calloc)
 AC_CHECK_FUNCS(bcopy bzero strlen strcpy strncpy strncmp strncasecmp toupper strspn strcspn)
 AC_CHECK_FUNCS(fgets printf sprintf sscanf)
-AC_CHECK_FUNCS(getopt)
 
 
 # ---------- Create files ----------
