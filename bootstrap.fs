@@ -554,4 +554,8 @@ C: WARM ( -- )
     // point the ip at the executive and return
     ip = xt_to_body(*(user_variable(USER_EXECUTIVE)));
 ;C
-      
+
+\ Exit the system
+C: BYE ( -- )
+    exit(0);
+;C
