@@ -29,6 +29,7 @@ bin_PROGRAMS = bootattila
 
 # ----- Sources -----
 
+# the bootstrapping sources
 bootattila_SOURCES = vm.h \
 	primgen.h \
 	bootstrap.h \
@@ -38,6 +39,7 @@ bootattila_SOURCES = vm.h \
 
 # ----- The bootstrapped interpreter -----
 
+# the collected bootstrap primitives, as a C file
 BUILT_SOURCES = primitives.c
 nodist_bootattila_SOURCES = primitives.c
 
@@ -47,6 +49,7 @@ primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
 
 # ----- The system sources -----
 
+# the standard prelude, included in a "real" Forth system
 prelude = conditionals.fs \
 	base.fs \
 	createdoes.fs \
@@ -75,6 +78,7 @@ prelude = conditionals.fs \
 	c.fs \
 	wordlists.fs
 
+# the cross-compiler
 crosscompiler = x-host.fs \
 	x-host.h \
 	c-image-fixedsize.fs \
@@ -87,6 +91,7 @@ crosscompiler = x-host.fs \
 	cross-generate.fs \
 	cross-environments.fs
 
+# the system sources, used to cross-compile a basic virtual machine
 regular = c-core.fs \
 	c-itil.fs \
 	c-fileio.fs \
