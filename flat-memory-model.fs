@@ -177,31 +177,27 @@ C: >IBA xt_to_iba ( xt -- iba )
 : SET-STATUS \ ( f xt -- )
     >STATUS DUP C@
     -ROT OR
-    SWAP ! ;
+    SWAP C! ;
 
 \ Get the status of the given word
 : GET-STATUS \ ( xt -- s )
     >STATUS @ ;
 
-\ Status bit masks
-: IMMEDIATE-MASK    1 ;
-: REDIRECTABLE-MASK 2 ;
-
 \ Make the last word defined IMMEDIATE
 : IMMEDIATE \ ( -- )
-    IMMEDIATE-MASK LASTXT SET-STATUS ;
+    1 ( IMMEDIATE-MASK ) LASTXT SET-STATUS ;
 
 \ Test whether the given word is IMMEDIATE
 : IMMEDIATE? \ ( xt -- f )
-    GET-STATUS IMMEDIATE-MASK AND 0<> ; 
+    GET-STATUS 1 ( IMMEDIATE-MASK ) AND 0<> ; 
 
 \ Make the last word defined REDIRECTABLE
 : REDIRECTABLE \ ( -- )
-    REDIRECTABLE-MASK LASTXT SET-STATUS ; 
+    2 ( REDIRECTABLE-MASK ) LASTXT SET-STATUS ; 
 
 \ Test whether the given word is REDIRECTABLE
 : REDIRECTABLE? \ ( xt -- f )
-    GET-STATUS REDIRECTABLE-MASK AND 0<> ; 
+    GET-STATUS 2 ( REDIRECTABLE-MASK ) AND 0<> ; 
 
 \ Convert xt to body address, accounting for iba if present. This
 \ has to be coded as a primitive called xt_to_body, which is used
@@ -265,7 +261,8 @@ C: (FIND) bracket_find ( addr namelen x -- )
         CALL(xt_to_name);
         tlen = POP_CELL();
         taddr = POP_CELL();
-	if((namelen == tlen) &&
+        printf("-> %s\n", create_unix_string(taddr, tlen));
+        if((namelen == tlen) &&
 	   (strncasecmp(addr, taddr, namelen) == 0)) {
 	    xt = x;   x = NULL;
 	} else {
