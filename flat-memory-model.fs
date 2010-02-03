@@ -261,7 +261,9 @@ C: (FIND) bracket_find ( addr namelen x -- )
         CALL(xt_to_name);
         tlen = POP_CELL();
         taddr = POP_CELL();
-        printf("-> %s\n", create_unix_string(taddr, tlen));
+        #ifdef DEBUGGING
+            printf("-> %s\n", create_unix_string(taddr, tlen));
+        #endif
         if((namelen == tlen) &&
 	   (strncasecmp(addr, taddr, namelen) == 0)) {
 	    xt = x;   x = NULL;
