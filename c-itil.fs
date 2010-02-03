@@ -12,9 +12,7 @@
 \ ---------- Very low-level debugging suppprt ----------
 
 CHEADER:
-// #define ITIL_DEBUGGING 1
-
-#ifdef ITIL_DEBUGGING
+#ifdef DEBUGGING
 static int indent;
 static char buf[256];
 #endif
@@ -26,7 +24,7 @@ static char buf[256];
 C: EXECUTE execute ( xt -- )
     PRIMITIVE prim;
 
-    #ifdef ITIL_DEBUGGING
+    #ifdef DEBUGGING
         // print word
 	int i;
 	if(xt == (XT) NULL) { 
@@ -211,15 +209,15 @@ C: WARM warm_start ( -- )
     *(user_variable(USER_STATE)) = (CELL) INTERPRETATION_STATE;
     *(user_variable(USER_BASE)) = (CELL) 10;
     *(user_variable(USER_TRACE)) = (CELL) 0;
-    *(user_variable(USER_INPUTSOURCE)) = (CELL) stdin;
-    *(user_variable(USER__IN)) = -1;                // in need of a refill
+    CALL(reset_io);
+    *(user_variable(USER__IN)) = -1;                // line input in need of a refill
 	
     // point the ip at the executive and return
     PUSH_CELL(*(user_variable(USER_EXECUTIVE)));
     CALL(xt_to_body);
     ip = (XTPTR) POP_CELL();
 
-    #ifdef ITIL_DEBUGGING
+    #ifdef DEBUGGING
         indent = 0;
     #endif
 ;C
