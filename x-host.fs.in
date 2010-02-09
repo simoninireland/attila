@@ -1,10 +1,6 @@
 \ $Id$
 
-\ Architecture definition for the host gcc compiler
-\
-\ This file is pre-processed to generate the necessary
-\ definitions, typically in C. It should contain only
-\ simple code such as CONSTANT declarations
+\ Driver file for host cross-compilation
 
 \ ---------- Cross-compiler set-up ----------
 
