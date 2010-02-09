@@ -5,6 +5,10 @@
 \ We use the C standard streams functions to manage files, since
 \ they provide buffering etc. For some systems it might be necessary
 \ to implement these directly.
+\
+\ This file has to export a primitive to reset the input system:
+\
+\   - reset_io       RESET-IO
 
 CHEADER:
 #include <unistd.h>
@@ -153,3 +157,15 @@ C: WRITE-LINE ( addr n fh -- ior )
 ;C
 
 
+\ ---------- Reset the I/O sub-system ----------
+
+\ Reset to default streams
+C: RESET-I/O reset_io ( -- )
+  if((FILE *) *user_variable(USER_INPUTSOURCE) != stdin)
+    fclose((FILE *) *user_variable(USER_INPUTSOURCE));
+   *user_variable(USER_INPUTSOURCE) = stdin;
+  if((FILE *) *user_variable(USER_OUTPUTSINK) != stdout)
+    fclose((FILE *) *user_variable(USER_OUTPUTSINK));
+   *user_variable(USER_OUTPUTSINK) = stdout; 
+;C
+  
