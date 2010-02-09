@@ -27,7 +27,6 @@ VERSION=0.4
 AC_SUBST(VERSION)
 AM_PROG_CC_STDC
 AM_INIT_AUTOMAKE(attila,$VERSION)
-AM_CONFIG_HEADER(config.h)
 
 # announcements and standard places for the C pre-processor
 AC_DEFINE_UNQUOTED(ATTILA_ANNOUNCE,["Attila v.$VERSION: a re-targetable threaded interpreter"],[Program announcement])
