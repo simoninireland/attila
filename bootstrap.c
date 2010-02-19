@@ -278,20 +278,12 @@ init_dictionary() {
   LITERAL(&docolon);
   COMPILE("(HEADER,)");
   COMPILE("START-DEFINITION");
-  LITERAL(USER_EXECUTIVE);
-  COMPILE("USERVAR");
-  COMPILE("@");
-  COMPILE("SWAP");
   COMPILE("]");
   NEXT();
 
   // finish colon-definition
   DEFINE_IMMEDIATE(";");
   COMPILE_NEXT();
-  COMPILE("SWAP");
-  LITERAL(USER_EXECUTIVE);
-  COMPILE("USERVAR");
-  COMPILE("!");
   COMPILE("[");
   COMPILE("END-DEFINITION");
   COMPILE("DROP");
