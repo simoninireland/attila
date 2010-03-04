@@ -79,10 +79,12 @@ WORDLISTS>
     >R                       \ stash the code field
     2DUP ." Compiling " TYPE CR
     DUP >R                   \ compile the name
-    0 DO
-	DUP C@ [CROSS] CCOMPILE,
-	1+
-    LOOP
+    ?DUP 0> IF
+	0 DO
+	    DUP C@ [CROSS] CCOMPILE,
+	    1+
+	LOOP
+    THEN
     DROP
     [CROSS] CALIGNED      
     R> [CROSS] CCOMPILE,              \ compile the name length
