@@ -175,6 +175,11 @@ C: (VAR) dovar ( -- addr )
 C: (DOES) bracket_does ( -- body )
     CELLPTR iba;
 
+    // put the body address on the stack first
+    PUSH_CELL(_xt);
+    CALL(xt_to_body);
+
+    // then jump to the IBA
     PUSH_CELL(_xt);
     CALL(xt_to_iba);
     iba = (CELLPTR) POP_CELL();
