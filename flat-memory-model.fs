@@ -223,15 +223,18 @@ C: >BODY xt_to_body ( xt -- addr )
 
 \ ---------- Header creation ----------
 
-\ Create a header for the named word with the given code field
+\ Create a header for the named word with the given code field. We must handle the
+\ name being of zero length for :NONAME definitions
 : (HEADER,) \ ( addr n cf -- xt )
     CALIGNED                 \ align TOP on the next cell boundary 
     >R                       \ stash the code field
     DUP >R                   \ ...and the name length
-    0 DO                     \ compile the name
-	DUP C@ CCOMPILE,
-	1+
-    LOOP
+    ?DUP 0> IF               \ if the name is not null
+	0 DO                 \ ...compile the name
+	    DUP C@ CCOMPILE,
+	    1+
+	LOOP
+    THEN
     DROP
     CALIGNED      
     R> CCOMPILE,             \ compile the name length
