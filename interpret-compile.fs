@@ -38,10 +38,10 @@
 
 \ Compile an anonymous word with no name, leaving its xt on the data stack
 \ after the final ;
-: :NONAME \ ( -- xt exec xt )
-    0 0 [ ' (:) CFA@ ] LITERAL (HEADER,)
+: :NONAME \ ( -- xt xt )
+    0 0 ['] (:) CFA@ (HEADER,)
     START-DEFINITION
-    1 USERVAR ( EXECUTIVE ) @ OVER
+    DUP
     ] ;
 
 \ Build a state-dependent word
