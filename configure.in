@@ -22,7 +22,6 @@
 # autoconf and automake magic
 AC_INIT(bootstrap.c)
 AC_PREREQ(2.54)
-AC_CONFIG_AUX_DIR(config)
 VERSION=0.4
 AC_SUBST(VERSION)
 AM_PROG_CC_STDC
@@ -38,7 +37,7 @@ AC_DEFINE(ATTILA_STANDARD_PRELUDE,["prelude.fs"],[Standard prelude])
 
 # compilation and installation
 AC_PROG_CC
-CFLAGS='-g -O -DATTILA_STANDARD_INCLUDE_DIR=\"${pkgdatadir}\"'
+CFLAGS='-g -DATTILA_STANDARD_INCLUDE_DIR=\"${pkgdatadir}\"'
 AC_PROG_INSTALL
 AC_C_INLINE
 
