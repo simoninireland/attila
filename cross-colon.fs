@@ -49,6 +49,18 @@
     ." CROSS-COMPILER POSTPONE" CR 
     [CROSS-COMPILER] ' [CROSS] CTCOMPILE, ; IMMEDIATE
 
+\ Allow compile-time manipulations of data compiled into data blocks
+\ sd: this needs to be refactored, at least to simplify shadowing words in different word lists
+: ,   [CROSS] , ;
+: @   [CROSS] @ ;
+: !   [CROSS] ! ;
+: C,  [CROSS] C, ;
+: C@  [CROSS] @ ;
+: C!  [CROSS] ! ;
+: XT, [CROSS] XT, ;
+: XT@ [CROSS] XT@ ;
+: XT! [CROSS] XT! ;
+
 WORDLISTS>
 
 <WORDLISTS ALSO CROSS DEFINITIONS
