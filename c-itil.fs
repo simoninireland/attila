@@ -178,6 +178,7 @@ C: (DOES) bracket_does ( -- body )
     // put the body address on the stack first
     PUSH_CELL(_xt);
     CALL(xt_to_body);
+    body = (CELLPTR) POP_CELL();
 
     // then jump to the IBA
     PUSH_CELL(_xt);
