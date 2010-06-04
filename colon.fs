@@ -19,6 +19,17 @@
 
 \ The colon-definition compiler
 
+\ ---------- Start and end hooks ----------
+
+\ Hooks
+DATA (START-DEFINITION) ' NOOP XT,
+DATA (END-DEFINITION)   ' NOOP XT,
+
+\ Hook functions
+: START-DEFINITION (START-DEFINITION) XT@ EXECUTE ;
+: END-DEFINITION   (END-DEFINITION)   XT@ EXECUTE ;
+
+
 \ ---------- The colon-compiler ----------
 
 \ The colon-definer
