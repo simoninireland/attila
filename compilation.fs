@@ -24,7 +24,7 @@
 
 \ Compile the string on the tp of the stack as a literal
 : SLITERAL \ ( addr len -- )
-    [COMPILE] (LITERAL)
+    [COMPILE] (SLITERAL)
     SCOMPILE, ; IMMEDIATE
 
 \ Compile a "-delimited string from the input source as a literal
@@ -38,14 +38,18 @@
     THEN ; IMMEDIATE
 
 
-\ ---------- Word status ----------
+\ ---------- Word finding ----------
 
-\ VARIABLE (FIND-BEHAVIOUR)
+\ Flat finder
+: (FIND-FLAT) \ ( addr n -- 0 | xt 1 | xt -1 )
+    LASTXT (FIND) ;
+
+\ Hook
+DATA (FIND-BEHAVIOUR) ' (FIND-FLAT) XT, 
 
 \ Top-level word-finder
-\ : FIND \ ( addr n -- 0 | xt 1 | xt -1 )
-\     (FIND-BEHAVIOUR) @ EXECUTE ;
-: FIND LASTXT (FIND) ;
+: FIND \ ( addr n -- 0 | xt 1 | xt -1 )
+    (FIND-BEHAVIOUR) XT@ EXECUTE ;
 
 \ Look up a word, returning its xt
 : ' \ ( "name" -- xt )
