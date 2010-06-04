@@ -61,3 +61,6 @@ VARIABLE SCRATCH-POINTER
 \ Represent the string in the scratch area on the stack, ready for use
 : SCRATCH> \ ( -- addr n )
     SCRATCH #SCRATCH ;
+
+\ Initialise the scratch area
+CLEAR-SCRATCH
