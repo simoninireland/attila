@@ -50,15 +50,15 @@ INITIALISE-IMAGE
 .( Loading target basic image...)
 <TARGET
 C: /CELL ( -- bs )
-  bs = 8;
+  bs = @CELL_SIZE@;
 ;C
 
 C: /CHARACTER ( -- bs )
-  bs = 1;
+  bs = @CHARACTER_SIZE@;
 ;C
 
 C: CHARACTERS ( n -- bs )
-  bs = n ;
+  bs = n * @CHARACTER_SIZE@;
 ;C
 
 C: USERVAR uservar ( n -- addr )
