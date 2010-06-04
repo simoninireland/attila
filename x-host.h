@@ -54,8 +54,8 @@ XTPTR return_stack, return_stack_base;   // return stack
 // Return stack macros
 #define PUSH_RETURN( xt ) (*(return_stack++)) = ((XT) xt)
 #define POP_RETURN() (XT) ((--return_stack < return_stack_base) ? DIE("return stack underflow") : (*return_stack))
-#define PEEK_RETURN() (XT) ((return_stack == return_stack_base) ? DIE("peeking empty return stack") : (*(return_stack - 1)))
-#define RETURN_STACK_ITEM( n ) (XTPTR) (return_stack - n - 1) 
+#define RETURN_STACK_ITEM( n ) (XTPTR) (return_stack - (n) - 1)
+#define PEEK_RETURN() (XT) *(RETURN_STACK_ITEM(0))
 #define RETURN_STACK_RESET() return_stack = return_stack_base
 
 
