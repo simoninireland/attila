@@ -438,9 +438,9 @@ C: CMOVE> ( addr1 addr2 n -- )
     int i;
     BYTEPTR ptr1, ptr2;
 
-    ptr1 = (BYTEPTR) addr1;    ptr2 = (BYTEPTR) addr2;
-    for(i = n - 1; i >= 0 ; i++) {
-        *ptr2++ = *ptr1++;
+    ptr1 = (BYTEPTR) ((BYTEPTR) addr1 + n - 1);    ptr2 = (BYTEPTR) ((BYTEPTR) addr2 + n - 1);
+    for(i = 0; i < n ; i++) {
+        *ptr2-- = *ptr1--;
     }
 ;C
 
