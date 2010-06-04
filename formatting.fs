@@ -21,12 +21,11 @@
 \ Requires strings.fs, scratch.fs, counted-loops.fs
 
 \ ---------- The numeric character set ----------
-
 VARIABLE MAX-BASE
 DATA NUMERIC-CHARACTER-SET
-SCRATCH SCRATCH-POINTER A!                                 \ manually initialise
+CLEAR-SCRATCH                                              \ manually initialise
 PARSE-WORD 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ >SCRATCH   \ copy to scratch area
-#SCRATCH MAX-BASE A!                                       \ avoid overruns
+#SCRATCH MAX-BASE !                                        \ avoid overruns
 SCRATCH> DUP ALLOT NUMERIC-CHARACTER-SET SWAP CMOVE        \ move into character set
 
 
@@ -88,7 +87,6 @@ SCRATCH> DUP ALLOT NUMERIC-CHARACTER-SET SWAP CMOVE        \ move into character
 : .HEX BASE @ SWAP HEX     . BASE ! ;
 : .BIN BASE @ SWAP BINARY  . BASE ! ;
 
-.s
 \ Print the contents of the stack, top item on the right
 : .S \ ( -- )
     DEPTH DUP [CHAR] < EMIT <# #S #> TYPE [CHAR] > EMIT SPACE
