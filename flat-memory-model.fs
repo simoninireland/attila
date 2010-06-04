@@ -76,7 +76,7 @@ C: CALIGN calign ( addr -- aaddr )
 \ CTCOMPILE, is defined in the inner interpreter
 
 \ In this model, data and code compilation are the same
-: C,      COMPILE, ;
+: C,      CCOMPILE, ;
 : ,       COMPILE, ;
 : R,      RCOMPILE, ;
 : A,      ACOMPILE, ;
@@ -230,7 +230,7 @@ C: >BODY xt_to_body ( xt -- addr )
     >R                       \ stash the code field
     DUP >R                   \ ...and the name length
     ?DUP 0> IF               \ if the name is not null
-	0 DO                 \ ...compile the name
+	0 DO
 	    DUP C@ CCOMPILE,
 	    1+
 	LOOP
