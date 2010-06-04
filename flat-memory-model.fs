@@ -68,7 +68,7 @@ C: CALIGN calign ( addr -- aaddr )
     DROP ;
 
 \ There's no distinction between addresses at run-time
-: RCOMPILE,   COMPILE, ;
+: RACOMPILE,  COMPILE, ;
 : ACOMPILE,   COMPILE, ;
 : XTCOMPILE,  ACOMPILE, ;
 : CFACOMPILE, COMPILE, ;
@@ -78,7 +78,7 @@ C: CALIGN calign ( addr -- aaddr )
 \ In this model, data and code compilation are the same
 : C,      CCOMPILE, ;
 : ,       COMPILE, ;
-: R,      RCOMPILE, ;
+: RA,     RACOMPILE, ;
 : A,      ACOMPILE, ;
 : XT,     XTCOMPILE, ;
 : S,      SCOMPILE, ;
@@ -94,10 +94,10 @@ C: CALIGN calign ( addr -- aaddr )
 \ Memory access also doesn't distinguish between address types
 \ !, @, C@, C!, 2@ amd 2! are in core.fs: these words are the "manipulators"
 \ for architectures that need to handle the different types differently
-: A!   ! ;          \ addresses
+: A!   ! ;          \ Attila addresses
 : A@   @ ;
-: R!   ! ;          \ "real" (hardware) addresses
-: R@   @ ;
+: RA!  ! ;          \ "real" (hardware) addresses
+: RA@  @ ;
 : XT!  ! ;          \ xts
 : XT@  @ ;
 \ See also CFA! and CFA@, IBA! and IBA@ below, which manipulate word headers
