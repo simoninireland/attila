@@ -285,8 +285,8 @@ FORTH-WORDLIST PARSE-WORD FORTH (VOCABULARY)
 \ the appropriate behaviour onto the front of the (END-DEFINITION) hook
 : (END-DEFINITION-WORDLISTS) \ ( xt -- xt )
     DUP GET-CURRENT >WID
-    [ (END-DEFINITION) @ ] LITERAL EXECUTE ;
-' (END-DEFINITION-WORDLISTS) (END-DEFINITION) !
+    [ (END-DEFINITION) XT@ ] LITERAL EXECUTE ;
+' (END-DEFINITION-WORDLISTS) (END-DEFINITION) XT!
 
 \ Patch the Forth wordlist to include everything defined up to this point,
 \ which includes the root wordlist
@@ -296,13 +296,13 @@ LASTXT FORTH-WORDLIST >WID
 ONLY FORTH ALSO DEFINITIONS
 
 \ Update the global FIND behaviour to be wordlist-enabled
-' (FIND-IN-WORDLISTS) (FIND-BEHAVIOUR) !
+' (FIND-IN-WORDLISTS) (FIND-BEHAVIOUR) XT!
 
 \ Finally we separate the root and Forth wordlists by patching the top
 \ of the root wordlist to be the last word defined, breaking the word
 \ chain at the first word in this file, and patching the top of the
 \ Forth wordlist to be the first word before this file. Phew!
 LASTXT ROOT-WORDLIST >WID
-0 SWAP >LFA !
+0 SWAP >LFA A!
 FORTH-WORDLIST >WID
 ONLY FORTH ALSO DEFINITIONS
