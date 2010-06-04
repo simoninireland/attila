@@ -165,7 +165,7 @@ ALSO CROSS DEFINITIONS
 \ In this model, data and code compilation are the same
 : C,       [CROSS] CCOMPILE, ;
 : ,        [CROSS] COMPILE, ;
-: R,       [CROSS] RCOMPILE, ;
+: RA,      [CROSS] RCOMPILE, ;
 : A,       [CROSS] ACOMPILE, ;
 : XT,      [CROSS] XTCOMPILE, ;
 : ALIGN    [CROSS] CALIGN ;
@@ -183,8 +183,8 @@ ALSO CROSS DEFINITIONS
     ['] EMIT-CELL SWAP E! ; 
 : @
     [CROSS] CHECK-ALIGNED TARGET> @ ;
-: R! [CROSS] ! ;
-: R@ [CROSS] @ ;
+: RA! [CROSS] ! ;
+: RA@ [CROSS] @ ;
 : A!
     [CROSS] CHECK-ALIGNED
     DUP ROT TARGET> !
