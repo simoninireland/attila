@@ -53,8 +53,12 @@
 \ (DOES>) is assumed to be available on the target
 
 \ Create a data block from the next word in the input
+: DATA \ ( "name" -- )
+    PARSE-WORD [CROSS] (DATA) ;
+
+\ Create a redirectable word from the next word in the input
 : CREATE \ ( "name" -- )
-    PARSE-WORD (CREATE) ;
+    PARSE-WORD [CROSS] (CREATE) ;
 
 \ Compile the setting behaviour
 : DOES> \ ( -- )
