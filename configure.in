@@ -35,6 +35,9 @@ AC_DEFINE(ATTILA_STANDARD_PRELUDE,["prelude.fs"],[Standard prelude])
 
 # ---------- Basic programs ----------
 
+# uncomment if debugging
+AC_DEFINE(DEBUGGING,[1])
+
 # compilation and installation
 AC_PROG_CC
 CFLAGS='-g -DATTILA_STANDARD_INCLUDE_DIR=\"${pkgdatadir}\"'
