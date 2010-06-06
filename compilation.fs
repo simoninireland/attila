@@ -27,12 +27,18 @@
     [COMPILE] (SLITERAL)
     SCOMPILE, ; IMMEDIATE
 
-\ Compile a "-delimited string from the input source as a literal
+\ Read a "-delimited string form the input and either leave it on the stack (when
+\ interpreting) or compile it as a literal (when compiling). In interpretation mode
+\ the string will be destroyed when a new line is read, so it needs to be used immediately
 : S" \ ( "string" -- )
     32 CONSUME \ spaces
     [CHAR] " PARSE
     ?DUP IF
-	POSTPONE SLITERAL
+	4 USERVAR ( STATE ) @ 0 ( INTERPRETATION-STATE ) = IF
+	    \ leave the string on the stack
+	ELSE
+	    POSTPONE SLITERAL \ compile the string as a string literal
+	THEN
 \    ELSE
 \	S" String not delimited" ABORT
     THEN ; IMMEDIATE
