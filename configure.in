@@ -47,8 +47,6 @@ AC_C_INLINE
 # bootstrapping 
 AC_CHECK_PROG(PERL,perl,`which perl`)
 test -z $PERL && AC_MSG_ERROR([attila needs a version of perl to bootstrap the system])
-BOOTSTRAP=tools/primgen
-AC_SUBST(BOOTSTRAP)
 
 
 # ---------- Sizes, headers, functions and libraries ----------
