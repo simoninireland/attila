@@ -17,11 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-# ----- Bootstrapping the interpreter -----
-
-BOOTSTRAP = @BOOTSTRAP@
-
-
 # ----- Main program -----
 
 bin_PROGRAMS = bootattila
@@ -44,7 +39,7 @@ BUILT_SOURCES = primitives.c
 nodist_bootattila_SOURCES = primitives.c
 
 primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
-	$(BOOTSTRAP) -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/c-core.fs $(srcdir)/c-fileio.fs $(srcdir)/c-io.fs
+	$(PERL) tools/primgen -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/c-core.fs $(srcdir)/c-fileio.fs $(srcdir)/c-io.fs
 
 
 # ----- The system sources -----
