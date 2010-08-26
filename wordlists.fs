@@ -203,9 +203,13 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
 
 \ ---------- Word listing ----------
 
-\ Print the name of a word followed by a space
+\ Print the name of a word followed by a space. Hidden words are not printed
 : .WORD \ ( xt -- )
-    >NAME TYPE SPACE ;
+    DUP HIDDEN? IF
+	DROP
+    ELSE
+	>NAME TYPE SPACE
+    THEN ;
 
 \ List all the words in a wordlist
 : .WORDLIST ( wid -- )

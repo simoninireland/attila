@@ -128,6 +128,41 @@ init_dictionary() {
   COMPILE("AND");
   NEXT();
 
+  // hide a word
+  DEFINE("(HIDE)");
+  LITERAL(STATUS_HIDDEN);
+  COMPILE("SWAP");
+  COMPILE(">STATUS");
+  COMPILE("DUP");
+  COMPILE("C@");
+  COMPILE("-ROT");
+  COMPILE("OR");
+  COMPILE("SWAP");
+  COMPILE("C!");
+  NEXT();
+
+  // unhide a word
+  DEFINE("(UNHIDE)");
+  LITERAL(STATUS_HIDDEN);
+  COMPILE("SWAP");
+  COMPILE(">STATUS");
+  COMPILE("DUP");
+  COMPILE("C@");
+  COMPILE("-ROT");
+  COMPILE("INVERT");
+  COMPILE("AND");
+  COMPILE("SWAP");
+  COMPILE("C!");
+  NEXT();
+
+  // test whether a word is hidden
+  DEFINE("HIDDEN?");
+  COMPILE(">STATUS");
+  COMPILE("C@");
+  LITERAL(STATUS_HIDDEN);
+  COMPILE("AND");
+  NEXT();
+
   // outer FIND
   // sd: not quite standard, as we don't use a counted string address 
   DEFINE("FIND"); // ( addr n -- 0 | xt 1 | xt -1 )

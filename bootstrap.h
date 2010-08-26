@@ -72,6 +72,7 @@
 // Status bitmasks
 #define STATUS_IMMEDIATE 1
 #define STATUS_REDIRECTABLE 2
+#define STATUS_HIDDEN 4
 
 // Compiler states
 #define STATE_INTERPRETING 0
