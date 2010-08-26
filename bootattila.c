@@ -1,4 +1,4 @@
-// $Id: attila.c 140 2010-01-29 10:08:38Z sd $
+// $Id$
 
 // This file is part of Attila, a retargetable threaded interpreter
 // Copyright (c) 2007--2009, Simon Dobson <simon.dobson@computer.org>.

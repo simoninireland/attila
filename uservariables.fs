@@ -1,4 +1,4 @@
-\ $Id: variables.fs 140 2010-01-29 10:08:38Z sd $
+\ $Id$
 
 \ This file is part of Attila, a minimal threaded interpretive language
 \ Copyright (c) 2007, UCD Dublin. All rights reserved.
