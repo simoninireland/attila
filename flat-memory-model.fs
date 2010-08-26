@@ -183,6 +183,12 @@ C: >IBA xt_to_iba ( xt -- iba )
     -ROT OR
     SWAP C! ;
 
+\ Mask-out the given mask to the status of a word
+: CLEAR-STATUS \ ( f xt -- )
+    >STATUS DUP C@
+    -ROT INVERT AND
+    SWAP C! ;
+
 \ Get the status of the given word
 : GET-STATUS \ ( xt -- s )
     >STATUS C@ ;
@@ -251,6 +257,19 @@ C: >BODY xt_to_body ( xt -- addr )
 
 
 \ ---------- Basic finding ----------
+\ sd: Hiding is incredibly ugly but incredibly useful for fine-tuning
+
+\ Hide/unhide a word from the finder. Since a hidden word can't be found,
+\ you need to stash its xt if you want to be able ti unhide it later
+: (HIDE) ( xt -- )
+    4 ( HIDDEN-MASK ) SWAP SET-STATUS ;
+: (UNHIDE) ( xt -- )
+    4 ( HIDDEN-MASK ) SWAP CLEAR-STATUS ;
+
+\ Test whether a word is hidden
+: HIDDEN? ( xt -- f )
+    GET-STATUS 4 ( HIDDEN-MASK ) AND 0<> ;
+
 
 \ Find the named word in the word list starting from the given
 \ xt. Return 0 if the word can't be found, or it's xt and either
@@ -271,7 +290,8 @@ C: (FIND) bracket_find ( addr namelen x -- )
         #ifdef DEBUGGING
             printf("-> %s\n", create_unix_string(taddr, tlen));
         #endif
-        if((namelen == tlen) &&
+        if((((*xt_to_status(x)) & STATUS_HIDDEN) == 0) &&
+           (namelen == tlen) &&
 	   (strncasecmp(addr, taddr, namelen) == 0)) {
 	    xt = x;   x = NULL;
 	} else {
@@ -290,3 +310,5 @@ C: (FIND) bracket_find ( addr namelen x -- )
         PUSH_CELL((*status & IMMEDIATE_MASK) ? -1 : 1);
     }
 ;C
+
+	    
