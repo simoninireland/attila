@@ -120,6 +120,14 @@ init_dictionary() {
   COMPILE("AND");
   NEXT();
 
+  // test for a REDIRECTABLE word
+  DEFINE("REDIRECTABLE?");
+  COMPILE(">STATUS");
+  COMPILE("C@");
+  LITERAL(STATUS_REDIRECTABLE);
+  COMPILE("AND");
+  NEXT();
+
   // outer FIND
   // sd: not quite standard, as we don't use a counted string address 
   DEFINE("FIND"); // ( addr n -- 0 | xt 1 | xt -1 )

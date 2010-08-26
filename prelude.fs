@@ -37,7 +37,8 @@ include base.fs                  \ Derived primitives
 \ Advanced compilation words
 include createdoes.fs            \ CREATE ... DOES>
 include interpret-compile.fs     \ INTERPRET-COMPILE
-include variables.fs             \ VARIABLE and USER
+include variables.fs             \ VARIABLE
+include uservariables.fs         \ USER
 include constants.fs             \ CONSTANT
 include values.fs                \ VALUE
 include defer.fs                 \ DEFER ... IS
@@ -62,10 +63,11 @@ include hooks.fs                 \ Dynamic behaviour at strategic points
 \ Data types
 include chars.fs                 \ Character operations
 include strings.fs               \ Counted (short) strings
-include zstrings.fs              \ Null-terminated (long) strings
+include zstrings.fs              \ Null-terminated (long, C-style) strings
 include scratch.fs               \ String scratch area
 include formatting.fs            \ Formatted numeric output
 include lists.fs                 \ Linked lists
+include records.fs               \ record types with named fields
 
 \ File management
 include file.fs                  \ I/O re-direction
@@ -79,7 +81,7 @@ include c.fs                     \ C definitions (check for definitions)
 include wordlists.fs             \ Multiple word lists
 
 \ Dynamic memory
-\ include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
+include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
 
 \ Local variables
 \ include locals-base.fs           \ base definitions

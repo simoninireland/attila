@@ -40,3 +40,13 @@
 : */ \ ( a b c -- (a*b)/c )
     */MOD NIP ;
 
+
+\ ---------- Block sizes ----------
+
+\ The number of bytes needed to represent n cells
+: CELLS \ ( n -- bs )
+    /CELL * ;
+
+\ The number of bytes needed to represent n cells
+: CHARS \ ( n -- bs )
+    /CHAR * ;

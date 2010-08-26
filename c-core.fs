@@ -184,15 +184,14 @@ C: TRUE ( -- f )
     f = !0;
 ;C
 
-\ The number of bytes needed to hold n cells
-C: CELLS ( n -- bs )
-    bs = n * sizeof(CELL); 
+\ The number of bytes per cell on this architecture
+C: /CELL ( -- bs )
+    bs = sizeof(CELL);
 ;C
 
-\ The number of bytes needed to hold n characters, which are
-\ typically - but not necessarily -- bytes
-C: CHARS ( n -- bs )
-    bs = n * sizeof(CHARACTER); 
+\ The number of bytes per character on this architecture
+C: /CHAR ( -- bs )
+    bs = sizeof(CHARACTER);
 ;C
 
 

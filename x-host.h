@@ -32,7 +32,7 @@ XTPTR ip;      // interpreter instruction pointer
 jmp_buf env;   // warm-start longjmp target
 
 // Primitive calling macro
-#define CALL( p ) p(_xt);
+#define CALL( p ) p(_xt)
 
 // Fatal error re-start
 #define DIE( msg ) (printf("FATAL: %s\n", msg), longjmp(env, 0), (CELL) 0)
@@ -54,6 +54,7 @@ XTPTR return_stack, return_stack_base;   // return stack
 // Return stack macros
 #define PUSH_RETURN( xt ) (*(return_stack++)) = ((XT) xt)
 #define POP_RETURN() (XT) ((--return_stack < return_stack_base) ? DIE("return stack underflow") : (*return_stack))
+#define RETURN_STACK_DEPTH() (return_stack - return_stack_base)
 #define RETURN_STACK_ITEM( n ) (XTPTR) (return_stack - (n) - 1)
 #define PEEK_RETURN() (XT) *(RETURN_STACK_ITEM(0))
 #define RETURN_STACK_RESET() return_stack = return_stack_base

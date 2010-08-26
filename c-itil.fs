@@ -15,6 +15,38 @@ CHEADER:
 #ifdef DEBUGGING
 static int indent;
 static char buf[256];
+
+static void print_word_name( XT xt ) {
+   XT _xt;
+   int i;
+   CELL n;
+   BYTEPTR addr;
+
+   PUSH_CELL(xt);
+   CALL(xt_to_name);
+   n = POP_CELL();
+   addr = (BYTEPTR) POP_CELL();
+   strncpy(buf, addr, n);   buf[n] = '\0';
+   for(i = 0; i < indent; i++) printf(" ");
+      // printf("%x %s ", (CELL) (((BYTEPTR) xt - (BYTEPTR) image) / sizeof(CELL)), buf);
+      printf("%s ", buf);
+}
+
+static void print_data_stack() {
+   int i;
+   printf("( ");
+   for(i = DATA_STACK_DEPTH() - 1; i >= 0; i--)
+      printf("%d ", *(DATA_STACK_ITEM(i)));
+   printf(")");
+}
+
+static void print_return_stack() {
+   int i;
+   printf("( ");
+   for(i = RETURN_STACK_DEPTH() - 1; i >= 0; i--)
+      printf("%d ", *(RETURN_STACK_ITEM(i)));
+   printf(")");
+}
 #endif
 ;CHEADER
 
@@ -30,13 +62,13 @@ C: EXECUTE execute ( xt -- )
 	if(xt == (XT) NULL) { 
             indent -= 3;
         } else {
-	    PUSH_CELL(xt);
-	    CALL(xt_to_name);
-	    CELL n = POP_CELL();
-	    BYTEPTR addr = (BYTEPTR) POP_CELL();
-	    strncpy(buf, addr, n);   buf[n] = '\0';
-            for(i = 0; i < indent; i++) printf(" ");
-	    printf("%x %s\n", (CELL) (((BYTEPTR) xt - (BYTEPTR) image) / 8), buf);
+            printf("%d: %d ", (ip - 1), xt);
+            print_word_name(xt);
+	    printf(" ");
+	    print_data_stack();
+            printf(" R: ");
+	    print_return_stack();
+	    printf("\n");
             if((PRIMITIVE) (*((CELLPTR) xt)) == (PRIMITIVE) docolon)
                 indent += 3;
 	}
@@ -116,7 +148,7 @@ C: (SLITERAL) ( -- s n )
     s = addr + 1;
     ip = (XTPTR) ((BYTEPTR) ip + n + 1);
     PUSH_CELL(ip);
-    CALL(calign)
+    CALL(calign);
     ip = POP_CELL();
 ;C
 
@@ -124,7 +156,7 @@ C: (SLITERAL) ( -- s n )
 \ ---------- Control primitives ----------
 
 \ Jump unconditionally to the address compiled in the next cell
-C: (BRANCH) ( -- )
+C: (BRANCH) branch ( -- )
   CELL offset = (CELL) *ip;
   ip = (XTPTR) (((BYTEPTR) ip) + offset);
 ;C
@@ -134,29 +166,26 @@ C: (BRANCH) ( -- )
 C: (?BRANCH) ( f -- )
   if(f)
     ip++;
-  else {
-    CELL offset = (CELL) *ip;
-    ip = (XTPTR) (((BYTEPTR) ip) + offset);
-  }
+  else
+    CALL(branch);
 ;C
 
 \ Compute a jump offset from a to TOP, in bytes
 : JUMP> \ ( a -- offset )
-    2 USERVAR @ SWAP - ;
+    2 USERVAR ( TOP ) @ SWAP - ;
 \ Compute a jump offset from TOP to a, in bytes
 : >JUMP \ ( a -- offset )
-    2 USERVAR @ - ;
+    2 USERVAR ( TOP ) @ - ;
 
 \ We also want the same code in CROSS for use by control structures
-<WORDLISTS ONLY FORTH ALSO CROSS DEFINITIONS
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
 \ Compute a jump offset from a to TOP, in bytes
 : JUMP> \ ( a -- offset )
-    [CROSS] TOP SWAP - ;
+    TOP SWAP - dup ." offset jump> " . cr ;
 
 \ Compute a jump offset from TOP to a, in bytes
 : >JUMP \ ( a -- offset )
-    ." >JUMP " dup .hex space [cross] top .hex
-    [CROSS] TOP -  ;
+    TOP -  dup ." offset >jump " . cr ;
 WORDLISTS>
 
 
@@ -190,6 +219,7 @@ C: (DOES) bracket_does ( -- body )
 
 
 \ ---------- (Re)-starting the interpreter ----------
+\ sd: these need to be refactored, as they're not appropriate for non-interactive installations
 
 CHEADER:
 
@@ -232,4 +262,9 @@ C: WARM warm_start ( -- )
 \ sd: COLD *must* be a primitive 
 C: COLD cold_start ( -- ) 
     CALL(warm_start);
+;C
+
+\ Exit the interpreter
+C: BYE ( -- )
+    exit(0);
 ;C

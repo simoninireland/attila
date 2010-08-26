@@ -5,9 +5,7 @@
 \ C primitives are stored in Attila source files alongside Attila code.
 \ When loaded into the cross-compiler they are converted into
 \ stylised C functions and output to a file ready for later compilation.
-\
-\ This code performs the same functions as tools/primgen does for
-\ bootstrapping Attila.
+
 
 \ ---------- Some handy helper words ----------
 
@@ -23,7 +21,8 @@
 	DUP 0<>
     WHILE
 	    DUP 2OVER -ROT     \ addr n elem addr n elem
-	    STRING-ELEMENT@ S= IF
+	    STRING-ELEMENT@ S=
+	    2 PICK 0= OR IF
 		DROP TRUE LEAVE
 	    ELSE
 		<ELEMENT
@@ -36,10 +35,6 @@
 
 VARIABLE (#PRIM) 0 (#PRIM) !    \ uniques
 DATA (PRIMNAME) 32 ALLOT        \ buffer for name
-
-\ Move a string
-: SMOVE \ ( addr1 n addr2 -- )
-    ROT 1+ ROT 1- ROT SWAP CMOVE ;
 
 \ Create a new name
 : (GENPRIMNAME) \ ( stemaddr stemn -- addr n )
@@ -77,39 +72,35 @@ DATA (PRIMTEXT) 20 1024 * ALLOT
     NL OVER C!
     1+ NULL SWAP C! ;
 
-\ Return the last primitive
-: LAST-PRIMITIVE LASTXT EXECUTE ;
-
 <WORDLISTS ALSO CROSS-COMPILER DEFINITIONS
 
 \ Parse a C primitive, creating a locator word that holds all its details
 : C:
-    PARSE-WORD 2DUP
-    (PRIMITIVE-LOCATOR)                    \ compile a locator
-    LAST-PRIMITIVE PRIMITIVE-NAME,         \ compile the primitive's name
-    
+    PARSE-WORD
+    TOP ROT S,                             \ primitive's Forth-level name: ( naddr )
+
     PARSE-WORD S" (" S=CI? IF              \ compile primitive's primitive name
 	2DROP PRIMNAME                     \ create a primitive name
     ELSE
 	PARSE-WORD 2DROP                   \ consume the open bracket
     THEN
-    LAST-PRIMITIVE PRIMITIVE-PRIMNAME,
+    TOP ROT S,                             \ store primitive's C-level name: ( naddr paddr )
 
-    LAST-PRIMITIVE PRIMITIVE-ARGUMENTS,    \ compile the parameters list
+    NULLSTRING STRING-ELEMENT              \ compile the parameters list
     BEGIN
 	PARSE-WORD S" --" S=CI? NOT
     WHILE
-	    STRING-ELEMENT DUP -ROT ELEMENT+
+	    STRING-ELEMENT OVER ELEMENT+>>
     REPEAT
-    2DROP DROP
+    2DROP                                  \ argument list: ( naddr paddr al )
 
-    LAST-PRIMITIVE PRIMITIVE-RESULTS,      \ compile the results list
+    NULLSTRING STRING-ELEMENT              \ compile the results list
     BEGIN
 	PARSE-WORD S" )" S=CI? NOT
     WHILE
-	    STRING-ELEMENT DUP -ROT ELEMENT+
+	    STRING-ELEMENT OVER ELEMENT+>>
     REPEAT
-    2DROP DROP
+    2DROP                                  \ result list: ( naddr paddr al rl )
 
     NULLSTRING (PRIMTEXT) S>Z              \ compile text
     (PRIMTEXT)
@@ -129,14 +120,18 @@ DATA (PRIMTEXT) 20 1024 * ALLOT
     WHILE
 	    Z+S DUP Z+NL
     REPEAT
-    LAST-PRIMITIVE PRIMITIVE-TEXT,
+    TOP SWAP Z,                           \ primitive text: ( naddr paddr al nl zaddr )
 
-    LAST-PRIMITIVE PRIMITIVE-NAME
-    LAST-PRIMITIVE PRIMITIVE-CFA
-    [CROSS] (HEADER,)
-    LAST-PRIMITIVE TARGET-XT,
+    CREATE-PRIMITIVE-LOCATOR              \ build the locator
 
-    LAST-PRIMITIVE A-ELEMENT PRIMITIVES ELEMENT+>> ; \ chain primitives
+    LASTXT EXECUTE >R
+    R@ PRIMITIVE-NAME @ COUNT             \ cross-compile word onto target
+    R@ PRIMITIVE-CFA @
+    [CROSS] (CROSS-PRIMITIVE-HEADER,)
+
+    R@ TARGET-XT !                        \ store txt of word in locator
+
+    R> A-ELEMENT PRIMITIVES ELEMENT+>> ;  \ add locator to chain of primitives
 
 WORDLISTS>
 
@@ -183,11 +178,9 @@ WORDLISTS>
 
 \ ---------- Primitive and block generation ----------
 
-<WORDLISTS ALSO CODE-GENERATOR ALSO DEFINITIONS
-
 \ Generate the declarations for arguments and results
 : GENERATE-PRIMITIVE-VARIABLES \ ( loc -- )
-    DUP PRIMITIVE-ARGUMENTS
+    DUP PRIMITIVE-ARGUMENTS @ ELEMENT>           \ first element is always blank
     BEGIN                                        \ arguments
 	?DUP 0<>
     WHILE
@@ -200,10 +193,10 @@ WORDLISTS>
 	    ELEMENT>
     REPEAT
 
-    DUP PRIMITIVE-ARGUMENTS DUP 0<> IF          \ results
+    DUP PRIMITIVE-ARGUMENTS @ DUP 0<> IF          \ results
 	ELEMENT>>
     THEN
-    SWAP PRIMITIVE-RESULTS
+    SWAP PRIMITIVE-RESULTS @ ELEMENT>             \ first element is always blank
     BEGIN
 	?DUP 0<>
     WHILE
@@ -223,7 +216,7 @@ WORDLISTS>
 
 \ Generate the stack pops for the arguments
 : GENERATE-PRIMITIVE-ARGUMENT-POPS \ ( loc -- )
-    PRIMITIVE-ARGUMENTS ?DUP 0<> IF
+    PRIMITIVE-ARGUMENTS @ ?DUP 0<> IF
 	ELEMENT>>
 	BEGIN
 	    ?DUP 0<>
@@ -240,31 +233,35 @@ WORDLISTS>
 
 \ Generate the stack pushes for the results
 : GENERATE-PRIMITIVE-RESULT-PUSHES \ ( loc -- )
-    PRIMITIVE-RESULTS
+    PRIMITIVE-RESULTS @ ELEMENT>    \ first element is always blank
     BEGIN
 	?DUP 0<>
     WHILE
-	    ." PUSH_CELL("
-	    DUP STRING-ELEMENT@ TYPE
-	    ." );" CR
+	    DUP STRING-ELEMENT@ ?DUP 0> IF
+		." PUSH_CELL("
+		TYPE
+		." );" CR
+	    ELSE
+		DROP
+	    THEN
 	    ELEMENT>
     REPEAT ;
 
 \ Generate the C source code for a primitive
 : GENERATE-PRIMITIVE \ ( loc -- )
-    DUP ." // " PRIMITIVE-NAME TYPE CR
+    DUP ." // " PRIMITIVE-NAME @ COUNT TYPE CR
     ." VOID" CR
-    DUP PRIMITIVE-PRIMNAME TYPE ." ( XT _xt ) {" CR
+    DUP PRIMITIVE-PRIMNAME @ COUNT TYPE ." ( XT _xt ) {" CR
     DUP GENERATE-PRIMITIVE-VARIABLES
     DUP GENERATE-PRIMITIVE-ARGUMENT-POPS
-    DUP PRIMITIVE-TEXT TYPE CR
+    DUP PRIMITIVE-TEXT @ ZCOUNT TYPE CR
     DUP GENERATE-PRIMITIVE-RESULT-PUSHES
     ." }" CR CR
     DROP ;
 
 \ Generate a C declaration for a primitive
 : GENERATE-PRIMITIVE-DECLARATION \ ( loc -- )
-    ." VOID " PRIMITIVE-PRIMNAME TYPE ." ( XT );" CR ;
+    ." VOID " PRIMITIVE-PRIMNAME @ COUNT TYPE ." ( XT );" CR ;
 
 \ Generate declarations for all the primitives
 : (GENERATE-PRIMITIVE-DECLARATION-FROM-ELEMENT) \ ( loc -- )
@@ -283,5 +280,3 @@ WORDLISTS>
     A@ CBLOCK-TEXT TYPE CR CR ;
 : GENERATE-CBLOCKS \ ( -- )
     ['] (GENERATE-CBLOCK-FROM-ELEMENT) CBLOCKS ELEMENT> MAP ;
-
-WORDLISTS>

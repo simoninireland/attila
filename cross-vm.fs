@@ -2,8 +2,6 @@
 
 \ VM description generator for cross-compiler
 
-<WORDLISTS ALSO CODE-GENERATOR DEFINITIONS
-
 \ Translate characters unsafe for C
 : SAFE-IDENTIFIER \ ( addr n -- )
     2DUP
@@ -12,14 +10,14 @@
 
 \ Parse a word and make it a safe C identifier
 : PARSE-IDENTIFIER \ ( "name" -- addr n )
-    PARSE-WORD [CODE-GENERATOR] SAFE-IDENTIFIER ;
+    PARSE-WORD SAFE-IDENTIFIER ;
 
 \ The defining words used in the vm and arch files
 : CONSTANT \ ( n "name" -- )
-    [CODE-GENERATOR] PARSE-IDENTIFIER
+    PARSE-IDENTIFIER
     ." #define " TYPE SPACE . CR ;
 : USER \ ( n "name" -- )
-    [CODE-GENERATOR] PARSE-IDENTIFIER
+    PARSE-IDENTIFIER
     ." #define USER_" TYPE SPACE . CR ;
 
 \ C inclusions are inserted literally or by #include
@@ -40,4 +38,3 @@
 	    TYPE CR
     REPEAT ;
 
-WORDLISTS>

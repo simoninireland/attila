@@ -9,7 +9,7 @@ include cross-compiler.fs
 
 \ Sizes in bytes. These must match the values from the underlying architecture
 @CELL_SIZE@ 'CROSS /CELL (IS)
-@CHARACTER_SIZE@ 'CROSS /CHARACTER (IS)
+@CHARACTER_SIZE@ 'CROSS /CHAR (IS)
 
 \ Endianness of the processor:
 \   0 = little-endian
@@ -49,24 +49,17 @@ INITIALISE-IMAGE
 
 .( Loading target basic image...)
 <TARGET
-C: /CELL ( -- bs )
-  bs = @CELL_SIZE@;
-;C
-
-C: /CHARACTER ( -- bs )
-  bs = @CHARACTER_SIZE@;
-;C
-
-C: CHARACTERS ( n -- bs )
-  bs = n * @CHARACTER_SIZE@;
-;C
-
 C: USERVAR uservar ( n -- addr )
   addr = (CELL) &image[n];
 ;C
 
 include c-core.fs
 include c-itil.fs
+
+\ sd: should be constants on the target
+: /CELL      [ [CROSS] /CELL ]      LITERAL ;
+: /CHAR      [ [CROSS] /CHAR ]      LITERAL ;
+: BIGENDIAN? [ [CROSS] BIGENDIAN? ] LITERAL ;
 TARGET>
 
 .( Loading cross-compiler control structures...)
@@ -110,7 +103,7 @@ FINALISE-IMAGE
 [CROSS] LASTXT 10 [CROSS] USERVAR [CROSS] XT!           \ LAST
 
 .( Saving image...)
-SAVE-IMAGE-TO test.c
+SAVE-IMAGE-TO attila.c
 
 .( Done)
 

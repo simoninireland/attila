@@ -65,9 +65,11 @@ INTERPRET/COMPILE ."
 \ The null string
 : NULLSTRING 0 0 ;
 
-\ Copy string to a given address
+\ Copy a string to the given address (including the count, so addr2 is a
+\ counted string *not* just the characters)
 : SMOVE \ ( addr1 n addr2 -- )
-    SWAP /CHARACTER * CMOVE ;
+    2DUP C!
+    1+ SWAP CMOVE ;
 
 \ Turn an address into a counted string. Safe for null strings
 : COUNT \ ( addr -- addr' len )

@@ -2,12 +2,6 @@
 
 \ Basic character operations, ASCII version 
 
-\ ASCII characters are 1 byte long
-1 CONSTANT /CHAR
-
-\ Return the number of bytes needed to represent n chars
-: CHARS ( n -- n ) ;
-
 \ Character constants
 32 CONSTANT BL
 10 CONSTANT NL

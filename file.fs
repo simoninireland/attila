@@ -50,10 +50,10 @@
     7 USERVAR ( OUTPUTSINK ) ! ;
 
 \ Re-direct subsequent input from the given file
-: (<FROM) \ ( fh -- )
+: (<FROM) \ ( fh -- ofh )
     6 USERVAR ( INPUTSOURCE ) @
     SWAP 6 USERVAR ( INPUTSOURCE ) ! ;
-: <FROM \ ( "name" -- )
+: <FROM \ ( "name" -- ofh )
     PARSE-WORD 2DUP R/O OPEN-FILE IF
 	DROP
 	TYPE 32 EMIT S" cannot be re-directed from" ABORT

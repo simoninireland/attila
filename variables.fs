@@ -17,16 +17,9 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Data blocks, variables and user variables
+\ Variables
 
 \ Create a variable holding a single-precision cell
 : VARIABLE \ ( "name" -- )
     DATA 0 , ;
-
-\ Create a user variable, returning the address of an indexed location
-\ within the user area
-: USER \ ( n "name" -- )
-    CREATE ,
-    DOES> @ USERVAR ;
-  
   

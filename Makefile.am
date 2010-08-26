@@ -19,32 +19,48 @@
 
 # ----- Main program -----
 
-bin_PROGRAMS = bootattila
+bin_PROGRAMS = bootattila attila
 
 
 # ----- Sources -----
 
-# the bootstrapping sources
+# The bootstrapping sources
 bootattila_SOURCES = vm.h \
 	primgen.h \
 	bootstrap.h \
 	bootstrap.c \
-	attila.c
+	bootattila.c
+
+# The cross-compiled sources
+attila_SOURCES = x-host.h \
+	x-host.fs
+
+BUILT_SOURCES = primitives.c attila.c
 
 
 # ----- The bootstrapped interpreter -----
 
-# the collected bootstrap primitives, as a C file
-BUILT_SOURCES = primitives.c
+# The collected bootstrap primitives, as a C file
 nodist_bootattila_SOURCES = primitives.c
 
 primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
 	$(PERL) tools/primgen -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/c-core.fs $(srcdir)/c-fileio.fs $(srcdir)/c-io.fs
 
 
+# ----- The cross-compiled interpreter -----
+
+# The generated VM
+nodist_attila_SOURCES = attila.c
+
+attila.c: bootattila
+	./bootattila <tools/crosscompile.fs
+
+attila: attila.c
+
+
 # ----- The system sources -----
 
-# the standard prelude, included in a "real" Forth system
+# The standard prelude, included in a "real" Forth system
 prelude = conditionals.fs \
 	base.fs \
 	createdoes.fs \
@@ -71,9 +87,10 @@ prelude = conditionals.fs \
 	file.fs \
 	evaluate.fs \
 	c.fs \
-	wordlists.fs
+	wordlists.fs \
+	dynamic-memory.fs
 
-# the cross-compiler
+# The cross-compiler
 crosscompiler = x-host.fs \
 	x-host.h \
 	c-image-fixedsize.fs \
@@ -86,7 +103,7 @@ crosscompiler = x-host.fs \
 	cross-generate.fs \
 	cross-environments.fs
 
-# the system sources, used to cross-compile a basic virtual machine
+# The system sources, used to cross-compile a basic virtual machine
 regular = c-core.fs \
 	c-itil.fs \
 	c-fileio.fs \
@@ -97,6 +114,7 @@ regular = c-core.fs \
 	colon.fs \
 	load.fs \
 	executive.fs
+
 
 # ----- Distribution -----
 

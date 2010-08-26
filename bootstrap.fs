@@ -208,11 +208,11 @@ show_execute( XT xt ) {
 \ We don't do alignment for boostrapping
 C: ALIGNED ( addr -- addr )
 ;C
-PRIMITIVE ALIGN ( -- )
+C: ALIGN ( -- )
 ;C
 C: CALIGNED ( addr -- addr )
 ;C
-PRIMITIVE CALIGN ( -- )
+C: CALIGN ( -- )
 ;C
 
 \ Compile a character into the body of a word

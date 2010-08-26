@@ -51,8 +51,8 @@
 
 \ Return the addresses of the various header fields
 : BLOCK>SIZE     BLOCK>HEADER ;
-: BLOCK>STATUS   BLOCK>HEADER CELL+ ;
-: BLOCK>NEXT     BLOCK>HEADER CELL+ 1+ ;
+: BLOCK>STATUS   BLOCK>HEADER 1 CELLS + ;
+: BLOCK>NEXT     BLOCK>HEADER 1 CELLS + 1+ ;
 : BLOCK>PREVIOUS BLOCK>HEADER 2 CELLS + 1+ ;
 
 \ Status flags

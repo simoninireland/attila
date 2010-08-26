@@ -1,4 +1,4 @@
-// $Id$
+// $Id: attila.c 140 2010-01-29 10:08:38Z sd $
 
 // This file is part of Attila, a retargetable threaded interpreter
 // Copyright (c) 2007--2009, Simon Dobson <simon.dobson@computer.org>.
@@ -18,7 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-// Attila main setup
+// Attila main setup, bootstrapped version
 //
 // The start-up sequence at this level is minimal:
 // 1. Allocate and initialise the memory block

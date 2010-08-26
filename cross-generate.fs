@@ -2,8 +2,6 @@
 
 \ File generators
 
-<WORDLISTS ALSO CODE-GENERATOR ALSO DEFINITIONS
-
 \ Generate a VM description from the given file
 : GENERATE-VM \ ( addr n -- )
     >R >R
@@ -28,22 +26,21 @@
     ." // C support" CR
     GENERATE-CBLOCKS CR CR
 
-    ." // Primitives"
+    ." // Primitives" CR
     GENERATE-PRIMITIVES CR CR
 
     ." // Initial image" CR
     EMIT-IMAGE CR CR ;
 
-WORDLISTS>
 
 \ Save the image to the given file
-: SAVE-IMAGE-TO \ ( "name" -- )
+: SAVE-IMAGE-AS \ ( "name" -- )
     PARSE-WORD 2DUP W/O CREATE-FILE IF
 	DROP
 	TYPE SPACE S" cannot be opened" ABORT
     ELSE
 	ROT 2DROP
 	(<TO)
-	[CODE-GENERATOR] GENERATE-IMAGE
+	GENERATE-IMAGE
 	TO>
     THEN ;

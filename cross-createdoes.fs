@@ -29,7 +29,7 @@
 \ Create a data block that returns its body address when executed
 : (DATA) \ ( addr n -- )
     2DUP [CROSS] ['] (VAR) [CROSS] CFA@ [CROSS] (HEADER,)
-    (WORD-LOCATOR) DROP ; \ create a locator for the new word
+    CREATE-WORD-LOCATOR DROP ; \ create a locator for the new word
     
 \ Create a data block from the next word in the input
 : DATA \ ( "name" -- )

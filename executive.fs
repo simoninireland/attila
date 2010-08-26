@@ -1,6 +1,7 @@
 \ $Id$
 
 \ The standard outer executive
+\ sd: this could be modularised to allow easier modification and hooking
 
 \ The outer executive
 : OUTER \ ( -- )

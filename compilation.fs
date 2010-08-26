@@ -46,24 +46,29 @@
 
 \ ---------- Word finding ----------
 
-\ Flat finder
-: (FIND-FLAT) \ ( addr n -- 0 | xt 1 | xt -1 )
+\ Flat finder, the default behaviour wrapped around whatever the underlying word list
+\ management function is
+:NONAME \ ( addr n -- 0 | xt 1 | xt -1 )
     LASTXT (FIND) ;
 
-\ Hook
-DATA (FIND-BEHAVIOUR) ' (FIND-FLAT) XT, 
+\ Hook, which consumes the unnamed xt generated above
+DATA (FIND-BEHAVIOUR) XT, 
 
 \ Top-level word-finder
 : FIND \ ( addr n -- 0 | xt 1 | xt -1 )
     (FIND-BEHAVIOUR) XT@ EXECUTE ;
 
 \ Look up a word, returning its xt
-: ' \ ( "name" -- xt )
-    PARSE-WORD 2DUP FIND 0= IF
+: (') ( addr n -- xt )
+    2DUP FIND 0= IF
 	TYPE S" ?" ABORT
     ELSE
 	ROT 2DROP
     THEN ;
+
+\ Look up the next word in the input stream and return its xt
+: ' \ ( "name" -- xt )
+    PARSE-WORD (') ;
 
 \ Compile the execution semantics of an immediate word
 : POSTPONE \ ( "name" -- )
@@ -77,7 +82,7 @@ DATA (FIND-BEHAVIOUR) ' (FIND-FLAT) XT,
 
 \ ---------- Compilation ----------
 
-\ At run-time, compile the next word in the input source at compile time
+\ At run-time, compile the next word that was in the input source at compile time
 : [COMPILE] \ ( "word" -- )
     POSTPONE [']
     ['] CTCOMPILE, CTCOMPILE, ; IMMEDIATE

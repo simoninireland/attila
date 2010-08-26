@@ -52,12 +52,16 @@ C: CALIGN calign ( addr -- aaddr )
     THEN ;
 
 \ Compilation primitives for cells, real addresses, strings, addresses, xts
-\ sd: currently hard-coded as being little-endian
+\ sd: should be refactored to use [IF] etc
 : COMPILE, \ ( n -- )
     CALIGNED
     /CELL 0 DO
-	DUP 255 AND CCOMPILE,
-	8 RSHIFT
+	BIGENDIAN? IF
+	    DUP /CELL I - 1- 8 * RSHIFT 255 AND CCOMPILE,
+	ELSE
+	    DUP 255 AND CCOMPILE,
+	    8 RSHIFT
+	THEN
     LOOP DROP ;
 : SCOMPILE, \ ( addr n -- )
     DUP CCOMPILE,
@@ -144,7 +148,7 @@ C: >STATUS xt_to_status ( xt -- addr )
 C: >NAME xt_to_name ( -- addr n )
   BYTEPTR a;
 
-  CALL(xt_to_lfa)
+  CALL(xt_to_lfa);
   a = (BYTEPTR) POP_CELL();
   a -= sizeof(CELL);
   n = (CELL) *a;
@@ -181,7 +185,7 @@ C: >IBA xt_to_iba ( xt -- iba )
 
 \ Get the status of the given word
 : GET-STATUS \ ( xt -- s )
-    >STATUS @ ;
+    >STATUS C@ ;
 
 \ Make the last word defined IMMEDIATE
 : IMMEDIATE \ ( -- )
