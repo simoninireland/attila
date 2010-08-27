@@ -48,16 +48,17 @@
 
 \ Flat finder, the default behaviour wrapped around whatever the underlying word list
 \ management function is
-:NONAME \ ( addr n -- 0 | xt 1 | xt -1 )
-    LASTXT (FIND) ;
+\ :NONAME \ ( addr n -- 0 | xt 1 | xt -1 )
+\     LASTXT (FIND) ;
 
 \ Hook, which consumes the unnamed xt generated above
-DATA (FIND-BEHAVIOUR) XT, 
+\ DATA (FIND-BEHAVIOUR) XT, 
 
 \ Top-level word-finder
-: FIND \ ( addr n -- 0 | xt 1 | xt -1 )
-    (FIND-BEHAVIOUR) XT@ EXECUTE ;
-
+\ : FIND \ ( addr n -- 0 | xt 1 | xt -1 )
+\     (FIND-BEHAVIOUR) XT@ EXECUTE ;
+: FIND LASTXT (FIND) ;
+    
 \ Look up a word, returning its xt
 : (') ( addr n -- xt )
     2DUP FIND 0= IF

@@ -37,6 +37,7 @@
 : +LOOP
     [COMPILE] (+LOOP)
     [COMPILE] (?BRANCH) >BEGIN
+    ENDS>
     (CS-END) ; IMMEDIATE
 
 \ Increment the index by one
@@ -44,6 +45,7 @@
     1 POSTPONE LITERAL
     [COMPILE] (+LOOP)
     [COMPILE] (?BRANCH) >BEGIN
+    ENDS>
     (CS-END) ; IMMEDIATE
 \ sd: This is repetitous to facilitate cross-compilation, where a defining
 \ word can't make use of other defining words

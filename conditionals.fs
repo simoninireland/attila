@@ -28,13 +28,13 @@
 
 \ Test the top of the stack and branch if false
 : IF \ ( -- addr )
-    [COMPILE] (?BRANCH) TOP 0 COMPILE, ; IMMEDIATE
+    [COMPILE] (?BRANCH) JUMP-FORWARD ; IMMEDIATE
 
 \ Jump out and resolve the previous IF branch
 : ELSE \ ( addr -- addr' )
-    [COMPILE] (BRANCH) TOP 0 COMPILE,
-    SWAP DUP JUMP> SWAP ! ; IMMEDIATE
+    [COMPILE] (BRANCH) JUMP-FORWARD
+    SWAP JUMP-HERE ; IMMEDIATE
 
 \ Complete the conditional by resolving the last branch
-: THEN \ ( -- )
-    DUP JUMP> SWAP ! ; IMMEDIATE
+: THEN \ ( addr -- )
+    JUMP-HERE ; IMMEDIATE

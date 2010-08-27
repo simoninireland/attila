@@ -155,6 +155,8 @@ C: (SLITERAL) ( -- s n )
 
 \ ---------- Control primitives ----------
 
+\ Using the branch and jump words we can abstrcat how jumps are represented.
+
 \ Jump unconditionally to the address compiled in the next cell
 C: (BRANCH) branch ( -- )
   CELL offset = (CELL) *ip;
@@ -170,22 +172,38 @@ C: (?BRANCH) ( f -- )
     CALL(branch);
 ;C
 
-\ Compute a jump offset from a to TOP, in bytes
-: JUMP> \ ( a -- offset )
-    2 USERVAR ( TOP ) @ SWAP - ;
-\ Compute a jump offset from TOP to a, in bytes
-: >JUMP \ ( a -- offset )
-    2 USERVAR ( TOP ) @ - ;
+\ \ Prepare for a forward jump
+\ : JUMP-FORWARD ( -- a )
+\     2 USERVAR ( TOP )
+\     0 COMPILE, ;
+
+\ \ Resolve a jump from the address on the stack to here
+\ : JUMP-HERE ( a -- )
+\     2 USERVAR ( TOP ) OVER -
+\     SWAP ! ;
+
+\ \ Resolve a jump from here backwards to the address on the stack
+\ : JUMP-BACKWARD ( a -- )
+\     2 USERVAR ( TOP ) -
+\     COMPILE, ;
 
 \ We also want the same code in CROSS for use by control structures
+\ Shame about the repetition, but it's unavoidable in this case
 <WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
-\ Compute a jump offset from a to TOP, in bytes
-: JUMP> \ ( a -- offset )
-    TOP SWAP - dup ." offset jump> " . cr ;
+\ Prepare for a forward jump
+: JUMP-FORWARD ( -- a )
+    TOP
+    0 COMPILE, ;
 
-\ Compute a jump offset from TOP to a, in bytes
-: >JUMP \ ( a -- offset )
-    TOP -  dup ." offset >jump " . cr ;
+\ Resolve a jump from the address on the stack to here
+: JUMP-HERE ( a -- )
+    TOP OVER -
+    SWAP ! ;
+
+\ Resolve a jump from here backwards to the address on the stack
+: JUMP-BACKWARD ( a -- )
+    TOP -
+    COMPILE, ;
 WORDLISTS>
 
 

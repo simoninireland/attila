@@ -508,7 +508,8 @@ C: (FIND) bracket_find ( addr namelen x -- )
         ha = ((BYTEPTR) x + CELL_SIZE);
 	tlen = (BYTE) *((BYTEPTR) ha);
 	taddr = (CHARACTERPTR) ha + 1;
-	if((namelen == tlen) &&
+	if((((*xt_to_status(x)) & STATUS_HIDDEN) == 0) &&
+	   (namelen == tlen) &&
 	   (strncasecmp(addr, taddr, namelen) == 0)) {
 	    xt = x;   x = NULL;
 	} else {

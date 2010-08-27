@@ -290,7 +290,10 @@ C: (FIND) bracket_find ( addr namelen x -- )
         #ifdef DEBUGGING
             printf("-> %s\n", create_unix_string(taddr, tlen));
         #endif
-        if((((*xt_to_status(x)) & STATUS_HIDDEN) == 0) &&
+        PUSH_CELL(x);
+        CALL(xt_to_status);
+        status = (BYTEPTR) POP_CELL();
+        if((((*status) & HIDDEN_MASK) == 0) &&
            (namelen == tlen) &&
 	   (strncasecmp(addr, taddr, namelen) == 0)) {
 	    xt = x;   x = NULL;

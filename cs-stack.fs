@@ -45,7 +45,7 @@
 \    * the start (repetition) address of the construct
 \    * the number of elements the construct keeps on the return
 \      stack at run-time
-2 VALUE /CS
+2 CONSTANT /CS
 
 \ The control structures stack
 MAX-LOOP-DEPTH /CS * STACK CS
@@ -68,12 +68,12 @@ MAX-LEAVES STACK LEAVES
 : CS-PICK \ ( i -- )
     1+ /CS *
     /CS
-    [ TOP ]                                                       \ BEGIN
-    ?DUP
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]                       \ WHILE
-    OVER 1- CS ST-PICK CS >ST
-    1-
-    [ ' (BRANCH) COMPILE, SWAP >JUMP COMPILE, DUP JUMP> SWAP ! ]  \ REPEAT
+    BEGIN
+	?DUP
+    WHILE
+	    OVER 1- CS ST-PICK CS >ST
+	    1-
+    REPEAT
     DROP ;
 
 \ Drop the top control structure
@@ -82,7 +82,7 @@ MAX-LEAVES STACK LEAVES
 
 \ Start a new structure definition
 : (CS-START) \ ( rt -- )
-    TOP CS >ST       \ repeat address (here)
+    TOP CS >ST        \ repeat address (here)
     CS >ST            \ elements hidden
     0 LEAVES >ST ;    \ no forward references
 
@@ -93,54 +93,5 @@ MAX-LEAVES STACK LEAVES
 
 \ End a structure definition
 : (CS-END) \ ( -- )
-    LEAVES ST>
-    [ TOP ]                                                       \ BEGIN
-    ?DUP
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]                       \ WHILE we have an exit address to patch
-    LEAVES ST> DUP JUMP> SWAP !                                   \ patch the exit address to here
-    1-
-    [ ' (BRANCH) COMPILE, SWAP >JUMP COMPILE, DUP JUMP> SWAP ! ]  \ REPEAT
-    CS-DROP ;                                                     \ drop the control structure
+    CS-DROP ;
 
-\ Compile the address of the start of the current structure
-: >BEGIN \ ( -- )
-    (CS-BEGIN-ADDR) >JUMP COMPILE, ;
-
-\ Compile a placeholder to the end of the current structure
-: >END \ ( -- )
-    LEAVES ST>       \ the count of the number of pending exits
-    TOP LEAVES >ST  \ push this as an exit
-    0 COMPILE,       \ placeholder
-    1+ LEAVES >ST ;  \ update the count
-
-\ Compile code to tidy-up the return stack ahead of an early exit
-\ sd: Should we compile this somehow, rather than repeating the >Rs so much?
-: (LEAVE)
-    (CS-R)
-    [ TOP ]                                                        \ BEGIN
-    ?DUP
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]                        \ WHILE
-    [COMPILE] RDROP
-    1-
-    [ ' (BRANCH) COMPILE, SWAP >JUMP COMPILE, DUP JUMP> SWAP ! ] ; \ REPEAT
-
-
-\ ---------- Exits ----------
-
-\ Escape from the current loop, jumping to the end
-: LEAVE \ ( -- )
-    (LEAVE)
-    [COMPILE] (BRANCH) >END ; IMMEDIATE
-    
-\ Return from this word immediately, unwinding any loops
-:  EXIT \ ( -- )
-    #CS
-    [ TOP ]                                                      \ BEGIN
-    ?DUP
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]                      \ WHILE
-    DUP 1- CS-PICK
-    (LEAVE)
-    CS-DROP
-    1-
-    [ ' (BRANCH) COMPILE, SWAP >JUMP COMPILE, DUP JUMP> SWAP ! ] \ REPEAT
-    NEXT, ; IMMEDIATE

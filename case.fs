@@ -32,16 +32,17 @@
 \ Check the two top values, continue if equal and jump if not
 : OF \ ( v1 v2 -- | v1 )
     [COMPILE] OVER [COMPILE] =
-    [COMPILE] (?BRANCH) TOP 0 COMPILE,
+    [COMPILE] (?BRANCH) JUMP-FORWARD
     [COMPILE] DROP ; IMMEDIATE
 
-\ Jump out to the end of the structure, and re-direct the last jump to here
+\ Jump out to the end of the structure, and resolves the jump from the
+\ previous case to to here
 : ENDOF \ ( -- )
     [COMPILE] (BRANCH) >END
-    DUP JUMP> SWAP ! ; IMMEDIATE
+    JUMP-HERE ; IMMEDIATE
 
 \ End the structure
 : ENDCASE \ ( v1 -- )
-    [COMPILE] DROP (CS-END) ; IMMEDIATE
+    [COMPILE] DROP ENDS> (CS-END) ; IMMEDIATE
     
     

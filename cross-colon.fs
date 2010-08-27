@@ -22,6 +22,16 @@
 \ Note that this file is carefully crafted to avoid using the new (cross-compiler)
 \ definitions when compiling other cross-compiler definitions. Edit with care!
 
+\ ---------- Cross-compiler testing ----------
+
+\ We're cross-compiling if (a) we're compiling and (b) words are going
+\ into the TARGET vocabulary
+: CROSS-COMPILING? ( -- f )
+    INTERPRETING? NOT
+    TARGET-WORDLIST [FORTH] CURRENT [FORTH] @ = AND ;
+
+
+\ ---------- Finding ----------
 
 \ Look up a word's txt in the target
 : FIND \ ( addr n -- 0 | xt 1 | xt -1 )
@@ -32,7 +42,7 @@
 
 \ Look up a word in the target, failing if we don't find it
 : (') \ ( addr n -- txt )
-    2DUP FIND IF
+    2DUP [cross-compiler] FIND IF
 	ROT 2DROP
     ELSE
 	TYPE S" ?" ABORT
@@ -40,59 +50,73 @@
 
 \ Look up the next word in the input stream in the target
 : ' ( "name" -- txt )
-    PARSE-WORD (') ;
+    PARSE-WORD [cross-compiler] (') ;
 
 \ Compile the txt of the next word as a literal, but done dynamically
 \ so that we get a chance to build the target words first
 : ['] ( "name" -- )
-    PARSE-WORD POSTPONE SLITERAL
-    [FORTH] ['] (') [FORTH] CTCOMPILE, ; [FORTH] IMMEDIATE
+    PARSE-WORD
+    [CROSS-COMPILER] CROSS-COMPILING? IF
+	2DUP [CROSS-COMPILER] FIND IF
+	    ROT 2DROP
+	    S" (LITERAL)" [CROSS-COMPILER] (') [CROSS] CTCOMPILE, [CROSS] XTCOMPILE,
+	ELSE
+	    TYPE S" not found on target" ABORT
+	THEN
+    ELSE
+	POSTPONE SLITERAL
+	[ 'CROSS-COMPILER (') ] LITERAL [FORTH] CTCOMPILE,
+    THEN ; IMMEDIATE
 
 \ Compile the code needed to cross-compile at run-time the next
 \ word in the input stream
 : [COMPILE] \ ( "name" -- )
-    PARSE-WORD POSTPONE SLITERAL
-    [FORTH] ['] (') [FORTH] CTCOMPILE,
-    [FORTH] ['] CTCOMPILE, [FORTH] CTCOMPILE, ; [FORTH] IMMEDIATE
+    PARSE-WORD
+    [CROSS-COMPILER] CROSS-COMPILING? IF
+	2DUP [CROSS-COMPILER] FIND IF
+	    ROT 2DROP
+	    S" (LITERAL)" [CROSS-COMPILER] (') [CROSS] CTCOMPILE,
+	    [CROSS] XTCOMPILE,
+	    S" CTCOMPILE," [CROSS-COMPILER] (') [CROSS] CTCOMPILE,
+	ELSE
+	    TYPE S" not found on target" ABORT
+	THEN
+    ELSE
+	POSTPONE SLITERAL
+	[ 'CROSS-COMPILER (') ] LITERAL [FORTH] CTCOMPILE,
+	[ 'CROSS CTCOMPILE,   ] LITERAL [FORTH] CTCOMPILE,
+    THEN ; IMMEDIATE
 
 
 \ ---------- Literals ----------
 
 \ Cross-compile the top of the stack as a literal
 : LITERAL \ ( n -- )
-    [CROSS-COMPILER-EXT] [COMPILE] (LITERAL)
+    [CROSS-COMPILER] [COMPILE] (LITERAL)
     COMPILE, ; [FORTH] IMMEDIATE
 
 \ Cross-compile the address on the top of the stack as a literal
 : ALITERAL \ ( addr -- )
-    [CROSS-COMPILER-EXT] [COMPILE] (LITERAL)
+    [CROSS-COMPILER] [COMPILE] (LITERAL)
     ACOMPILE, ; [FORTH] IMMEDIATE
 
 \ Cross-compile the xt on the top of the stack as a literal
 : XTLITERAL \ ( xt -- )
-    [CROSS-COMPILER-EXT] [COMPILE] (LITERAL)
+    [CROSS-COMPILER] [COMPILE] (LITERAL)
     XTCOMPILE, ; [FORTH] IMMEDIATE
 
 \ Cross-compile the cfa on the top of the stack as a literal
 : CFALITERAL \ ( cfa -- )
-    [CROSS-COMPILER-EXT] [COMPILE] (LITERAL)
+    [CROSS-COMPILER] [COMPILE] (LITERAL)
     CFACOMPILE, ; [FORTH] IMMEDIATE
 
 \ Cross-compile the string on the top of the stack as a literal
 : SLITERAL \ ( addr len -- )
-    [CROSS-COMPILER-EXT] [COMPILE] (SLITERAL)
+    [CROSS-COMPILER] [COMPILE] (SLITERAL)
     SCOMPILE, ; [FORTH] IMMEDIATE
 
 
 \ ---------- The colon cross-compiler ----------
-
-<CROSS-COMPILER
-
-\ We're cross-compiling if (a) we're compiling and (b) words are going
-\ into the TARGET vocabulary
-: CROSS-COMPILING?
-    INTERPRETING? NOT
-    TARGET-WORDLIST [FORTH] CURRENT [FORTH] @ = AND ;
 
 : CROSS-COMPILER-FIND ( addr n -- xt 1 | xt -1 | 0 )
     2DUP CROSS-COMPILER-WORDLIST SEARCH-WORDLIST ?DUP IF
@@ -126,7 +150,7 @@
 		." not interpreting, are we compiling or cross-compiling?" CR
 		[CROSS-COMPILER] CROSS-COMPILING? IF
 		    ." cross-compiling, lookup using cross-compiler" CR
-		    2DUP [CROSS-COMPILER-EXT] FIND CASE
+		    2DUP [CROSS-COMPILER] FIND CASE
 			1 OF
 			    \ found, compile
 			    ROT 2DROP
@@ -170,7 +194,7 @@
 				    2DUP NUMBER? IF
 					." a number, compile as a literal" CR
 					ROT 2DROP
-					[ 'CROSS-COMPILER-EXT LITERAL [FORTH] CTCOMPILE, ] \ POSTPONE [CROSS-COMPILER-EXT] LITERAL
+					[ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ] \ POSTPONE [CROSS-COMPILER-EXT] LITERAL
 				    ELSE
 					\ not a number, fail
 					TYPE S" ?" ABORT
@@ -221,24 +245,27 @@
 
 \ Compile the next character as a literal
 : [CHAR] \ ( "name" -- )
-    PARSE-WORD CHAR POSTPONE LITERAL ; [FORTH] IMMEDIATE
+    PARSE-WORD CHAR [ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ] ; [FORTH] IMMEDIATE
 
 \ Postpone dynamically
 : POSTPONE ( "name" -- )
-    ' CTCOMPILE, ; [FORTH] IMMEDIATE
+    [CROSS-COMPILER] ' CTCOMPILE, ; [FORTH] IMMEDIATE
 
 
 \ The colon cross-compiler
 
 <WORDLISTS ONLY FORTH ALSO CROSS-COMPILER DEFINITIONS
 
-: [ INTERPRETATION-STATE STATE ! ; [FORTH] IMMEDIATE
+: [ INTERPRETATION-STATE STATE ! ; IMMEDIATE
 : ] COMPILATION-STATE    STATE ! ;
 
 WORDLISTS>
 
+: IMMEDIATE    [CROSS] IMMEDIATE-MASK    [CROSS] LASTXT [CROSS] SET-STATUS ; 
+: REDIRECTABLE [CROSS] REDIRECTABLE-MASK [CROSS] LASTXT [CROSS] SET-STATUS ; 
+
 : COLON ( addr n -- txt )
-    [CROSS-COMPILER-EXT] ['] (:) [CROSS] CFA@ [CROSS] (HEADER,)
+    [CROSS-COMPILER] ['] (:) [CROSS] CFA@ [CROSS] (HEADER,)
     ] ;    
 : : ( "name" -- txt )
     PARSE-WORD [CROSS-COMPILER] COLON ;
@@ -249,8 +276,26 @@ WORDLISTS>
     POSTPONE [
     DROP ; [FORTH] IMMEDIATE
 
-CROSS-COMPILER>
+<WORDLISTS ONLY FORTH ALSO CROSS-COMPILER DEFINITIONS
 
+: (COLON-CROSS-COMPILER) ( hider -- )
+    [ 'CROSS-COMPILER :          ] LITERAL OVER EXECUTE
+    [ 'CROSS-COMPILER ;          ] LITERAL OVER EXECUTE
+    [ 'CROSS-COMPILER :NONAME    ] LITERAL OVER EXECUTE
+    [ 'CROSS-COMPILER [          ] LITERAL OVER EXECUTE
+    [ 'CROSS-COMPILER ]          ] LITERAL OVER EXECUTE
+    [ 'CROSS-COMPILER POSTPONE   ] LITERAL OVER EXECUTE
+    [ 'CROSS-COMPILER IMMEDIATE  ] LITERAL OVER EXECUTE
+    [ 'CROSS          IMMEDIATE? ] LITERAL OVER EXECUTE
+    DROP ;
+	
+: HIDE-COLON-CROSS-COMPILER
+    ['] (HIDE)   [CROSS-COMPILER] (COLON-CROSS-COMPILER) ;
+: UNHIDE-COLON-CROSS-COMPILER
+    ['] (UNHIDE) [CROSS-COMPILER] (COLON-CROSS-COMPILER) ;
+
+WORDLISTS>
+    
 <wordlists only forth also cross-compiler definitions
 
 \ Include using the host's include operations wrapped-up with a new executive

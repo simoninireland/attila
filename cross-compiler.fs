@@ -156,9 +156,9 @@ include cross-vm.fs
 include cross-generate.fs
 CODE-GENERATOR>
 .( Loading colon cross-compiler...)
-<CROSS-COMPILER-EXT
+<CROSS-COMPILER
 include cross-colon.fs
-CROSS-COMPILER-EXT>
+CROSS-COMPILER>
 
 CROSS>
 

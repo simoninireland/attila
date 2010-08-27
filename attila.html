@@ -718,6 +718,19 @@ Attila is distributed in the hope that it will be useful, but WITHOUT ANY WARRAN
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 </pre>
 </div>
+<div title="CrossCompilerCodingStyle" creator="sd" modifier="sd" created="201008261418" tags="cross-compiler overview style" changecount="1">
+<pre>! Writing cross-compiler-friendly code
+
+
+!! Separate {{{ IMMEDIATE }}} words from their run-time support
+
+This is especially true for new defining words: keep the {{{ IMMEDIATE }}} words used in compiling your code separate from the words used at run-time. The reasons for this is simple: if you want to use your defining words in cross-compiled code, they have to be loaded into the cross-compiler and run on the host: they may not be included on the target. Conversely, the run-time support will need to be on the target, and may not be run on the host. Putting all the words in one file makes this separation difficult to accomplish, unless you stud the file with cross-compiler directives; separating them into two different files allows each to be loaded using the appropriate cross-compiler words.
+
+
+!! Don't use word lists
+
+The cross-compiler doesn't at present support word lists on the target: all target words are in a single word list. This might change in the future, but it seems largely unnecessary given that word lists are primarily a development feature, and a development system should really load most of itself from disc rather than having everything in a large virtual machine image.</pre>
+</div>
 <div title="CrossCompilerGotchas" creator="sd" modifier="sd" created="201008161923" modified="201008170810" tags="cross-compiler" changecount="3">
 <pre>! Cross-compiler &quot;gotchas&quot;
 
@@ -921,9 +934,16 @@ The &quot;standard&quot; string type in Attila is the counted string consisting 
 
 For longer strings, Attila provides a [[zstring word set|ZStringWords]] that provide null-terminated (C-style) strings. These are less convenient and less standard than &quot;normal&quot; strings, but can be of arbitrary length</pre>
 </div>
-<div title="DefaultTiddlers" creator="sd" modifier="sd" created="201008161041" modified="201008161041" changecount="2">
-<pre>[[WhatIsAttila]]
-[[Copyright]]</pre>
+<div title="DefaultTiddlers" creator="sd" modifier="sd" created="201008161041" modified="201008261428" changecount="3">
+<pre>[[WhatIsAttila]]</pre>
+</div>
+<div title="Documentation" creator="sd" modifier="sd" created="201008261424" modified="201008261427" changecount="4">
+<pre>! Documentation
+
+You're looking at it! More specifically, Attila is documentaed using [[TiddlyWiki|http://www.tiddlywiki.com]], a &quot;web site in a page&quot; that lets you download and interact with the entire documentation set in a single, simple action.
+
+To store the documentation locally, just save this page to your disc -- //File &gt;&gt; Save as...// on most browsers. (On Firefox, make sure to choose &quot;Web page, HTML only&quot; and not &quot;Web page, complete&quot; from the save dialogue.) When you open the file, you'll find the entire Attila site available for use offline.
+</pre>
 </div>
 <div title="DownloadInstall" creator="sd" modifier="sd" created="201008181702" modified="201008182005" tags="download install" changecount="8">
 <pre>! Downloading and installing Attila
@@ -948,16 +968,29 @@ If you want to understand more about how Attila constructs itself, the details a
 
 </pre>
 </div>
-<div title="MainMenu" creator="YourName" modifier="sd" created="201008161039" modified="201008161201" changecount="3">
-<pre>[[Home|WhatIsAttila]]
-* [[Downloading and installing|DownloadInstall]]
+<div title="ForthCodingStyle" creator="sd" modifier="sd" created="201008261411" tags="overview style" changecount="1">
+<pre>! Forth coding style guide
 
-Language overview
+Here are a few coding style tips. See also [[tips for cross-compiler-friendly code|CrossCompilerCodingStyle]]. 
+
+!! Code bottom-up
+
+Forth is amenable to a bottom-up style of coding, where you build abstractions on top of abstractions. This contrasts with the top-down style in which you define interfaces and then implement them, leading to more interfaces lower down. </pre>
+</div>
+<div title="MainMenu" creator="YourName" modifier="sd" created="201008161039" modified="201008261430" changecount="11">
+<pre>!! About Attila
+* [[Downloading and installing|DownloadInstall]]
+* [[Documentation|Documentation]]
+* [[Copyright|Copyright]]
+
+!! Language overview
 * [[Data types|DataTypes]]
 * [[Memory management|MemoryManagementWords]]
 * [[Data memory access|DataMemoryAccessWords]]
+* [[Finding words|WordFindingWords]]
+* [[Coding style tips|ForthCodingStyle]]
 
-Advanced issues
+!! Advanced issues
 * [[Interpretation model|InterpreterOverview]]
 * [[Memory model|MemoryModelOverview]]
 * [[Cross-compilation|CrossCompilerOverview]]
@@ -1045,7 +1078,7 @@ The prelude is loaded automatically when Attila is run.
 <div title="SiteTitle" creator="YourName" modifier="YourName" created="201008161037" changecount="1">
 <pre>Attila</pre>
 </div>
-<div title="StyleSheet" creator="sd" modifier="sd" created="201008161241" modified="201008170811" tags="template" changecount="45">
+<div title="StyleSheet" creator="sd" modifier="sd" created="201008161241" modified="201008261429" tags="template" changecount="46">
 <pre>/***
 !! General layout
 ***/
@@ -1093,7 +1126,7 @@ div.viewer blockquote {
 
 #displayArea {
   position: absolute;
-  left: 3em;
+  left: 5em;
 }
 
 #sidebar {
@@ -1205,6 +1238,63 @@ which takes two cells addr and n and returns //either// two cells xt and flag //
 Which takes a value off the stack and duplicates it if it's not zero.
 
 Very occasionally it's necessary to indicate which stack a word manipulates, or that it does different things at compile-time //versus// run-time. Such words have more detailed stack comments which are explained in their description.
+</pre>
+</div>
+<div title="WordFindingWords" creator="sd" modifier="sd" created="201008261409" modified="201008261409" tags="words FIND [[ []] ] (HIDE) (UNHIDE) HIDDEN?" changecount="2">
+<pre>! Words for finding words
+
+
+!! Finding words
+
+{{{ FIND }}} ( addr n -- xt 1 | xt -1 | 0 )
+
+Find a word in the current search order. If the named word is found, return its xt and a flag that is 1 for a &quot;normal&quot; word and -1 for an immediate word; if not, return 0.
+
+{{{ ' }}} ( &quot;name&quot; -- xt )
+
+Lookup the next word in the input stream and return its xt, failing of the word can't be found.
+
+{{{ ['] }}} ( &quot;name&quot; -- ) (immediate)
+
+Lookup the next word at compile-time, failing if it can't be found. Then compile code that places the xt of this word on the stack at run-time.
+
+The difference between {{{ ' }}} and {{{ ['] }}} are quite subtle, so here's an example. The following code:
+
+&gt; : TEST ['] DUP . ;
+
+will, then run, display the xt of the word {{{ DUP }}}, which was looked-up at compile-time and compiled as a literal. By contrast, the following code: 
+
+&gt; : ~TEST1 ' . ;
+&gt; ~TEST1 DUP
+
+will //also// display the xt of {{{ DUP }}}, or any other word provided at run-time: the lookup occurs when the containing word is run rather than when it is compiled.
+
+{{{ (FIND) }}} ( addr n -- xt 1 | xt -1 | 0 ) &quot;bracket find&quot;
+
+The low-level finder. Typically this understands a single list of words that is traversed to locate the named word.
+
+{{{ (FIND-BEHAVIOUR) }}} ( -- addr ) &quot;bracket find behaviour&quot;
+
+A variable holding the address of the currently-installed finder. Initially this is {{{ (FIND) }}}: systems with [[word lists|WordlistWords]] modify {{{ (FIND-BEHAVIOUR) }}} to understand multiple word lists and search orders.
+
+
+!! Hiding
+
+Hiding allows words to be removed from the search order after definition. This can be used for a number of purposes, for example to hide &quot;internal&quot; words from users, although this is considered [[poor style|ForthCodingStyle]] by some. Another use is in fine-tuning word lists during complex compilation manoevres.
+
+Once a word is hidden, //it can't be found// -- which sounds obvious, but means you can't then find it's xt to un-hide it. If you will want to un-hide a word later, you need to stach its xt somewhere find-able first for later use with {{{ (UNHIDE) }}}. 
+
+{{{ (HIDE) }}} ( xt -- ) &quot;bracket hide&quot;
+
+Mark the given word as hidden.
+
+{{{ (UNHIDE) }}} ( xt -- ) &quot;bracket unhide&quot;
+
+Mark the given word as visible (not hidden).
+
+{{{ HIDDEN? }}} ( xt -- f ) &quot;hidden query&quot;
+
+Test whether a word is hidden.
 </pre>
 </div>
 <div title="sd" creator="sd" modifier="sd" created="201008161322" modified="201008161324" tags="[[contact details]]" changecount="6">

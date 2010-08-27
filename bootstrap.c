@@ -364,17 +364,27 @@ init_dictionary() {
   COMPILE("LITERAL");
   NEXT();
 
-  // compute a jump offset from a to TOP, in bytes
-  DEFINE("JUMP>");
+  // introduce a forward jump
+  DEFINE("JUMP-FORWARD");
   COMPILE("TOP");
-  COMPILE("SWAP");
-  COMPILE("-");
+  LITERAL(0);
+  COMPILE("COMPILE,");
   NEXT();
-  
-  // compute a jump offset from TOP to a, in bytes
-  DEFINE(">JUMP");
+
+  // resolve a forward jump
+  DEFINE("JUMP-HERE");
+  COMPILE("TOP");
+  COMPILE("OVER");
+  COMPILE("-");
+  COMPILE("SWAP");
+  COMPILE("!");
+  NEXT();
+
+  // resolve a backward jump
+  DEFINE("JUMP-BACKWARD");
   COMPILE("TOP");
   COMPILE("-");
+  COMPILE("COMPILE,");
   NEXT();
 
 

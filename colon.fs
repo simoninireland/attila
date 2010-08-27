@@ -33,16 +33,15 @@ DATA (END-DEFINITION)   ' NOOP XT,
 \ ---------- The colon-compiler ----------
 
 \ The colon-definer
-: : \ ( "name" -- xt )
+: : ( "name" -- xt )
     START-DEFINITION
     PARSE-WORD ['] (:) CFA@ (HEADER,)
     ] ;
 
 \ Complete a colon-definition
-: ; \ ( xt -- )
-    [ IMMEDIATE ]                 \ to ensure we pick up the right
-                                  \ version when cross-compiling
+: ; ( xt -- ) [ IMMEDIATE ]
+    IMMEDIATE
     NEXT,
     END-DEFINITION
-    POSTPONE [ DROP ; IMMEDIATE
+    POSTPONE [ DROP ; 
 

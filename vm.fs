@@ -17,7 +17,7 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Virtual machine constants
+\ Virtual machine description
 \
 \ This file is pre-processed to generate the necessary
 \ definitions, typically in C. It should contain only
@@ -33,22 +33,23 @@
 \ Status masks
 1 CONSTANT IMMEDIATE-MASK          \ IMMEDIATE words, executed even when compiling
 2 CONSTANT REDIRECTABLE-MASK       \ REDIRECTABLE words, amenable to DOES>
+4 CONSTANT HIDDEN-MASK             \ hidden words that FIND won't find
 
 \ States
 0 CONSTANT INTERPRETATION-STATE    \ interpretation state
 1 CONSTANT COMPILATION-STATE       \ (standard) compilation state
 
 \ User variables
- 0 USER COLDSTART             \ xt of the word that cold-starts the system (REQUIRED)
+ 0 USER COLDSTART             \ xt of the word that cold-starts the system
  1 USER EXECUTIVE             \ xt of outer executive
-2 USER (TOP)                 \ first free code address
+ 2 USER (TOP)                 \ first free code address
 \  USER (CEILING)             \ highest code address currently available
  3 USER (HERE)                \ first free data address
 \  USER (THERE)               \ highest data address currently available
  4 USER STATE                 \ compiler state
  5 USER BASE                  \ number base
- 6 USER INPUTSOURCE           \ pointer to internal structure for terminal input
- 7 USER OUTPUTSINK            \ pointer to internal structure for terminal output
+ 6 USER INPUTSOURCE           \ pointer to internal structure for input
+ 7 USER OUTPUTSINK            \ pointer to internal structure for output
  8 USER >IN                   \ input offset
  9 USER TIB                   \ address of the TIB
 10 USER LAST                  \ xt of the most-recently-defined word
