@@ -512,7 +512,7 @@ Also see [[AdvancedOptions]]</pre>
 </div>
 <!--POST-SHADOWAREA-->
 <div id="storeArea">
-<div title="ArithmeticWords" creator="sd" modifier="sd" created="201008161225" tags="words + - * /MOD /" changecount="1">
+<div title="ArithmeticWords" creator="sd" modifier="sd" created="201008161225" modified="201008281547" tags="words + - * /MOD / */" changecount="2">
 <pre>! Arithmetic words
 
 !! Basic arithmetic words
@@ -536,6 +536,11 @@ Perform integer division of a by b, leaving the quotient and remainder as signed
 {{{ / }}} ( a b -- a/b ) &quot;divide&quot;
 
 Divide a by b, leaving the quotient. Equivalent to {{{ /MOD DROP }}}.
+
+{{{ */}}} ( a b c -- (a*b)/c ) &quot;times divide&quot;
+
+Multiply a by b and divide by c, using a double-precision intermediate value for (a * b).
+
 
 </pre>
 </div>
@@ -581,6 +586,30 @@ At this stage we can dispense completely with the bootstrap code and support fil
  
  </pre>
 </div>
+<div title="ColonDefinitionWords" creator="sd" modifier="sd" created="201008281647" modified="201008281648" tags="words : ; :NONAME" changecount="2">
+<pre>! Colon-definition words
+
+(See [[here|MemoryModelWords]] for low-level details of header creation and the like.)
+
+!! The colon-compiler
+
+{{{:}}} ( &quot;name&quot; -- xt ) &quot;colon&quot;
+
+A [[defining word|TermDefiningWord]] that creates a new word and starts compiling its body.
+
+{{{;}}} ( xt -- ) &quot;semi&quot;
+
+End a colon-definition
+
+{{{:NONAME}}} ( -- xt xt ) &quot;no name&quot;
+
+Begin an anonymous colon definition. The word's xt will be left on the stack after the closing {{{;}}}.
+
+
+!! Note for experts
+
+In Forth the behaviour of the colon-compiler is traditionally very much tied-up with the behaviour of the outer executive. In fact the implementations of {{{:}}} and the like are essentially just for header creation and status manipulation. Attila follows this scheme at present, although this may change: the traditional approach is minimal, but doesn't really meet with modern software engineering principles. </pre>
+</div>
 <div title="CompilerOverview" creator="sd" modifier="sd" created="201008171541" modified="201008251510" tags="compiler overview" changecount="3">
 <pre>! The compiler
 
@@ -602,6 +631,40 @@ Attila uses indirect threading, in common with most Forth systems, but the threa
 Since a threaded interpreter uses subroutine calls throughout, it's clearly vital that subroutine calls are efficient.
 
   
+</pre>
+</div>
+<div title="ConstantValueWords" creator="sd" modifier="sd" created="201008281555" tags="words CONSTANT VARIABLE VALUE TO" changecount="1">
+<pre>! Constants, values and variables
+
+!! Constants
+
+{{{ CONSTANT }}} ( n &quot;name&quot; -- )
+
+Create a new word representing the constant n. The value n will be substituted whenever the created word is encountered. Constants should therefore be regarded as literally constant, and should never be changed post-definition.
+
+
+!! Values
+
+Values are similar to constants except they can be re-defined. Previous compiled uses of the value are unchanged; future compiled uses reflect the new value.
+
+{{{ VALUE }}} ( n &quot;name&quot; -- )
+
+Create a new word representing the value n. The value n will be substituted whenever the created word is encountered. 
+
+{{{ TO }}} ( xt n -- )
+
+Update the value of the value represented by the xt to the new value n. The typical idiom for this, to update a value {{{ V }}}, would be {{{ ' V IS 45 }}}.
+
+
+!! Variables
+
+Variables are represented as cell-sized boxes of memory, accessed using {{{ ! }}} and {{{ @ }}}.
+
+{{{ VARIABLE }}} ( &quot;name&quot; -- )
+
+Create a new word that, when executed, returns the address of a cell of memory.
+ 
+
 </pre>
 </div>
 <div title="ControlFlowWords" creator="sd" modifier="sd" created="201008170806" modified="201008171115" tags="words IF ELSE THEN CASE OF ENDOF ENDCASE BEGIN AGAIN WHILE REPEAT UNTIL DO LOOP +LOOP I J K LEAVE" changecount="7">
@@ -717,6 +780,55 @@ Attila is distributed in the hope that it will be useful, but WITHOUT ANY WARRAN
 
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 </pre>
+</div>
+<div title="CreateDoesWords" creator="sd" modifier="sd" created="201008281602" modified="201008281621" tags="words CREATE DOES&gt;" changecount="8">
+<pre>! Defining words
+
+Words are typically either code (colon-definitions) or data ([[simple data structures|SimpleDataStructureWords]], [[constants|ConstantValueWords]] and the like). A more complex programming idiom is to create words that create //new// words -- essentially extending the compiler with &quot;words that build words&quot; as {{{:}}} does. {{{DATA}}} (see [[here|SimpleDataStructureWords]]) is a simple example: it creates a new word whose behaviour is to return its data address.
+
+To do this we need a word that performs two distinct behaviours:
+
+# At //compile time//, it creates a new word, performs any necessary initialisation, and sets the new word's behaviour to be whatever is required. Each call to the defining word will create a new word, all of whose behaviours will be the same but which might have different data and so on.
+# At //compile-time//, each defined word executes its assigned behaviour with access to its own data segment.
+
+The construction that does this is called {{{CREATE}}} ... {{{DOES&gt;}}}.
+
+{{{ CREATE }}} ( &quot;name&quot; -- )
+
+Creates a new word whose default behaviour is to return its data body address. Essentially this is what {{{DATA}}} does, but words created with {{{CREATE}}} can have their behaviours re-directed.
+
+{{{ DOES&gt; }}} ( -- )
+
+Re-directs the behaviour of the last-created word to the code following {{{DOES&gt;}}}.
+
+
+!! An example
+
+That sounds nonsense, so an example will make things clear.
+
+Suppose we want to define a collection of words that print logging messages in different languages. We could define them all by hand:
+
+&gt; : ~LOG-ERROR ( addr n -- )
+&gt;    LANGUAGE CASE
+&gt;       ENGLISH OF
+&gt;          .&quot; Error: &quot;
+&gt;       ENDOF
+&gt;       FRENCH OF
+&gt;          .&quot; Erreur: &quot;
+&gt;       ENDOF
+&gt;    ENDCASE
+&gt;    TYPE ;
+
+(for appropriate definitions of {{{ENGLISH}}} and {{{FRENCH}}} as constants 0 and 1 respectively). We might do this a lot, however. It would be better programming style to allow families of language-specific output words. We can do this by placing the alternative strings on the stack and then having a word that selects between them:
+
+&gt; : LOG ( addr1 n1 addr2 n2 &quot;name&quot; -- )
+&gt;    CREATE
+&gt;    2SWAP SWAP , ,
+&gt;         SWAP , ,
+&gt;    DOES&gt; ( lang addr -- )
+&gt;       SWAP 2* CELLS + 2@ TYPE ;
+
+What happens here? When we run {{{LOG MESSAGE}}}, {{{LOG}}} expects two strings on the stack. It creates a new word -- {{{MESSAGE}}} in this case -- allocates data space for 4 cells, and then copies the two strings' addresses and lengths into this space. So far so good. It then uses {{{DOES&gt;}}} to set the run-time behaviour of {{{MESSAGE}}} to read a value off the stack and use it as an offset into the string table (0 for the first string, 1 for the second, ...). It retrieves the string and types it out. The address on the stack is the address of {{{MESSAGE}}}'s data body, where the strings were stored, and is placed there automatically when {{{MESSAGE}}} executes. So we can run {{{ENGLISH MESSAGE}}} and output the first string, or {{{FRENCH MESSAGE}}} for the second.</pre>
 </div>
 <div title="CrossCompilerCodingStyle" creator="sd" modifier="sd" created="201008261418" tags="cross-compiler overview style" changecount="1">
 <pre>! Writing cross-compiler-friendly code
@@ -937,6 +1049,44 @@ For longer strings, Attila provides a [[zstring word set|ZStringWords]] that pro
 <div title="DefaultTiddlers" creator="sd" modifier="sd" created="201008161041" modified="201008261428" changecount="3">
 <pre>[[WhatIsAttila]]</pre>
 </div>
+<div title="DeferWords" creator="sd" modifier="sd" created="201008281643" modified="201008281643" tags="words DEFER IS (IS)" changecount="2">
+<pre>! Deferring words
+
+In Forth, a word can only be referred to after it has been defined: there are no &quot;forward&quot; definitions. This can be awkward, since one sometimes finds one word defined in terms of another and //vice versa// -- mutually-recursive definitions. A way of handling this is to allow a word to be defined without a body, and then assign its body later. This is performed by {{{DEFER}}}.
+
+Suppose we want to write two mutually-recursive words. We {{{DEFER}}} the first and then write the second, which (since the first word now exists in the dictionary) has access to it:
+
+&gt; DEFER ONE
+&gt; : TWO 10 0 I . CR ONE LOOP ;
+
+We then write the body of the first word and assign it to {{{ONE}}}. Since {{{TWO}}} has been defined already, this new code can refer to it:
+
+&gt; : ONE-BODY 10 1 TWO LOOP ;
+&gt; ' ONE-BODY IS ONE
+
+If we don't want to generate an extra name, we can create an [[anonymous word|ColonDefinitionWords]] instead:
+
+&gt; :NONAME 10 1 TWO LOOP ;
+&gt; IS ONE
+
+Another use for {{{DEFER}}} is to define words whose definitions can be provided by including one of a number of files. The rest of the system refers to the deferred word, which is resolved against the desired implementation before the system runs.
+
+
+!! Deferring words
+
+{{{DEFER}}} ( &quot;name&quot; -- )
+
+A [[defining word|TermDefiningWord]] that creates a word &quot;alias&quot;, initially with a (fatal) dummy behaviour.
+
+{{{IS}}} ( xt &quot;name&quot; -- )
+
+Assign the given word as the behaviour of the given word, which should have been created using {{{DEFER}}}.
+
+{{{(IS)}}} ( xt dxt -- ) &quot;bracket is&quot;
+
+Assign xt as the behaviour of the deferred word identified by dxt.
+</pre>
+</div>
 <div title="Documentation" creator="sd" modifier="sd" created="201008261424" modified="201008261427" changecount="4">
 <pre>! Documentation
 
@@ -996,7 +1146,7 @@ Forth is amenable to a bottom-up style of coding, where you build abstractions o
 * [[Cross-compilation|CrossCompilerOverview]]
 </pre>
 </div>
-<div title="MemoryManagementWords" creator="sd" modifier="sd" created="201008161142" modified="201008161620" tags="words memory /CELL /CHAR ALIGN ALIGNED ALLOT CALIGN CALIGNED" changecount="8">
+<div title="MemoryManagementWords" creator="sd" modifier="sd" created="201008161142" modified="201008281653" tags="words memory /CELL /CHAR CELLS CHARS ALIGN ALIGNED ALLOT CALIGN CALIGNED" changecount="10">
 <pre>! Memory management words
 
 Memory management in Attila is encapsulated in a small word set that controls the allocation and manipulation of //static// memory that is allocated and never released: //dynamic// memor, which in intended for use and the release, is controlled by [[a different word set|DynamicMemoryManagementWords]].
@@ -1004,15 +1154,16 @@ Memory management in Attila is encapsulated in a small word set that controls th
 Memory in Attila can be broadly divided into //code// memory within the code segments of words and //data// memory used for data storage -- see the [[memory model overview|MemoryModelOverview]] for more details. Code memory is generally controlled using the [[code memory compilation words|CodeMemoryAccessWords]]. Data memory is accessed using the [[data memory word set|DataMemoryAccessWords]].
 
 
-!! Data elements sizes
+!! Size calculations
 
-{{{ /CELL }}} ( -- nb ) &quot;per cell&quot;
+{{{ CELLS }}} ( n -- nb )
 
-Return the number of bytes required to represent a cell: typically 2, 4 or 8. Architectures with alignment will often require that a cell address divisible by {{{ /CELL }}}.
+Return the number of bytes needed to represent n cells. Typically seen in the form {{{ 45 CELLS ALLOT }}}.
 
-{{{ /CHAR }}} ( - nb ) &quot;per char&quot;
 
-Return the number of bytes required to store a character: typically 1, occasionally 2. 
+{{{ CHARS }}} ( n -- nb )
+
+Return the number of bytes needed to represent n characters, which is typically (not not necessarily) the same.
 
 
 !! Data memory alignment and allocation 
@@ -1070,6 +1221,19 @@ The standard prelude, {{{ prelude.fs }}}, is a single file that builds a &quot;s
 The prelude is loaded automatically when Attila is run.
   
 
+</pre>
+</div>
+<div title="SimpleDataStructureWords" creator="sd" modifier="sd" created="201008281559" modified="201008281559" tags="words DATA (DATA)" changecount="2">
+<pre>! Simple data structures
+
+The simplest data structure is a block of memory with no other explicit structure: it's up to the programmer to manage the memory, or (more usually) to write a set of words that manages it. See [[records|RecordWords]] for an example. If the word created should do something more complex than just return a data address, it's behaviour can be specified using the [[defining words|CreateDoesWords]].
+
+{{{ DATA }}} ( &quot;name&quot; -- )
+
+Create a word that returns the address of its body. No data is allocated by default, so one often sees code of the form {{{ DATA TEST 25 CELLS ALLOT }}} to create a word {{{ TEST }}} with space for 25 cells of data.
+
+{{{ (DATA) }}} ( addr n -- ) &quot;bracket data&quot;
+The primitive form of {{{ DATA }}} that takes the name of the word to create off the stack.
 </pre>
 </div>
 <div title="SiteSubtitle" creator="YourName" modifier="YourName" created="201008161038" changecount="1">
@@ -1197,6 +1361,159 @@ div.viewer blockquote {
 /*}}}*/
 </pre>
 </div>
+<div title="TermColonDefinition" creator="sd" modifier="sd" created="201008281634" tags="term" changecount="1">
+<pre>! Colon definitions
+
+A word that has a behaviour defined as Forth code, using the {{{:}}} and {{{;}}} words. Colon-definitions are the most common way of writing Forth code. See [[here|ColonDefinitionWords]] for all the associated words.</pre>
+</div>
+<div title="TermDefiningWord" creator="sd" modifier="sd" created="201008281632" modified="201008281647" tags="term" changecount="2">
+<pre>! Defining words
+
+Defining words are words that support the creation of new words. They provide a mechanism for extending the language, since each defining word can be used to create families of //other// words with a given behaviour.
+
+The classic defining word is {{{:}}} for creating new &quot;normal&quot; words.
+
+Most defining words use the {{{CREATE}}} ... {{{DOES&gt;}}} construct (see [[here|CreateDoesWords]] to create new words and assign run-time behaviour to them. </pre>
+</div>
+<div title="UserVariableWords" creator="sd" modifier="sd" created="201008281630" tags="words USERVAR USER" changecount="1">
+<pre>! User variables
+
+{{{USER}}} ( n &quot;name&quot; -- )
+
+A [[defining word|TermDefiningWords]] that creates a word the refers to the n'th user variable. When executed, the address of the user variable will be returned.
+
+{{{USERVAR}}} ( n -- addr )
+
+Return the address of the n'th user variable.
+ </pre>
+</div>
+<div title="VMWords" creator="sd" modifier="sd" created="201008281710" modified="201008281711" tags="words" changecount="4">
+<pre>! The virtual machine
+
+!! Health warning
+
+In the interests of openness, and according to Forth tradition, we document all the user variables available. This doesn't mean they should be used in anything other than exceptional circumstances. Most user variables that are of any &quot;normal&quot; use whatsoever have other words associated with them (pointed out below) that should be used in preference to accessing the user variables raw.
+
+
+!! Platform constants
+
+{{{IMAGE-SIZE}}} ( -- n )
+
+Return the initial size of the image in cells. This is a rough guide to the memory footprint of a system, but does not include primitives, libraries or other additions. Depending on the [[memory model|MemoryModelOverview]] the image may grow if required.
+
+{{{DATA-STACK-SIZE}}} ( -- n )
+
+Return the size of the data stack in cells.
+
+{{{RETURN-STACK-SIZE}}} (  -- n )
+
+Return the size of the return stack in cells.
+
+{{{USER-SIZE}}} ( -- n )
+
+Return the number of user variables supported.
+
+{{{TIB-SIZE}}} ( -- nb )
+
+Return the size of the terminal input buffer in bytes, which may be 0 for non-interactive systems.
+
+{{{/CELL}}} ( -- nb ) &quot;per cell&quot;
+
+Return the number of bytes required to represent a cell: typically 2, 4 or 8. Architectures with alignment will often require that a cell address is divisible by {{{/CELL}}}.
+
+{{{/CHAR}}} ( - nb ) &quot;per char&quot;
+
+Return the number of bytes required to store a character: typically 1, occasionally 2. 
+
+
+!! Language constants
+
+{{{FALSE}}} ( -- f )
+
+Place the constant for falsity on the stack.
+
+{{{TRUE}}} ( -- f )
+
+Place the constant for truth on the stack.
+
+
+!! Core user variables
+
+{{{COLDSTART}}} ( -- addr )
+
+Variable holding the cold-start vector, used to store the xt of the word executed when the system first starts up (typically {{{COLD}}}).
+
+{{{(DATA-STACK)}}} ( -- addr ) &quot;bracket data stack&quot;
+
+Variable holding the address of the base of the data stack. Do not touch.
+
+{{{(RETURN-STACK)}}} ( -- addr ) &quot;bracket return stack&quot;
+
+Variable holding the address of the base of the return stack. Do not touch.
+
+{{{(TOP)}}} ( -- addr ) &quot;bracket top&quot;
+
+Variable holding the first free code address in the system. Use {{{TOP}}} instead.
+
+{{{(CEILING)}}} ( -- addr ) &quot;bracket sealing&quot;
+
+Variable holding the current maximum code address.
+
+{{{(HERE)}}} ( -- addr ) &quot;bracket here&quot;)
+
+Variable holding the first free data address in the system. Use {{{HERE}}} instead.
+
+{{{(THERE)}}} ( -- addr ) &quot;bracket there&quot;
+
+Variable holding  the current maximum data address.
+
+{{{LAST}}} ( -- addr )
+
+Variable holding the xt of the last word defined. Use {{{LASTXT}}} to access this.
+
+ 
+
+!! User variables for interactive systems
+
+{{{EXECUTIVE}}} ( -- addr )
+
+Variable holding the xt of the outer executive that runs the interactive loop.
+
+{{{STATE}}} ( -- addr )
+
+Variable holding the current system interactive state. This is manipulated by defining words, chiefly {{{:}}}, {{{;}}} {{{[}}} and {{{]}}}, and queried by {{{INTERPRETING?}}}: it never needs to be accessed directly.
+
+{{{BASE}}} ( addr -- )
+
+Variable holding the current number base.
+
+{{{INPUTSOURCE}}} ( -- addr )
+
+Variable holding the address of the current input source from which all terminal input occurs. The input source is an internal structure accessed using the [[file word set|FileWords]].
+
+{{{OUTPUTSINK}}} ( -- addr )
+
+Variable holding the address of the current output sink to which all terminal output is sent. The output sink is an internal structure accessed using the [[file word set|FileWords]].
+ 
+{{{TIB}}} ( -- addr )
+
+Variable holding the address of the [[terminal input buffer (TIB)|TermTIB]].
+
+{{{&gt;IN}}} ( -- addr ) &quot;to in&quot;
+
+Offset within the TIB of the next character to read.
+
+
+!! Variables available on some systems
+
+{{{TRACE}}} ( -- addr )
+
+Variable holding the trace flag, which causes the default inner interpreter to generate debugging output. Available on development systems,
+
+{{{CURRENT}}} ( -- addr )
+
+Variable holding the [[wordlist|TermWordlist]] that will get any newly-defined words. Available on systems that intend to use [[wordlists and vocabularies|WordlistWords]].</pre>
+</div>
 <div title="WhatIsAttila" creator="sd" modifier="sd" created="201008161040" modified="201008161244" changecount="5">
 <pre>! What is Attila?
 
@@ -1240,7 +1557,7 @@ Which takes a value off the stack and duplicates it if it's not zero.
 Very occasionally it's necessary to indicate which stack a word manipulates, or that it does different things at compile-time //versus// run-time. Such words have more detailed stack comments which are explained in their description.
 </pre>
 </div>
-<div title="WordFindingWords" creator="sd" modifier="sd" created="201008261409" modified="201008261409" tags="words FIND [[ []] ] (HIDE) (UNHIDE) HIDDEN?" changecount="2">
+<div title="WordFindingWords" creator="sd" modifier="sd" created="201008261409" modified="201008281622" tags="words FIND [[ []] ] (HIDE) (UNHIDE) HIDDEN?" changecount="3">
 <pre>! Words for finding words
 
 
@@ -1292,10 +1609,30 @@ Mark the given word as hidden.
 
 Mark the given word as visible (not hidden).
 
-{{{ HIDDEN? }}} ( xt -- f ) &quot;hidden query&quot;
-
-Test whether a word is hidden.
 </pre>
+</div>
+<div title="WordStatusWords" creator="sd" modifier="sd" created="201008281628" tags="words IMMEDIATE REDIRECTABLE HIDDEN IMMEDIATE? REDIRECTABLE? HIDDEN?" changecount="1">
+<pre>! Words for querying the status of words
+
+{{{IMMEDIATE}}} ( -- )
+
+Makes the last-defined word immediate. Immediate words execute even in compilation mode, and are often used to implement control structures.
+
+{{{IMMEDIATE?}}} ( xt -- f ) &quot;immediate query&quot;
+
+Test whether the given word is immediate.
+
+{{{REDIRECTABLE}}} ( -- )
+
+Make the last-defined word re-directable. This is performed automatically by {{{CREATE}}} (see [[here|CreateDoesWords]]), and there's almost never any need it do it manually (and doing so may have fatal consequences).
+
+{{{REDIRECTABLE?}}} ( xt -- f ) &quot;redirectable query&quot;
+
+Test whether a word is re-directable. This is used internally, but there's seldom any need for it in normal code.
+
+{{{HIDDEN?}}} ( xt -- f ) &quot;hidden query&quot;
+
+Test whether a word is [[hidden from the search mechanism|WordFindingWords]]. Again, there's seldom any need for this in normal code, but it might be needed if you re-write the basic word finder.  </pre>
 </div>
 <div title="sd" creator="sd" modifier="sd" created="201008161322" modified="201008161324" tags="[[contact details]]" changecount="6">
 <pre>! Simon Dobson
