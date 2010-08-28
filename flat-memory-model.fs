@@ -27,14 +27,14 @@
 \ ---------- Memory management ----------
 
 \ TOP and HERE are the same in this model
-: TOP  2 USERVAR @ ; \ (TOP)
+: TOP  2 USERVAR ( TOP ) @ ;
 : HERE TOP ;
-: LASTXT 10 USERVAR @ ; \ LAST
+: LASTXT 10 USERVAR ( LAST ) @ ;
 
 \ Compile a character
 : CCOMPILE, \ ( c -- )
     TOP C!
-    1 2 USERVAR +! ; \ (TOP)
+    1 2 USERVAR ( TOP ) +! ;
 
 \ Align code address on cell boundaries
 \ : CALIGN \ ( addr -- aaddr )
