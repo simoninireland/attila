@@ -138,7 +138,7 @@
 			ROT 2DROP
 		    ELSE
 			\ not a number, fail
-			TYPE S" ?" ABORT
+			TYPE [FORTH] S" ?" ABORT
 		    THEN
 		THEN
 	    ELSE
@@ -155,7 +155,7 @@
 				1 OF
 				    \ found but not immediate, fail
 				    DROP
-				    TYPE SPACE S" is shadowed but not IMMEDIATE on host" ABORT
+				    TYPE SPACE [FORTH] S" is shadowed but not IMMEDIATE on host" ABORT
 				ENDOF
 				1 NEGATE OF
 				    ROT 2DROP
@@ -163,7 +163,7 @@
 				ENDOF
 				0 OF
 				    \ not found, fail
-				    TYPE S" ?" ABORT
+				    TYPE [FORTH] S" ?" ABORT
 				ENDOF
 			    ENDCASE
 			ENDOF
@@ -172,7 +172,7 @@
 				1 OF
 				    \ found but not immediate, abort
 				    DROP
-				    TYPE SPACE S" is not a cross-compiler word" ABORT
+				    TYPE SPACE [FORTH] S" is not a cross-compiler word" ABORT
 				ENDOF
 				1 NEGATE OF
 				    \ found an immediate, execute
@@ -186,7 +186,7 @@
 					[ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ]
 				    ELSE
 					\ not a number, fail
-					TYPE S" ?" ABORT
+					TYPE [FORTH] S" ?" ABORT
 				    THEN
 				ENDOF
 			    ENDCASE
@@ -211,7 +211,7 @@
 				POSTPONE LITERAL
 			    ELSE
 				\ not a number, fail
-				TYPE S" ?" ABORT
+				TYPE [FORTH] S" ?" ABORT
 			    THEN
 			ENDOF
 		    ENDCASE
@@ -225,9 +225,9 @@
     32 CONSUME \ spaces
     [FORTH] [CHAR] " PARSE
     ?DUP IF
-	POSTPONE SLITERAL
-    ELSE
-	S" String not delimited" ABORT
+	[ 'CROSS-COMPILER SLITERAL [FORTH] CTCOMPILE, ]
+\    ELSE
+\	S" String not delimited" ABORT
     THEN ; [FORTH] IMMEDIATE
 
 \ Compile the next character as a literal
