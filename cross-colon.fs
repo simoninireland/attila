@@ -50,7 +50,7 @@
 
 \ Look up the next word in the input stream in the target
 : ' ( "name" -- txt )
-    PARSE-WORD [cross-compiler] (') ;
+    PARSE-WORD [CROSS-COMPILER] (') ;
 
 \ Compile the txt of the next word as a literal, but done dynamically
 \ so that we get a chance to build the target words first
@@ -118,23 +118,18 @@
 
 \ ---------- The colon cross-compiler ----------
 
+\ Look up a word in the cross-compiler
 : CROSS-COMPILER-FIND ( addr n -- xt 1 | xt -1 | 0 )
-    2DUP CROSS-COMPILER-WORDLIST SEARCH-WORDLIST ?DUP IF
-	3 ROLL 3 ROLL 2DROP
-    ELSE
-	CROSS-COMPILER-EXT-WORDLIST SEARCH-WORDLIST
-    THEN ;
+    CROSS-COMPILER-WORDLIST SEARCH-WORDLIST ;
 
 \ The cross-executive.
 : CROSS-OUTER ( -- )
     BEGIN
 	PARSE-WORD ?DUP IF
-	    2DUP TYPE CR
 	    INTERPRETING? IF
-		." interpreting, look the word up using the host FIND" CR
 		2DUP FIND IF
 		    \ found, execute
-		    ROT 2DROP   dup . cr
+		    ROT 2DROP
 		    EXECUTE
 		ELSE
 		    \ no found, is it a number?
@@ -147,9 +142,7 @@
 		    THEN
 		THEN
 	    ELSE
-		." not interpreting, are we compiling or cross-compiling?" CR
 		[CROSS-COMPILER] CROSS-COMPILING? IF
-		    ." cross-compiling, lookup using cross-compiler" CR
 		    2DUP [CROSS-COMPILER] FIND CASE
 			1 OF
 			    \ found, compile
@@ -157,7 +150,6 @@
 			    [CROSS] CTCOMPILE,
 			ENDOF
 			1 NEGATE OF
-			    ." found an immediate, look for shadow" CR
 			    DROP
 			    2DUP [CROSS-COMPILER] CROSS-COMPILER-FIND CASE
 				1 OF
@@ -166,7 +158,6 @@
 				    TYPE SPACE S" is shadowed but not IMMEDIATE on host" ABORT
 				ENDOF
 				1 NEGATE OF
-				    ." found and immediate, execute" CR
 				    ROT 2DROP
 				    EXECUTE
 				ENDOF
@@ -177,7 +168,6 @@
 			    ENDCASE
 			ENDOF
 			0 OF
-			    ." not found, is the word a cross-compiler immediate word?" CR
 			    2DUP [CROSS-COMPILER] CROSS-COMPILER-FIND CASE
 				1 OF
 				    \ found but not immediate, abort
@@ -192,9 +182,8 @@
 				0 OF
 				    \ not found, is it a number?
 				    2DUP NUMBER? IF
-					." a number, compile as a literal" CR
 					ROT 2DROP
-					[ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ] \ POSTPONE [CROSS-COMPILER-EXT] LITERAL
+					[ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ]
 				    ELSE
 					\ not a number, fail
 					TYPE S" ?" ABORT
@@ -204,7 +193,6 @@
 			ENDOF
 		    ENDCASE
 		ELSE
-		    ." compiling, as normal" CR
 		    2DUP FIND CASE
 			1 OF
 			    \ found, compile
@@ -212,7 +200,6 @@
 			    [FORTH] CTCOMPILE,
 			ENDOF
 			1 NEGATE OF
-			    \ found an immediate, execute
 			    ROT 2DROP
 			    EXECUTE
 			ENDOF
@@ -278,6 +265,9 @@ WORDLISTS>
 
 <WORDLISTS ONLY FORTH ALSO CROSS-COMPILER DEFINITIONS
 
+\ Manipulate the hidden status of the main colon-cross-compiler words. This allows
+\ them to be hidden when including code into the cross-compiler itself, while
+\ still letting that code use other cross-compiler words
 : (COLON-CROSS-COMPILER) ( hider -- )
     [ 'CROSS-COMPILER :          ] LITERAL OVER EXECUTE
     [ 'CROSS-COMPILER ;          ] LITERAL OVER EXECUTE
@@ -288,7 +278,8 @@ WORDLISTS>
     [ 'CROSS-COMPILER IMMEDIATE  ] LITERAL OVER EXECUTE
     [ 'CROSS          IMMEDIATE? ] LITERAL OVER EXECUTE
     DROP ;
-	
+
+\ Hide/unhide the core coon-cross-compiler
 : HIDE-COLON-CROSS-COMPILER
     ['] (HIDE)   [CROSS-COMPILER] (COLON-CROSS-COMPILER) ;
 : UNHIDE-COLON-CROSS-COMPILER
@@ -299,10 +290,10 @@ WORDLISTS>
 <wordlists only forth also cross-compiler definitions
 
 \ Include using the host's include operations wrapped-up with a new executive
+\ sd: not really safe....
 : INCLUDED ( addr n -- )
     EXECUTIVE @ ROT
     [ 'CROSS-COMPILER CROSS-OUTER ] LITERAL EXECUTIVE !
-    2DUP ." include " TYPE CR
     INCLUDED
     EXECUTIVE ! ;
 : INCLUDE ( "name" -- )
