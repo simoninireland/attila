@@ -39,9 +39,10 @@ DATA (END-DEFINITION)   ' NOOP XT,
     ] ;
 
 \ Complete a colon-definition
-: ; ( xt -- ) [ IMMEDIATE ]
-    IMMEDIATE
+: ; ( xt -- ) [ IMMEDIATE ] \ make ; immediate immediately, to ensure that the
+                            \ shadow is used at the end of this definition
+                            \ when cross-compiling
     NEXT,
     END-DEFINITION
-    POSTPONE [ DROP ; 
+    POSTPONE [ DROP ; ( IMMEDIATE )
 
