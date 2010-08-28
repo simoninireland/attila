@@ -32,6 +32,7 @@
 
 \ Print a string when interpreting, or compile the code to do so
 :NONAME \ ( "str" -- )
+    BL CONSUME
     [CHAR] " PARSE TYPE ;
 :NONAME \ ( "str" -- )
     POSTPONE S"
@@ -39,7 +40,7 @@
 INTERPRET/COMPILE ."
 
 \ Immediately print anything up to the next closing bracket
-: .( [CHAR] ) PARSE TYPE CR ; IMMEDIATE
+: .( BL CONSUME [CHAR] ) PARSE TYPE CR ; IMMEDIATE
 
 \ Place a string into data memory. Safe for empty strings
 : S, \ ( addr n -- )
