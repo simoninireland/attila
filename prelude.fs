@@ -47,11 +47,21 @@ include defer.fs                 \ DEFER ... IS
 include vm.fs                    \ Virtual machine structures and constants 
 include ascii.fs                 \ ASCII character operations
 
+\ Simple loops
+include bootstrap-loops.fs       \ Simple loops without proper control
+
 \ Data structures
 include stacks.fs                \ General stacks
 
 \ Control structures
 include cs-stack.fs              \ Control structures stack
+include loop-support.fs          \ Exits and other supports
+\ hide the simple llops, replace with "proper" ones
+' BEGIN  (HIDE)
+' UNTIL  (HIDE)
+' WHILE  (HIDE)
+' AGAIN  (HIDE)
+' REPEAT (HIDE)
 include loops.fs                 \ BEGIN ... AGAIN
                                  \ BEGIN ... UNTIL
                                  \ BEGIN ... WHILE ... REPEAT

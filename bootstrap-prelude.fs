@@ -76,19 +76,8 @@ include records.fs               \ record types with named fields
 \ File management
 include file.fs                  \ I/O re-direction
 include evaluate.fs              \ Execute code from strings
-\ include file-templates.fs        \ File templates
-
-\ Foreign language support
-include c.fs                     \ C definitions (check for definitions)
 
 \ Word list control
 include wordlists.fs             \ Multiple word lists
 
-\ Dynamic memory
-include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
-
-\ Local variables
-\ include locals-base.fs           \ base definitions
-\ include ans-locals.fs            \ LOCALS| ... | for symbolic local definitions
-\ include locals.fs                \ stack-comment-style locals
 
