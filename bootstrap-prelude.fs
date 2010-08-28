@@ -38,7 +38,7 @@ include values.fs                \ VALUE
 include defer.fs                 \ DEFER ... IS
 
 \ The VM
-include vm.fs                    \ Virtual machine structures and constants 
+include bootstrap-vm.fs          \ Limited set of virtual machine constants 
 include ascii.fs                 \ ASCII character operations
 
 \ Data structures

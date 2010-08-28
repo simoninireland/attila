@@ -17,14 +17,6 @@
 
 \ ---------- Building and maintaining the target ----------
 
-\ Maximum size of image in cells. May be re-defined before calling
-\ (INITIALISE-IMAGE) to get a larger or smaller image 
-10 1024 * VALUE MAXIMAGECELLS
-
-\ Number of user variables to allocate space for -- again, may be
-\ re-defined before calling (INITIALISE-IMAGE)
-15 VALUE MAXUSERVARIABLES
-
 \ The parts of the image
 VARIABLE (TARGET-TOP)            \ the current compilation address
 : (TARGET-HERE) (TARGET-TOP) ;   \ current data address, same as compilation
@@ -62,8 +54,10 @@ VARIABLE (TARGET-LAST)           \ the last txt defined
 : C@ T> [FORTH] C@ ;
 
 \ The (target) address of the image's i'th user variable
-: USERVAR
+: (SIMPLE-USERVAR)
     /CELL * ;
+
+' (SIMPLE-USERVAR) IS USERVAR
 
 \ Reading and writing the output word for a cell
 : E! T>EMIT [FORTH] ! ;
@@ -237,10 +231,10 @@ VARIABLE (TARGET-LAST)           \ the last txt defined
 : (INITIALISE-IMAGE) \ ( -- )
     \ allocate the image and point IMAGE at it
     [FORTH] HERE TO IMAGE
-    MAXIMAGECELLS /IMAGECELL * [FORTH] ALLOT
+    IMAGE-SIZE /IMAGECELL * [FORTH] ALLOT
 
     \ all cells are treated as data cells initially
-    MAXIMAGECELLS 0 DO
+    IMAGE-SIZE 0 DO
 	['] EMIT-CELL I /CELL * E!
     LOOP
     
@@ -249,7 +243,7 @@ VARIABLE (TARGET-LAST)           \ the last txt defined
     0 (TARGET-LAST) [FORTH] !
     
     \ initialise the user variable space
-    MAXUSERVARIABLES 0 DO
+    USER-SIZE 0 DO
 	0 COMPILE,
     LOOP ;
 

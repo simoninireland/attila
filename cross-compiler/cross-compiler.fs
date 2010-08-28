@@ -91,6 +91,7 @@ WORDLISTS>
 
 <WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
 \ Pre-defining unavoidable forward references
+DEFER USERVAR
 DEFER >CFA
 DEFER (HEADER,)
 DEFER CTCOMPILE,
@@ -98,14 +99,11 @@ DEFER NEXT,
 
 \ Sizes of architectural elements, and other characteristics. These are
 \ defaults that can be overridden later
-4 VALUE /CELL
-1 VALUE /CHAR
-1 VALUE BIGENDIAN?
-: CELLS \ ( n -- bs )
-    /CELL * ;
-
-.( Loading image manager...)
-include c-image-fixedsize.fs    \ sd: should come from elsewhere
+\ 4 VALUE /CELL
+\ 1 VALUE /CHAR
+\ 1 VALUE BIGENDIAN?
+\ : CELLS \ ( n -- bs )
+\     /CELL * ;
 
 .( Loading target vm description...)
 : CONSTANT
@@ -116,6 +114,11 @@ include c-image-fixedsize.fs    \ sd: should come from elsewhere
   DOES> [FORTH] @ [CROSS] USERVAR ;
 
 include vm.fs
+WORDLISTS>
+
+.( Loading image manager...)
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
+include c-image-fixedsize.fs    \ sd: should come from elsewhere
 WORDLISTS>
 
 .( Loading locator structures...)
