@@ -42,10 +42,10 @@ include vm.fs                    \ Virtual machine structures and constants
 include ascii.fs                 \ ASCII character operations
 
 \ Data structures
+include bootstrap-loops.fs       \ Simple bootstrapping loops
 include stacks.fs                \ General stacks
 
 \ Control structure support
-include bootstrap-loops.fs       \ Simple bootstrapping loops
 include cs-stack.fs              \ Control structures stack
 include loop-support.fs          \ Exits and other supports
 \ now hide the bootstrapping loops ahead of loading the "real" ones
