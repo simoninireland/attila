@@ -239,18 +239,19 @@
     [CROSS-COMPILER] ' CTCOMPILE, ; [FORTH] IMMEDIATE
 
 
-\ The colon cross-compiler
-
 <WORDLISTS ONLY FORTH ALSO CROSS-COMPILER DEFINITIONS
 
+\ Manipulate the compiler state of the host from the cross-compiler
 : [ INTERPRETATION-STATE STATE ! ; IMMEDIATE
 : ] COMPILATION-STATE    STATE ! ;
 
 WORDLISTS>
 
+\ Manage immediacy and redirect-ability of words on the target
 : IMMEDIATE    [CROSS] IMMEDIATE-MASK    [CROSS] LASTXT [CROSS] SET-STATUS ; 
 : REDIRECTABLE [CROSS] REDIRECTABLE-MASK [CROSS] LASTXT [CROSS] SET-STATUS ; 
 
+\ The colon-compiler
 : COLON ( addr n -- txt )
     [CROSS-COMPILER] ['] (:) [CROSS] CFA@ [CROSS] (HEADER,)
     ] ;    
@@ -262,6 +263,7 @@ WORDLISTS>
     NEXT,
     POSTPONE [
     DROP ; [FORTH] IMMEDIATE
+
 
 <WORDLISTS ONLY FORTH ALSO CROSS-COMPILER DEFINITIONS
 
@@ -287,16 +289,17 @@ WORDLISTS>
 
 WORDLISTS>
     
-<wordlists only forth also cross-compiler definitions
+<WORDLISTS ONLY FORTH ALSO CROSS-COMPILER DEFINITIONS
 
 \ Include using the host's include operations wrapped-up with a new executive
 \ sd: not really safe....
 : INCLUDED ( addr n -- )
     EXECUTIVE @ ROT
     [ 'CROSS-COMPILER CROSS-OUTER ] LITERAL EXECUTIVE !
+    ." (include " 2DUP TYPE ." )" CR 
     INCLUDED
     EXECUTIVE ! ;
 : INCLUDE ( "name" -- )
     PARSE-WORD [CROSS-COMPILER] INCLUDED ;
 
-wordlists>
+WORDLISTS>
