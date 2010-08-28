@@ -2,24 +2,10 @@
 
 \ Driver file for host cross-compilation
 
-\ ---------- Cross-compiler set-up ----------
-
 \ Load the cross-compiler
 include cross-compiler/cross-compiler.fs
 
-\ Sizes in bytes. These must match the values from the underlying architecture
-@CELL_SIZE@ 'CROSS /CELL (IS)
-@CHARACTER_SIZE@ 'CROSS /CHAR (IS)
-
-\ Endianness of the processor:
-\   0 = little-endian
-\   1 = big-endian
-@BIGENDIAN@ 'CROSS BIGENDIAN? (IS)
-
-
-\ ---------- The image ----------
-
-.( Iniialising cross-compiler view of target VM...)
+.( Initialising cross-compiler view of target VM...)
 <cross-compiler also cross-compiler
 include vm.fs
 cross-compiler>
