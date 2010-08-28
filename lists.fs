@@ -114,9 +114,6 @@
 \ Map a word over all the elements of a list. The word applied
 \ is expected to have a stack effect ( vaddr -- ) and will
 \ be passed the address of each element's value in turn
-cs #st . cr
-leaves #st . cr
-
 : MAP \ ( xt elem -- )
     SWAP >R
     BEGIN
