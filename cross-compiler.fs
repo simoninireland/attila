@@ -121,8 +121,8 @@ include c-image-fixedsize.fs    \ sd: should come from elsewhere
 .( Loading target vm description...)
 <wordlists only forth also cross definitions
 : USER
-    CREATE IMMEDIATE , ." create user variable" cr
-  DOES> @ [CROSS] USERVAR ." USERVAR " dup . cr ;
+    CREATE IMMEDIATE ,
+  DOES> @ [CROSS] USERVAR ;
 wordlists>
 <wordlists only forth also cross also definitions
 include vm.fs
