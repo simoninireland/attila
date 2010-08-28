@@ -71,8 +71,10 @@ prelude = conditionals.fs \
 	defer.fs \
 	vm.fs \
 	ascii.fs \
+	bootstrap-loops.fs \
 	stacks.fs \
 	cs-stack.fs \
+	loop-support.fs \
 	loops.fs \
 	counted-loops-runtime.fs \
 	counted-loops.fs \
@@ -94,14 +96,14 @@ prelude = conditionals.fs \
 crosscompiler = x-host.fs \
 	x-host.h \
 	c-image-fixedsize.fs \
-	cross-locator.fs \
-	cross-flat-memory-model.fs \
-	cross-c.fs \
-	cross-colon.fs \
-	cross-createdoes.fs \
-	cross-vm.fs \
-	cross-generate.fs \
-	cross-environments.fs
+	cross-compiler/cross-locator.fs \
+	cross-compiler/cross-flat-memory-model.fs \
+	cross-compiler/cross-c.fs \
+	cross-compiler/cross-colon.fs \
+	cross-compiler/cross-vm.fs \
+	cross-compiler/cross-generate.fs \
+	cross-compiler/cross-initialisation.fs \
+	cross-compiler/cross-environments.fs
 
 # The system sources, used to cross-compile a basic virtual machine
 regular = c-core.fs \

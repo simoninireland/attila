@@ -84,7 +84,6 @@ main( int argc, char *argv[] ) {
   // set up the stacks
   data_stack_base = data_stack = image[USER__DATA_STACK_];
   return_stack_base = return_stack = image[USER__RETURN_STACK_];
-  printf("%d -- %$d\n", data_stack, return_stack);
 
   // initialise the I/O streams
   *user_variable(USER_INPUTSOURCE) = (CELL) stdin;

@@ -5,7 +5,7 @@
 \ ---------- Cross-compiler set-up ----------
 
 \ Load the cross-compiler
-include cross-compiler.fs
+include cross-compiler/cross-compiler.fs
 
 \ Sizes in bytes. These must match the values from the underlying architecture
 @CELL_SIZE@ 'CROSS /CELL (IS)
@@ -19,36 +19,18 @@ include cross-compiler.fs
 
 \ ---------- The image ----------
 
-<WORDLISTS ALSO CROSS-COMPILER DEFINITIONS
-: CONSTANT
-    CREATE ,
-  DOES>
-    @
-    INTERPRETING? NOT IF
-	[ 'CROSS-COMPILER LITERAL CTCOMPILE, ]
-    THEN ;
-: USER
-    CREATE ,
-  DOES>
-    @
-    INTERPRETING? NOT IF
-	[ 'CROSS-COMPILER LITERAL CTCOMPILE, ]
-	[CROSS] [COMPILE] USERVAR
-    THEN ;
-WORDLISTS>
+.( Iniialising cross-compiler view of target VM...)
+<cross-compiler also cross-compiler
+include vm.fs
+cross-compiler>
 
-.( Initialising image...)
-INITIALISE-IMAGE
+.( Initialising cross-compiler target image...)
+<code-generator
+initialise-image
+code-generator>
 
-.( Adding stacks)
-20 [CROSS] CELLS [CROSS] ALLOT
-20 [CROSS] CELLS [CROSS] ALLOT
-
-.( Adding TIB)
-800 [CROSS] ALLOT
-
-.( Loading target basic image...)
-<TARGET
+.( Initialising image with really basic primitives...)
+<target
 C: USERVAR uservar ( n -- addr )
   addr = (CELL) &image[n];
 ;C
@@ -56,54 +38,54 @@ C: USERVAR uservar ( n -- addr )
 include c-core.fs
 include c-itil.fs
 
-\ sd: should be constants on the target
+\ sd: should be in vm.fs? 
 : /CELL      [ [CROSS] /CELL ]      LITERAL ;
 : /CHAR      [ [CROSS] /CHAR ]      LITERAL ;
 : BIGENDIAN? [ [CROSS] BIGENDIAN? ] LITERAL ;
-TARGET>
+target>
 
-.( Loading cross-compiler control structures...)
-<WORDLISTS ALSO CROSS ALSO DEFINITIONS
-include chars.fs
-include cross-cs.fs
-WORDLISTS>
-<WORDLISTS ALSO CROSS ALSO CROSS-COMPILER DEFINITIONS
+.( Initialising cross-compiler loop support...)
+<cross-compiler
+include cs-stack.fs
+include loop-support.fs
+cross-compiler>
+
+.( Loading cross-compiler loop words...)
+<cross-compiler also cross-compiler
 include conditionals.fs
 include loops.fs
 include counted-loops.fs
-WORDLISTS>
+: START-DEFINITION ;
+: END-DEFINITION ;
+include createdoes.fs
+cross-compiler>
 
-.( Loading rest of image...) 
-<TARGET
+.( Populating target image...)
+<target
 include ascii.fs
 include c-fileio.fs
 include c-io.fs
 include counted-loops-runtime.fs
 
-include base.fs
 include flat-memory-model.fs
-include chars.fs
-
 include itil-compilation.fs
-: START-DEFINITION ;
-: END-DEFINITION ;
 include compilation.fs
 include colon.fs
 
 include executive.fs
 include file.fs
 include load.fs
+target>
+
+.( Finalising target image...)
+[code-generator] FINALISE-IMAGE
+<TARGET
+' COLD  COLDSTART XT! \ cold start vector (first word executed)
+' OUTER EXECUTIVE XT! \ executive (outer interpreter)
 TARGET>
 
-.( Finalising image...)
-FINALISE-IMAGE
-[CROSS-COMPILER] ' COLD 0 [CROSS] USERVAR [CROSS] XT!   \ cold-start vector 
-[CROSS-COMPILER] ' OUTER 1 [CROSS] USERVAR [CROSS] XT!  \ outer executive
-100 [CROSS] /CELL * 9 [CROSS] USERVAR [CROSS] A!        \ TIB
-[CROSS] LASTXT 10 [CROSS] USERVAR [CROSS] XT!           \ LAST
-
-.( Saving image...)
-SAVE-IMAGE-TO attila.c
+.( Saving target image...)
+[CODE-GENERATOR] SAVE-IMAGE-AS attila.c
 
 .( Done)
 
