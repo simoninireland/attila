@@ -34,7 +34,7 @@
     32 CONSUME \ spaces
     [CHAR] " PARSE
     ?DUP IF
-	4 USERVAR ( STATE ) @ 0 ( INTERPRETATION-STATE ) = IF
+	STATE @ INTERPRETATION-STATE = IF
 	    \ leave the string on the stack
 	ELSE
 	    POSTPONE SLITERAL \ compile the string as a string literal
@@ -48,16 +48,15 @@
 
 \ Flat finder, the default behaviour wrapped around whatever the underlying word list
 \ management function is
-\ :NONAME \ ( addr n -- 0 | xt 1 | xt -1 )
-\     LASTXT (FIND) ;
+:NONAME \ ( addr n -- 0 | xt 1 | xt -1 )
+    LASTXT (FIND) ;
 
 \ Hook, which consumes the unnamed xt generated above
-\ DATA (FIND-BEHAVIOUR) XT, 
+DATA (FIND-BEHAVIOUR) XT, 
 
 \ Top-level word-finder
-\ : FIND \ ( addr n -- 0 | xt 1 | xt -1 )
-\     (FIND-BEHAVIOUR) XT@ EXECUTE ;
-: FIND LASTXT (FIND) ;
+: FIND \ ( addr n -- 0 | xt 1 | xt -1 )
+    (FIND-BEHAVIOUR) XT@ EXECUTE ;
     
 \ Look up a word, returning its xt
 : (') ( addr n -- xt )
@@ -110,12 +109,12 @@
 
 \ Enter interpretation state
 : [ \ ( -- )
-    0 ( INTERPRETATION-STATE ) 4 USERVAR ( STATE ) ! ; IMMEDIATE
+    INTERPRETATION-STATE STATE ! ; IMMEDIATE
 
 \ Enter compilation state
 : ] \ ( -- )
-    1 ( COMPILATION-STATE ) 4 USERVAR ( STATE ) ! ;
+    COMPILATION-STATE STATE ! ;
 
 \ Check whether we're interpreting
 : INTERPRETING? \ ( -- f )
-    4 USERVAR ( STATE ) @ 0 ( INTERPRETATION-STATE ) = ;
+    STATE @ INTERPRETATION-STATE = ;

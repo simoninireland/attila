@@ -75,21 +75,23 @@ create_unix_string( CELL addr, CELL namelen ) {
 // ---------- Start-up ----------
 
 extern CELL image[];
+extern CELLPTR user_variable( int );
 
 int
 main( int argc, char *argv[] ) {
   XT _xt = NULL;
 
-  // hack the stacks, for now
-  data_stack_base = data_stack = &image[20];
-  return_stack_base = return_stack = &image[50];
+  // set up the stacks
+  data_stack_base = data_stack = image[USER__DATA_STACK_];
+  return_stack_base = return_stack = image[USER__RETURN_STACK_];
+  printf("%d -- %$d\n", data_stack, return_stack);
 
-  // also hack the I/O streams
-  image[6] = (CELL) stdin;
-  image[7] = (CELL) stdout;
+  // initialise the I/O streams
+  *user_variable(USER_INPUTSOURCE) = (CELL) stdin;
+  *user_variable(USER_OUTPUTSINK) = (CELL) stdout;
  
   // call the cold-start routine:
-  ip = (XTPTR) &image[0];         // cold-start vector is at the first cell in the image
+  ip = (XTPTR) user_variable(USER_COLDSTART);
   CALL(docolon);
 
   exit(0);

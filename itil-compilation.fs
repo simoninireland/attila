@@ -15,10 +15,10 @@
 
 \ Resolve a jump from the address on the stack to here
 : JUMP-HERE ( a -- )
-    2 USERVAR ( TOP ) @ OVER -
+    TOP OVER -
     SWAP ! ;
 
 \ Resolve a jump from here backwards to the address on the stack
 : JUMP-BACKWARD ( a -- )
-    2 USERVAR ( TOP ) @ -
+    TOP -
     COMPILE, ;

@@ -72,12 +72,11 @@ VARIABLE (TARGET-LAST)           \ the last txt defined
 
 \ ---------- Saving the image ----------
 
-<wordlists also forth
+\ Emit a byte as two characters, no leading zero supression
 : .BYTE \ ( n -- )
-    BASE @ HEX SWAP
+    [FORTH] BASE [FORTH] @ HEX SWAP
     <# ABS # # #> TYPE
-    BASE ! ;
-wordlists>
+    [FORTH] BASE [FORTH] ! ;
 
 \ Emit a cell, converting from the target's endianness to a literal C value
 \ sd: we have to maintain target endianness up until this point to make sure
@@ -232,15 +231,15 @@ wordlists>
 
 \ ---------- Initialising and finalising the image ----------
 
-<CODE-GENERATOR ALSO CROSS
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO CODE-GENERATOR ALSO DEFINITIONS
 
 \ Initialise the image
-: INITIALISE-IMAGE \ ( -- )
+: (INITIALISE-IMAGE) \ ( -- )
     \ allocate the image and point IMAGE at it
     [FORTH] HERE TO IMAGE
     MAXIMAGECELLS /IMAGECELL * [FORTH] ALLOT
 
-    \ all cells are treated as cells initially
+    \ all cells are treated as data cells initially
     MAXIMAGECELLS 0 DO
 	['] EMIT-CELL I /CELL * E!
     LOOP
@@ -252,17 +251,14 @@ wordlists>
     \ initialise the user variable space
     MAXUSERVARIABLES 0 DO
 	0 COMPILE,
-    LOOP
+    LOOP ;
 
-    \ initialise stacks and TIB
-    DATA-STACK-SIZE   CELLS ALLOT \ data stack
-    RETURN-STACK-SIZE CELLS ALLOT \ return stack
-    TIB-SIZE                ALLOT \ terminal input buffer
+\ Finalise the image -- nothing to do in this model
+: (FINALISE-IMAGE) ( -- )
 ;
 
-\ Finalise the image prior to being output
-: FINALISE-IMAGE
-    TOP 2 ( TOP ) USERVAR A! ;
+
+\ ---------- Emitting the image ----------
 
 \ Emit the image as a C data structure
 : EMIT-IMAGE \ ( -- )
@@ -274,7 +270,7 @@ wordlists>
     LOOP
     ." };" CR ;
 
-CODE-GENERATOR>
+WORDLISTS>
 
 \ Emit a small part of the image around the given target address
 : EMIT-AROUND \ ( taddr -- )

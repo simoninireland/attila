@@ -55,6 +55,8 @@
 10 USER LAST                  \ xt of the most-recently-defined word
 11 USER TRACE                 \ trace (debugging) flag
 12 USER CURRENT               \ the current wordlist receiving definitions
+13 USER (DATA-STACK)
+14 USER (RETURN-STACK)
 
 \ Truth values
 0        CONSTANT FALSE

@@ -7,7 +7,7 @@
 \ Load a file
 : (LOAD) \ ( fh -- )
     (<FROM)
-    1 USERVAR ( EXECUTIVE ) @ EXECUTE
+    EXECUTIVE @ EXECUTE
     FROM> ;
 
 \ Load a file

@@ -15,7 +15,7 @@
 
 \ Save the current input state
 : SAVE-INPUT \ ( -- fh pos 2 )
-    6 USERVAR ( INPUTSOURCE ) @
+    INPUTSOURCE @
     DUP FILE-POSITION DROP
     2 ;
 
@@ -25,7 +25,7 @@
     OVER REPOSITION-FILE ?DUP IF
 	NIP
     ELSE
-	6 USERVAR ( INPUTSOURCE )  !
+	INPUTSOURCE !
 	TRUE
     THEN ;
 
@@ -34,8 +34,8 @@
 
 \ Re-direct subsequent output to the given file
 : (<TO) \ ( fh -- ofh )
-    7 USERVAR ( OUTPUTSINK ) @
-    SWAP 7 USERVAR ( OUTPUTSINK ) ! ;
+    OUTPUTSINK @
+    SWAP OUTPUTSINK ! ;
 : <TO \ ( "name" -- ofh )
     PARSE-WORD 2DUP W/O CREATE-FILE IF
 	DROP
@@ -46,13 +46,13 @@
 
 \ Restore previous output stream
 : TO> \ ( ofh -- ) 
-    7 USERVAR ( OUTPUTSINK ) @ CLOSE-FILE DROP
-    7 USERVAR ( OUTPUTSINK ) ! ;
+    OUTPUTSINK @ CLOSE-FILE DROP
+    OUTPUTSINK ! ;
 
 \ Re-direct subsequent input from the given file
 : (<FROM) \ ( fh -- ofh )
-    6 USERVAR ( INPUTSOURCE ) @
-    SWAP 6 USERVAR ( INPUTSOURCE ) ! ;
+    INPUTSOURCE @
+    SWAP INPUTSOURCE ! ;
 : <FROM \ ( "name" -- ofh )
     PARSE-WORD 2DUP R/O OPEN-FILE IF
 	DROP
@@ -63,6 +63,6 @@
 
 \ Restore previous output stream
 : FROM> \ ( ofh -- ) 
-    6 USERVAR ( INPUTSOURCE ) @ CLOSE-FILE DROP
-    6 USERVAR ( INPUTSOURCE ) ! ;
+    INPUTSOURCE @ CLOSE-FILE DROP
+    INPUTSOURCE ! ;
 

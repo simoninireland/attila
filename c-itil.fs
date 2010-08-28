@@ -263,8 +263,7 @@ C: WARM warm_start ( -- )
     #endif
 ;C
 
-\ Cold-start (same as WARM, for the moment)
-\ sd: COLD *must* be a primitive 
+\ Cold-start the interpreter
 C: COLD cold_start ( -- ) 
     CALL(warm_start);
 ;C

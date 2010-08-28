@@ -47,7 +47,6 @@ INTERPRET/COMPILE [WORDLIST]
 \ searching FORTH
 <WORDLISTS ALSO ROOT DEFINITIONS
 
-.( Creating cross-compiler wordlists...)
 NAMED-WORDLIST TARGET             CONSTANT TARGET-WORDLIST              \ locators
 NAMED-WORDLIST CROSS              CONSTANT CROSS-WORDLIST               \ image manipulation
 NAMED-WORDLIST CROSS-COMPILER     CONSTANT CROSS-COMPILER-WORDLIST      \ cross-compiler IMMEDIATE words
@@ -76,31 +75,21 @@ CODE-GENERATOR-WORDLIST     PARSE-WORD CODE-GENERATOR     (VOCABULARY)
 : CROSS-WORDS              CROSS-WORDLIST              .WORDLIST ;
 : CROSS-COMPILER-WORDS     CROSS-COMPILER-WORDLIST     .WORDLIST ;
 : CODE-GENERATOR-WORDS     CODE-GENERATOR-WORDLIST     .WORDLIST ;
-
-.( Loading cross-compiler coding environments...)
-include cross-environments.fs
-
 WORDLISTS>
 
 
 \ ---------- The main body of the cross-compiler ----------
 
-<CODE-GENERATOR
-
+<WORDLISTS ONLY FORTH ALSO CODE-GENERATOR ALSO DEFINITIONS
 \ Current version string
 : VERSION S" v0.2 alpha $Date$" ;
 
 \ Generate a timestamp string
 : TIMESTAMP
     ." Attila cross-compiler " VERSION TYPE ;
+WORDLISTS>
 
-CODE-GENERATOR>
-
-<CROSS
-
-\ Target is ASCII-based
-\ include ascii.fs
-
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
 \ Pre-defining unavoidable forward references
 DEFER >CFA
 DEFER (HEADER,)
@@ -119,44 +108,77 @@ DEFER NEXT,
 include c-image-fixedsize.fs    \ sd: should come from elsewhere
 
 .( Loading target vm description...)
-<wordlists only forth also cross definitions
+: CONSTANT
+    CREATE [FORTH] ,
+  DOES> [FORTH] @ ;
 : USER
-    CREATE IMMEDIATE ,
-  DOES> @ [CROSS] USERVAR ;
-wordlists>
-<wordlists only forth also cross also definitions
+    CREATE [FORTH] ,
+  DOES> [FORTH] @ [CROSS] USERVAR ;
+
 include vm.fs
-wordlists>
+WORDLISTS>
 
 .( Loading locator structures...)
 <WORDLISTS ONLY FORTH ALSO DEFINITIONS
 include cross-locator.fs
 WORDLISTS>
+
 .( Loading cross-compiler memory model...)
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
 include cross-flat-memory-model.fs
-<wordlists only forth also cross also definitions
+WORDLISTS>
+
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
 : IMMEDIATE?    GET-STATUS IMMEDIATE-MASK    AND 0<> ;
 : REDIRECTABLE? GET-STATUS REDIRECTABLE-MASK AND 0<> ;
-wordlists>
+WORDLISTS>
+
 .( Loading C language primitive compiler...)
 <WORDLISTS ONLY FORTH ALSO DEFINITIONS
 include cross-c.fs
 WORDLISTS>
-.( Loading cross create-does...)
-\ include cross-createdoes.fs
-<CODE-GENERATOR
-.( Loading vm description generator...)
-include cross-vm.fs
-.( Loading cross-compiler file generators... )
-include cross-generate.fs
-CODE-GENERATOR>
-.( Loading colon cross-compiler...)
-<CROSS-COMPILER
-include cross-colon.fs
-CROSS-COMPILER>
 
-CROSS>
+.( Loading vm description generator...)
+<WORDLISTS ONLY FORTH ALSO CODE-GENERATOR ALSO DEFINITIONS
+include cross-vm.fs
+WORDLISTS>
+
+.( Loading cross-compiler file generators... )
+<WORDLISTS ONLY FORTH ALSO CODE-GENERATOR ALSO DEFINITIONS
+include cross-generate.fs
+WORDLISTS>
+
+.( Loading cross-compiler high-level image initialisation...)
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO CODE-GENERATOR ALSO DEFINITIONS
+include cross-initialisation.fs
+WORDLISTS>
+
+.( Loading colon cross-compiler...)
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO CROSS-COMPILER DEFINITIONS
+include cross-colon.fs
+
+: CONSTANT
+    CREATE IMMEDIATE [FORTH] ,
+  DOES> [FORTH] @
+    INTERPRETING? NOT IF
+	[ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ]
+    THEN ;
+: USER
+    CREATE IMMEDIATE [FORTH] ,
+  DOES> [FORTH] @ [CROSS] USERVAR
+    INTERPRETING? NOT IF
+	[ 'CROSS-COMPILER ALITERAL [FORTH] CTCOMPILE, ]
+    THEN ;
+WORDLISTS>
+
+.( Loading cross-compiler coding environments...)
+<WORDLISTS ONLY FORTH ALSO ROOT DEFINITIONS
+include cross-environments.fs
+WORDLISTS>
+
+.( Loading cross-compiler comment handling...)
+<WORDLISTS ONLY FORTH ALSO CROSS-COMPILER DEFINITIONS
+include comments.fs
+WORDLISTS>
 
 .( Cross-compiler loaded)
-
-

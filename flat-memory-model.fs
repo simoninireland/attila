@@ -27,14 +27,14 @@
 \ ---------- Memory management ----------
 
 \ TOP and HERE are the same in this model
-: TOP  2 USERVAR ( TOP ) @ ;
-: HERE TOP ;
-: LASTXT 10 USERVAR ( LAST ) @ ;
+: TOP    (TOP) @ ;
+: HERE   TOP ;
+: LASTXT LAST @ ;
 
 \ Compile a character
 : CCOMPILE, \ ( c -- )
     TOP C!
-    1 2 USERVAR ( TOP ) +! ;
+    1 (TOP) +! ;
 
 \ Align code address on cell boundaries
 \ : CALIGN \ ( addr -- aaddr )
@@ -253,7 +253,7 @@ C: >BODY xt_to_body ( xt -- addr )
     LASTXT ACOMPILE,         \ compile the link pointer
     TOP                      \ the txt
     R> CFACOMPILE,           \ the code pointer
-    DUP 10 USERVAR XT! ;     \ update LAST
+    DUP LAST XT! ;           \ update LAST
 
 
 \ ---------- Basic finding ----------
@@ -262,13 +262,13 @@ C: >BODY xt_to_body ( xt -- addr )
 \ Hide/unhide a word from the finder. Since a hidden word can't be found,
 \ you need to stash its xt if you want to be able ti unhide it later
 : (HIDE) ( xt -- )
-    4 ( HIDDEN-MASK ) SWAP SET-STATUS ;
+    HIDDEN-MASK SWAP SET-STATUS ;
 : (UNHIDE) ( xt -- )
-    4 ( HIDDEN-MASK ) SWAP CLEAR-STATUS ;
+    HIDDEN-MASK SWAP CLEAR-STATUS ;
 
 \ Test whether a word is hidden
 : HIDDEN? ( xt -- f )
-    GET-STATUS 4 ( HIDDEN-MASK ) AND 0<> ;
+    GET-STATUS HIDDEN-MASK AND 0<> ;
 
 
 \ Find the named word in the word list starting from the given
