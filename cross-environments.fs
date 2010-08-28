@@ -16,14 +16,6 @@
 : CROSS-COMPILER> WORDLISTS> ;
 
 
-\ Load cross-compiler extensions. Code has access to the image, so all
-\ compilation and data storage from within words will occur to the target.
-\ However, all control occurs on the host
-: <CROSS-COMPILER-EXT
-    <WORDLISTS ONLY FORTH ALSO CROSS ALSO CROSS-COMPILER-EXT ALSO DEFINITIONS ;
-: CROSS-COMPILER-EXT> WORDLISTS> ;
-
-
 \ Load code into the code generator
 : <CODE-GENERATOR
     <WORDLISTS ONLY FORTH ALSO CODE-GENERATOR ALSO DEFINITIONS ;
@@ -33,6 +25,6 @@
 \ Load code into the image
 \ sd: omitting FORTH omits immediate-mode arithmetic etc, which may be too strong
 : <TARGET
-    <WORDLISTS ONLY ( ALSO FORTH ) ALSO CROSS ALSO CROSS-COMPILER-EXT ALSO CROSS-COMPILER ALSO TARGET DEFINITIONS ;
+    <WORDLISTS ONLY ( ALSO FORTH ) ALSO CROSS ALSO CROSS-COMPILER ALSO TARGET DEFINITIONS ;
 : TARGET> WORDLISTS> ;
 
