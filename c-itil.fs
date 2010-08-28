@@ -172,22 +172,9 @@ C: (?BRANCH) ( f -- )
     CALL(branch);
 ;C
 
-\ \ Prepare for a forward jump
-\ : JUMP-FORWARD ( -- a )
-\     2 USERVAR ( TOP )
-\     0 COMPILE, ;
-
-\ \ Resolve a jump from the address on the stack to here
-\ : JUMP-HERE ( a -- )
-\     2 USERVAR ( TOP ) OVER -
-\     SWAP ! ;
-
-\ \ Resolve a jump from here backwards to the address on the stack
-\ : JUMP-BACKWARD ( a -- )
-\     2 USERVAR ( TOP ) -
-\     COMPILE, ;
-
-\ We also want the same code in CROSS for use by control structures
+\ Jump calculations in CROSS for use in cross-compiling loops. If we
+\ want to load control structures onto the target later, these also
+\ need to be present there.
 \ Shame about the repetition, but it's unavoidable in this case
 <WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
 \ Prepare for a forward jump
