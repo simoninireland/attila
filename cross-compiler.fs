@@ -82,7 +82,7 @@ WORDLISTS>
 
 <WORDLISTS ONLY FORTH ALSO CODE-GENERATOR ALSO DEFINITIONS
 \ Current version string
-: VERSION S" v0.2 alpha $Date$" ;
+: VERSION S" v1 $Date$" ;
 
 \ Generate a timestamp string
 : TIMESTAMP
