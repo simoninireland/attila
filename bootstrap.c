@@ -314,10 +314,10 @@ init_dictionary() {
   // the colon definer
   DEFINE(":");
   COMPILE("PARSE-WORD");
-  COMPILE("2DUP");
-  STRING(": ");   COMPILE("TYPE");
-  COMPILE("TYPE");
-  LITERAL(10);   COMPILE("EMIT");
+  // COMPILE("2DUP");
+  // STRING(": ");   COMPILE("TYPE");
+  // COMPILE("TYPE");
+  // LITERAL(10);   COMPILE("EMIT");
   LITERAL(&docolon);
   COMPILE("(HEADER,)");
   COMPILE("START-DEFINITION");
