@@ -40,12 +40,12 @@ VARIABLE (TARGET-LAST)           \ the last txt defined
 0 VALUE IMAGE
 
 \ Return the host address of the given target image address
-: TARGET> \ ( taddr -- addr )
+: T> \ ( taddr -- addr )
     /CELL /MOD
     /IMAGECELL * + IMAGE + 1 CELLS + ;
 
 \ Return the address of the output word associated with the given target address
-: TARGET>EMIT \ ( taddr -- addr )
+: T>EMIT \ ( taddr -- addr )
     /CELL /MOD
     NIP /IMAGECELL * IMAGE + ;
 
@@ -58,16 +58,16 @@ VARIABLE (TARGET-LAST)           \ the last txt defined
 
 \ Reading and writing to and from the image's addresses. All the other
 \ image manipulations are built from these
-: C! TARGET> [FORTH] C! ;
-: C@ TARGET> [FORTH] C@ ;
+: C! T> [FORTH] C! ;
+: C@ T> [FORTH] C@ ;
 
 \ The (target) address of the image's i'th user variable
 : USERVAR
     /CELL * ;
 
 \ Reading and writing the output word for a cell
-: E! TARGET>EMIT [FORTH] ! ;
-: E@ TARGET>EMIT [FORTH] @ ;
+: E! T>EMIT [FORTH] ! ;
+: E@ T>EMIT [FORTH] @ ;
 
 
 \ ---------- Saving the image ----------
@@ -164,7 +164,7 @@ wordlists>
 \ Forth addresses are stored as offsets into the image
 : ACOMPILE, \ ( taddr -- )
     CALIGNED
-    TOP TARGET> [FORTH] !    \ store address in host endiannness
+    TOP T> [FORTH] !    \ store address in host endiannness
     ['] EMIT-ADDRESS TOP E!
     /CELL (TARGET-TOP) +! ;
 
@@ -184,7 +184,7 @@ wordlists>
 \ image and setting the output word to write it out correctly. 
 : CFACOMPILE, \ ( cf -- )
     CALIGNED
-    TOP TARGET> [FORTH] !  \ store counted string address in host endianness
+    TOP T> [FORTH] !  \ store counted string address in host endianness
     ['] EMIT-CFA TOP E!
     /CELL (TARGET-TOP) +! ;
 
@@ -205,10 +205,10 @@ wordlists>
     THEN ;
 : !
     CHECK-ALIGNED
-    DUP ROT TARGET> [FORTH] !
+    DUP ROT T> [FORTH] !
     ['] EMIT-CELL SWAP E! ; 
 : @
-    CHECK-ALIGNED TARGET> [FORTH] @ ;
+    CHECK-ALIGNED T> [FORTH] @ ;
 : RA! ! ;
 : RA@ @ ;
 : A!
@@ -252,7 +252,13 @@ wordlists>
     \ initialise the user variable space
     MAXUSERVARIABLES 0 DO
 	0 COMPILE,
-    LOOP ;
+    LOOP
+
+    \ initialise stacks and TIB
+    DATA-STACK-SIZE   CELLS ALLOT \ data stack
+    RETURN-STACK-SIZE CELLS ALLOT \ return stack
+    TIB-SIZE                ALLOT \ terminal input buffer
+;
 
 \ Finalise the image prior to being output
 : FINALISE-IMAGE
