@@ -21,7 +21,15 @@
 \
 \ This file is pre-processed to generate the necessary
 \ definitions, typically in C. It should contain only
-\ simple code such as CONSTANT and USER declarations
+\ simple code such as CONSTANT and USER declarations.
+\
+\ To cross-compile to other targets, use this file as a model
+\ and define the various elements. You *must* make sure that the
+\ cell size and character size are right (long ints for C-based
+\ compilations), and that the endianness of the process is correct.
+\ You can reduce the stack sizes, but development systems will require
+\ a data stack of around 50 to accommodate some of the compiler
+\ structures.
 
 \ Core sizes
 @CELL_SIZE@ CONSTANT /CELL
@@ -64,8 +72,8 @@
 10 USER LAST                  \ xt of the most-recently-defined word
 11 USER TRACE                 \ trace (debugging) flag
 12 USER CURRENT               \ the current wordlist receiving definitions
-13 USER (DATA-STACK)
-14 USER (RETURN-STACK)
+13 USER (DATA-STACK)          \ address of the base of the data stack
+14 USER (RETURN-STACK)        \ address of the base of the return stack
 
 \ Truth values
 0        CONSTANT FALSE
