@@ -129,11 +129,11 @@
 \ Copy the complete stack onto the data stack, with a count
 : ST-ALL> \ ( st -- st-1 ... st0 n )
     DUP >R #ST DUP >R >R
-    [ TOP ]                                                      \ BEGIN
-    R@ ?DUP
-    [ ' (?BRANCH) COMPILE, TOP 0 COMPILE, ]                      \ WHILE
-    1- 2 RPICK ST-PICK
-    R> 1- >R
-    [ ' (BRANCH) COMPILE, SWAP >JUMP COMPILE, DUP JUMP> SWAP ! ] \ REPEAT
+    BEGIN
+	R@ ?DUP
+    WHILE
+	    1- 2 RPICK ST-PICK
+	    R> 1- >R
+    REPEAT
     R> R> R> -ROT 2DROP ;
 
