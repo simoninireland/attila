@@ -64,29 +64,28 @@
 
 \ Cross-compile a header for the name word with the given code field
 : (CROSS-PRIMITIVE-HEADER,) \ ( addr n cf -- txt )
-    CALIGNED         \ align TOP on the next cell boundary 
-    >R                       \ stash the code field
-    2DUP ." Compiling " TYPE CR
-    DUP >R                   \ compile the name
+    CALIGNED                       \ start word on code cell boundary (if needed)
+    >R                             \ stash the code field
+    DUP >R                         \ compile the name
     ?DUP 0> IF
 	0 DO
 	    DUP [FORTH] C@ CCOMPILE,
 	    1 CHARS +
 	LOOP
     THEN
-    DROP ." name "
-    CALIGNED      
-    R> CCOMPILE,  ." len "            \ compile the name length
-    0 CCOMPILE,     ." status "       \ status byte
-    CALIGNED
-    LASTXT DUP 0= IF                  \ compile the link pointer
-	COMPILE, ." start of chain "
+    DROP
+    CALIGNED                       \ name and status on next cell boundary (if needed)
+    R> CCOMPILE,                   \ compile the name length
+    0 CCOMPILE,                    \ status byte
+    CALIGNED                       \ link poiinter on next cell boundary (if needed)
+    LASTXT DUP 0= IF               \ compile the link pointer
+	COMPILE,                   \ first word, LFA is 0
     ELSE
-	ACOMPILE, ." link "
+	ACOMPILE,                  \ other words, point LASTXT address 
     THEN 
-    TOP                       \ the txt
-    R> DUP . SPACE CFACOMPILE,       ." cf "     \ the code pointer
-    DUP LASTXT!        ." last" ;      \ update LAST
+    TOP                            \ the txt
+    R> CFACOMPILE,                 \ the code pointer
+    DUP LASTXT! ;                  \ update LAST
 
 \ Create a header and a locator
 : (CROSS-HEADER,) ( addr n cf -- txt )
