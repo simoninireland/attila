@@ -341,12 +341,12 @@ C: NOT ( f -- nf )
     
 \ Shift a left n bits, replacing the rightmost n bits with zeros
 C: LSHIFT ( a n -- b )
-    b = a << n;
+    b = (CELL) (((UCELL) a) << n);
 ;C
 
 \ Shift a right n bits, replacing the leftmost n bits with zeros
 C: RSHIFT ( a n -- b )
-    b = a >> n;
+    b = (CELL) (((UCELL) a) >> n);
 ;C
 
 
