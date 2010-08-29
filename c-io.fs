@@ -242,14 +242,19 @@ C: NUMBER? ( addr n -- )
   CHARACTERPTR buf;
   CHARACTERPTR digitptr;
   int i, len, acc, digit;
+  int negative = 0;
   int valid = 1;
   int base = (int) *(user_variable(USER_BASE));
 
   buf = create_unix_string(addr, n);
 
   // convert number
-  acc = 0;
-  for(i = 0; i < n; i++) {
+  acc = 0;   i = 0;
+  if(buf[i] == '-') {
+    negative = 1;
+    i++;
+  }
+  for(; i < n; i++) {
     digitptr = index(digits, toupper(buf[i]));
     digit = digitptr - digits;
     if((digitptr == NULL) ||
@@ -261,8 +266,11 @@ C: NUMBER? ( addr n -- )
     acc = (acc * base) + digit;
   }
 
-  if(valid)
+  if(valid) {
+    if(negative)
+      acc *= -1;
     PUSH_CELL(acc);
+  }
   PUSH_CELL(valid);
 ;C
 
