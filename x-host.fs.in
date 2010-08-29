@@ -23,11 +23,6 @@ C: USERVAR uservar ( n -- addr )
 
 include c-core.fs
 include c-itil.fs
-
-\ sd: should be in vm.fs? 
-: /CELL      [ [CROSS] /CELL ]      LITERAL ;
-: /CHAR      [ [CROSS] /CHAR ]      LITERAL ;
-: BIGENDIAN? [ [CROSS] BIGENDIAN? ] LITERAL ;
 target>
 
 .( Initialising cross-compiler loop support...)
