@@ -10,7 +10,7 @@
 
 \ Prepare for a forward jump
 : JUMP-FORWARD ( -- a )
-    2 USERVAR ( TOP ) @
+    TOP
     0 COMPILE, ;
 
 \ Resolve a jump from the address on the stack to here
