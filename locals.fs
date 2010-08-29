@@ -1,7 +1,8 @@
 \ $Id$
 
-\ This file is part of Attila, a minimal threaded interpretive language
-\ Copyright (c) 2007, UCD Dublin. All rights reserved.
+\ This file is part of Attila, a retargetable threaded interpreter
+\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
 \ modify it under the terms of the GNU General Public License
@@ -22,7 +23,7 @@
 \ A locals definition that minimcs stack comments, in the style of Gforth's
 \ locals (although not *quite* as flexible).
 \
-\ The esiest way to explain is by an example: consider the definition
+\ The easiest way to explain is by an example: consider the definition
 \
 \ : POINTLESS { a b -- c }
 \     a b + TO c ;

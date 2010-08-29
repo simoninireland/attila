@@ -3,8 +3,9 @@ include comments.fs
 
 \ $Id$
 
-\ This file is part of Attila, a minimal threaded interpretive language
-\ Copyright (c) 2007, UCD Dublin. All rights reserved.
+\ This file is part of Attila, a retargetable threaded interpreter
+\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
 \ modify it under the terms of the GNU General Public License
@@ -20,7 +21,9 @@ include comments.fs
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Bootstrapping system prelude
+\ Bootstrapping system prelude. This contains enough to bootstrap the
+\ system and run the cross-compiler. See prelude.fs for a fuller
+\ language definition.
 
 \ Simple control structures
 include conditionals.fs          \ IF ... ELSE ... THEN

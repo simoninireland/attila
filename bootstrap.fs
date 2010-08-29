@@ -1,7 +1,8 @@
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007, UCD Dublin. All rights reserved.
+\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
 \ modify it under the terms of the GNU General Public License

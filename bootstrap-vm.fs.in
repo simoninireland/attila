@@ -1,7 +1,8 @@
 \ $Id: vm.fs 509 2010-08-28 15:12:01Z sd $
 
-\ This file is part of Attila, a minimal threaded interpretive language
-\ Copyright (c) 2007, UCD Dublin. All rights reserved.
+\ This file is part of Attila, a retargetable threaded interpreter
+\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
 \ modify it under the terms of the GNU General Public License
@@ -17,7 +18,9 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Virtual machine description, for bootstraping
+\ Virtual machine description, for bootstraping. This file is filled-in
+\ during configuration to match the host system's architecture. It is
+\ simplified compared to a "full" VM definition: see vm.fs for details.
 
 \ Core sizes
 @CELL_SIZE@ CONSTANT /CELL
