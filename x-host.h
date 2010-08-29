@@ -12,6 +12,7 @@
 // Base types
 typedef void VOID;
 typedef long CELL;
+typedef unsigned long UCELL;
 typedef long long DOUBLE_CELL;
 typedef VOID *XT;
 typedef unsigned char BYTE;
