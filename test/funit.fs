@@ -56,7 +56,7 @@ FALSE VALUE VERBOSE-LOGGING
 
 \ Return the number of items deposited on the stack
 : DEPOSITED ( -- n )
-    DEPTH INITIAL-STACK-DEPTH @ SAFETY-MARGIN + - ;
+    DEPTH INITIAL-STACK-DEPTH @ - ;
 
 \ Drop n values from the stack
 : NDROP
@@ -77,8 +77,8 @@ FALSE VALUE VERBOSE-LOGGING
 
 \ Start a test case
 : { 
-    DEPTH INITIAL-STACK-DEPTH !
     ALLOCATE-SAFETY-MARGIN
+    DEPTH INITIAL-STACK-DEPTH !
     1 TEST-CASE +!
     VERBOSE-LOGGING IF
 	." Case #" TEST-CASE @ . CR
