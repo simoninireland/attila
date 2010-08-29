@@ -107,11 +107,15 @@ C: CALIGN calign ( addr -- aaddr )
 : ALIGN   CALIGN ;
 : ALIGNED CALIGNED ;
 
-\ ALLOTting data space simply compiles zeros
+\ ALLOTting data space simply compiles zeros. Safe for 0 and negative amounts
 : ALLOT ( n -- )
-    0 DO
-	0 C,
-    LOOP ;
+    DUP 0> IF
+	0 DO
+	    0 C,
+	LOOP
+    ELSE
+	DROP
+    THEN ;
 
 \ Memory access also doesn't distinguish between address types
 \ !, @, C@, C!, 2@ amd 2! are in core.fs: these words are the "manipulators"
