@@ -256,34 +256,36 @@ user_variable( int n ) {
 }
 ;CHEADER
 
-\ Warm-start the interpreter
-C: WARM warm_start ( -- )
-    setjmp(env);
-
+\ Reset the interpreter
+C: (RESET) bracket_reset ( -- )
     // reset the stacks      
     DATA_STACK_RESET();
     RETURN_STACK_RESET();  
 
     // reset user variables
-    *(user_variable(USER_STATE)) = (CELL) INTERPRETATION_STATE;
-    *(user_variable(USER_BASE)) = (CELL) 10;
-    *(user_variable(USER_TRACE)) = (CELL) 0;
+    *(user_variable(USER_STATE)) = (CELL) INTERPRETATION_STATE;    // interpretation state
+    *(user_variable(USER_BASE)) = (CELL) 10;                       // decimal by convention
+    *(user_variable(USER_TRACE)) = (CELL) 0;                       // not debugging
     CALL(reset_io);
-    *(user_variable(USER__IN)) = -1;                // line input in need of a refill
+    *(user_variable(USER__IN)) = -1;                               // line input in need of a refill
+;C
+
+
+\ Warm-start the interpreter
+C: WARM warm_start ( -- )
+    setjmp(env);
+
+    // reset the interpreter
+    CALL(bracket_reset);	
 	
-    // point the ip at the executive and return
-    PUSH_CELL(*(user_variable(USER_EXECUTIVE)));
+    // point the ip at the re-start vector and return
+    PUSH_CELL(*(user_variable(USER__START_)));
     CALL(xt_to_body);
     ip = (XTPTR) POP_CELL();
 
     #ifdef DEBUGGING
         indent = 0;
     #endif
-;C
-
-\ Cold-start the interpreter
-C: COLD cold_start ( -- ) 
-    CALL(warm_start);
 ;C
 
 \ Exit the interpreter

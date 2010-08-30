@@ -74,12 +74,14 @@ include colon.fs
 include executive.fs
 include file.fs
 include load.fs
+
+include startup.fs
 target>
 
 .( Finalising target image...)
 [code-generator] FINALISE-IMAGE
 <TARGET
-' COLD  COLDSTART XT! \ cold start vector (first word executed)
+' START (START) XT!   \ cold start vector (first word executed)
 ' OUTER EXECUTIVE XT! \ executive (outer interpreter)
 TARGET>
 

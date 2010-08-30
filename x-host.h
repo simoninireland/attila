@@ -81,17 +81,21 @@ extern CELLPTR user_variable( int );
 int
 main( int argc, char *argv[] ) {
   XT _xt = NULL;
+  CELL tmpstack[3];
 
-  // set up the stacks
-  data_stack_base = data_stack = image[USER__DATA_STACK_];
-  return_stack_base = return_stack = image[USER__RETURN_STACK_];
+  // set up a temporary stack, enough to call simple primitives
+  data_stack_base = data_stack = tmpstack;
+
+  // initialise stacks to correct addresses
+  data_stack_base = data_stack = *user_variable(USER__DATA_STACK_);
+  return_stack_base = return_stack = *user_variable(USER__RETURN_STACK_);
 
   // initialise the I/O streams
   *user_variable(USER_INPUTSOURCE) = (CELL) stdin;
   *user_variable(USER_OUTPUTSINK) = (CELL) stdout;
  
-  // call the cold-start routine:
-  ip = (XTPTR) user_variable(USER_COLDSTART);
+  // call the cold-start routine
+  ip = (XTPTR) user_variable(USER__START_);
   CALL(docolon);
 
   exit(0);

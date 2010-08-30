@@ -58,7 +58,7 @@
 1 CONSTANT COMPILATION-STATE       \ (standard) compilation state
 
 \ User variables
- 0 USER COLDSTART             \ xt of the word that cold-starts the system
+ 0 USER (START)               \ xt of the word that restarts the system
  1 USER EXECUTIVE             \ xt of outer executive
  2 USER (DATA-STACK)          \ address of the base of the data stack
  3 USER (RETURN-STACK)        \ address of the base of the return stack
