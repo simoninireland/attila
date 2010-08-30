@@ -18,20 +18,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
+# ---------- Release version ----------
+
+VERSION="0.9"
+
+
 # ---------- Setup ----------
 
 # autoconf and automake magic
-AC_INIT(bootstrap.c)
+#AC_INIT(bootstrap.c)
+AC_INIT()
 AC_PREREQ(2.54)
-VERSION=0.4
-AC_SUBST(VERSION)
 AM_PROG_CC_STDC
 AM_INIT_AUTOMAKE(attila,$VERSION)
-
-# announcements and standard places for the C pre-processor
-AC_DEFINE_UNQUOTED(ATTILA_ANNOUNCE,["Attila v.$VERSION: a re-targetable threaded interpreter"],[Program announcement])
-AC_DEFINE(ATTILA_COPYRIGHT,["Copyright (c) 2007 -- 2010, Simon Dobson <simon.dobson@computer.org>. Distributed under the GNU GPL"],[Program copyright])
-AC_DEFINE(ATTILA_STANDARD_PRELUDE,["prelude.fs"],[Standard prelude])
 
 
 # ---------- Basic programs ----------
@@ -48,6 +47,8 @@ AC_C_INLINE
 # bootstrapping 
 AC_CHECK_PROG(PERL,perl,`which perl`)
 test -z $PERL && AC_MSG_ERROR([attila needs a version of perl to bootstrap the system])
+AC_CHECK_PROG(UNAME,uname,`which uname`)
+test -z $UNAME && AC_MSG_ERROR([attila needs a version of uname to bootstrap the system])
 
 
 # ---------- Sizes, headers, functions and libraries ----------
