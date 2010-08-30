@@ -62,5 +62,9 @@ TESTING" Leaving loops from the middle"
 { :NONAME 10 0 DO I DUP 2 = IF LEAVE THEN LOOP 1+ ; EXECUTE -> 0 1 3 }
 { :NONAME 10 0 DO I DUP 2 = IF EXIT  THEN LOOP 1+ ; EXECUTE -> 0 1 2 }
 
+\ LEAVE should only leave 1 loop; EXIT should leave them all
+{ :NONAME 4 0 DO I 2 0 DO I J 2 > IF LEAVE THEN LOOP LOOP ; EXECUTE -> 0 0 1 1 0 1 2 0 1 3 0 }
+{ :NONAME 4 0 DO I 2 0 DO I J 2 > IF EXIT  THEN LOOP LOOP ; EXECUTE -> 0 0 1 1 0 1 2 0 }
+
 
 
