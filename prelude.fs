@@ -94,6 +94,9 @@ include wordlists.fs             \ Multiple word lists
 \ Dynamic memory
 include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
 
+\ Compilation and debugging support
+include decompiler.fs            \ Word decompilation
+
 \ Local variables
 \ include locals-base.fs           \ base definitions
 \ include ans-locals.fs            \ LOCALS| ... | for symbolic local definitions

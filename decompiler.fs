@@ -103,8 +103,8 @@ DATA SPECIAL-WORDS-TABLE MAX-SPECIAL-WORDS 2* CELLS ALLOT
 
 \ Display a "normal" (non-special) word
 : (DISPLAY-NONSPECIAL-WORD) ( ip xt -- ip' )
-    \ >NAME TYPE SPACE
-    .HEX SPACE
+    >NAME TYPE SPACE
+    \ .HEX SPACE
     1 CELLS + ;
 
 \ Look-up a word in the special words table, returning its display word or 0
