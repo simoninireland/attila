@@ -27,3 +27,4 @@ TESTCASES" Core system tests"
 testcases test/stack.fs
 testcases test/arithmetic.fs
 testcases test/allot.fs
+testcases test/loops.fs
