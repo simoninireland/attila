@@ -43,6 +43,10 @@ INTERPRET/COMPILE ."
 \ Immediately print anything up to the next closing bracket
 : .( BL CONSUME [CHAR] ) PARSE TYPE CR ; IMMEDIATE
 
+\ Push the first character of a string onto the stack
+: CHAR \ ( addr len -- c )
+    DROP C@ ;
+
 \ Place a string into data memory. Safe for empty strings
 : S, \ ( addr n -- )
     DUP C,
