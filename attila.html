@@ -1118,10 +1118,15 @@ If you want to understand more about how Attila constructs itself, the details a
 
 </pre>
 </div>
-<div title="ForthCodingStyle" creator="sd" modifier="sd" created="201008261411" tags="overview style" changecount="1">
+<div title="ForthCodingStyle" creator="sd" modifier="sd" created="201008261411" modified="201008301046" tags="overview style" changecount="3">
 <pre>! Forth coding style guide
 
 Here are a few coding style tips. See also [[tips for cross-compiler-friendly code|CrossCompilerCodingStyle]]. 
+
+!! Obey the naming conventions where appropriate
+
+Forth coding generates a //lot// of words. To keep them straight and to keep code readable, the standard Forth [[naming conventions|NamingConventions]] are very helpful and well worth learning. They shouldn't be used slavishly, however: adopt and adpat as appropriate to create the most readable code.
+ 
 
 !! Code bottom-up
 
@@ -1202,26 +1207,19 @@ Attila supports the following memory models:
 * [[Static, fixed-sized|StaticFixedMemoryModel]] intended for embedded devices and other systems where it's important to fix the maximum memory footprint.
 </pre>
 </div>
-<div title="Prelude" creator="sd" modifier="sd" created="201008181729" modified="201008181730" tags="prelude overview" changecount="2">
-<pre>! The standard prelude
+<div title="NamingConventions" creator="sd" modifier="sd" created="201008301029" modified="201008301046" tags="overview style" changecount="9">
+<pre>! Word naming conventions
 
-The standard prelude, {{{ prelude.fs }}}, is a single file that builds a &quot;standard&quot; Forth system on top of a virtual machine. It causes the virtual machine to load and compile all the source code describing a standard system. This includes the following language features:
+In Forth, all words are treated fairly equally. To help keep things clear, there are a few naming conventions that it can help to adhere to and recognise:
 
-* [[Control structures|ControlFlowWords]], conditionals and loops
-* [[Defining words|DefiningWords]] for constants, variables and values
-* [[Strings|StringWords]] and [[long strings (zstrings)|ZStringWords]]
-* [[Word lists|WordListWords]] allowing words to be grouped into collections
-* [[Dynamic memory management|DynamicMemoryManagementWords]] for allocating and releasing memory flexibly
-* [[Records|RecordWords]] for building record structures
-* [[Lists|ListWords]] of values
-* [[Formatted text I/O|IOWords]]
-* [[File I/O|FileIOWords]] for access mass media
-* A description of the [[virtual machine's characteristics|VMWords]]
+* Words are usually defined and referred to in capital letters, so {{{DUP}}} rather than {{{dup}}} -- although in code the compiler recognises either and even mixed cases, and it's often more attractive to write in lower case
+* Immediate words appear in square brackets, for example {{{[COMPILE]}}}, {{{[']}}}
+* Words that test the stack to determine an action have leading question marks, for example {{{?DUP}}}
+* Words that test some condition and leave a flag on the stack have trailing question marks, for example {{{IMMEDIATE?}}}
+* Words that store and fetch data from memory have trailing exclamation marks and at-signs respectively,  typically preceded by what sort of data they manipulate, for example {{{XT!}}}, {{{RA@}}}
+* Words intended to provide lower-level, not-usually-used-by-users functions appear in brackets, for example {{{(:)}}}
 
-The prelude is loaded automatically when Attila is run.
-  
-
-</pre>
+These are only //conventions//, of course, and no harm will come if they're ignored -- except in terms making your code less readable to people who //do// follow the conventions. That's a good enough reason to follow them. There are also good reasons //not// to: control structures are immediate but don't use square brackets ({{{BEGIN}}} not {{{[BEGIN]}}}) because they're so common and it's of no real relevance to the programmer that they actually //are// immediate.</pre>
 </div>
 <div title="SimpleDataStructureWords" creator="sd" modifier="sd" created="201008281559" modified="201008281559" tags="words DATA (DATA)" changecount="2">
 <pre>! Simple data structures
@@ -1241,6 +1239,52 @@ The primitive form of {{{ DATA }}} that takes the name of the word to create off
 </div>
 <div title="SiteTitle" creator="YourName" modifier="YourName" created="201008161037" changecount="1">
 <pre>Attila</pre>
+</div>
+<div title="StandardPrelude" creator="sd" modifier="sd" created="201008181729" modified="201008301021" tags="prelude prelude.fs overview" changecount="4">
+<pre>! The standard prelude
+
+The standard prelude, prelude.fs, is a single file that builds a &quot;standard&quot; Forth system on top of a virtual machine. It causes the virtual machine to load and compile all the source code describing a standard system. This includes the following language features:
+
+* [[Control structures|ControlFlowWords]], conditionals and loops
+* [[Defining words|DefiningWords]] for constants, variables and values
+* [[Strings|StringWords]] and [[long strings (zstrings)|ZStringWords]]
+* [[Word lists|WordListWords]] allowing words to be grouped into collections
+* [[Dynamic memory management|DynamicMemoryManagementWords]] for allocating and releasing memory flexibly
+* [[Records|RecordWords]] for building record structures
+* [[Lists|ListWords]] of values
+* [[Formatted text I/O|IOWords]]
+* [[File I/O|FileIOWords]] for access mass media
+* A description of the [[virtual machine's characteristics|VMWords]]
+* A simple [[decompiler|DecompilerWords]]
+
+The prelude is loaded automatically when Attila is run.
+  
+
+</pre>
+</div>
+<div title="StartupSequence" creator="sd" modifier="sd" created="201008301017" modified="201008301020" tags="startup prelude.fs startup.fs" changecount="4">
+<pre>! Start-up sequence
+
+When the standard interpreter is run, it performs the following actions:
+
+# Sets-up the initial stacks by reading their addresses from {{{(DATA-STACK)}}} and {{{(RETURN-STACK)}}} respectively
+# Sets-up the initial terminal I/O to use standard input and output
+# Calls the word in the start vector {{{(START)}}}, which by default is {{{START}}} and:
+## Calls {{{(RESET)}}}, which:
+### Resets the stacks
+### Resets the default number base to 10 ({{{DECIMAL}}})
+### Sets the system into interpretation state
+### Disables debugging
+### Resets the I/O sub-system
+### Empties any pending input
+## Re-sets the start vector {{{(START)}}} to hold {{{OUTER}}}, so the the outer executive runs next time the system restarts
+## Announces the system on the terminal
+## Loads the standard prelude from prelude.fs
+## Warm-starts the system by calling {{{WARM}}}
+
+The net result of this is to place the system ready to receive input with the standard language loaded. The [[standard prelude|StandardPrelude]] contains a reasonably complete and reasonably standard Forth system, with extensions.
+
+[[Cross-compiled|CrossCompilerOverview]] systems can re-define the start-up behaviour as required by placing the appropriate start-up word into {{{(START)}}} during cross-compilation.</pre>
 </div>
 <div title="StyleSheet" creator="sd" modifier="sd" created="201008161241" modified="201008261429" tags="template" changecount="46">
 <pre>/***
@@ -1374,6 +1418,21 @@ Defining words are words that support the creation of new words. They provide a 
 The classic defining word is {{{:}}} for creating new &quot;normal&quot; words.
 
 Most defining words use the {{{CREATE}}} ... {{{DOES&gt;}}} construct (see [[here|CreateDoesWords]] to create new words and assign run-time behaviour to them. </pre>
+</div>
+<div title="TermExecutive" creator="sd" modifier="sd" created="201008301026" tags="term executive" changecount="1">
+<pre>! Executive
+
+The outermost interactive loop of a Forth system. The executive typically reads user input and executes it, allowing access to all the words in the dictionary and to the colon-compiler and other [[defining words|TermDefiningWord]].
+  </pre>
+</div>
+<div title="TermPrelude" creator="sd" modifier="sd" created="201008301025" modified="201008301025" tags="term prelude prelude.fs" changecount="3">
+<pre>! Prelude
+
+The language that is loaded into an interactive system by default. This allows a &quot;standard&quot; (or indeed non-standard) language to be made available immediately, without it being compiled-in to the virtual machine. This separation reduces the need to re-compile the virtual machine.
+
+The prelude is just a Forth file that's {{{INCLUDE}}}'d automatically without user intervention. As such it's easy to define new preludes for different languages as required. &quot;Turnkey&quot; systems can also be built, where the prelude executes user code rather than dropping into the [[outer executive|TermExecutive]].
+
+The [[standard prelude|StandardPrelude]] prelude.fs includes a fairly complete and reasonably standard Forth language, and is loaded by default in interactive systems.</pre>
 </div>
 <div title="UserVariableWords" creator="sd" modifier="sd" created="201008281630" tags="words USERVAR USER" changecount="1">
 <pre>! User variables
