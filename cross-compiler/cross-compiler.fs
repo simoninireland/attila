@@ -110,18 +110,10 @@ WORDLISTS>
 <WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
 \ Pre-defining unavoidable forward references
 DEFER USERVAR
-DEFER >CFA
 DEFER (HEADER,)
+DEFER (WORD)
 DEFER CTCOMPILE,
 DEFER NEXT,
-
-\ Sizes of architectural elements, and other characteristics. These are
-\ defaults that can be overridden later
-\ 4 VALUE /CELL
-\ 1 VALUE /CHAR
-\ 1 VALUE BIGENDIAN?
-\ : CELLS \ ( n -- bs )
-\     /CELL * ;
 
 .( Loading target vm description...)
 : CONSTANT
@@ -132,6 +124,11 @@ DEFER NEXT,
   DOES> [FORTH] @ [CROSS] USERVAR ;
 
 include vm.fs
+WORDLISTS>
+
+.( Loading target character handlers...)
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
+include ascii.fs
 WORDLISTS>
 
 .( Loading image manager...)
@@ -147,6 +144,11 @@ WORDLISTS>
 .( Loading cross-compiler memory model...)
 <WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
 include cross-compiler/cross-flat-memory-model.fs
+WORDLISTS>
+
+.( Loading cross-compiler interpretation model...)
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
+include itil.fs
 WORDLISTS>
 
 <WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
@@ -169,10 +171,6 @@ WORDLISTS>
 include cross-compiler/cross-generate.fs
 WORDLISTS>
 
-.( Loading cross-compiler high-level image initialisation...)
-<WORDLISTS ONLY FORTH ALSO CROSS ALSO CODE-GENERATOR ALSO DEFINITIONS
-include cross-compiler/cross-initialisation.fs
-WORDLISTS>
 
 .( Loading colon cross-compiler...)
 <WORDLISTS ONLY FORTH ALSO CROSS ALSO CROSS-COMPILER DEFINITIONS
@@ -182,13 +180,21 @@ include cross-compiler/cross-colon.fs
     CREATE IMMEDIATE [FORTH] ,
   DOES> [FORTH] @
     INTERPRETING? NOT IF
-	[ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ]
+	[CROSS-COMPILER] CROSS-COMPILING? IF
+	    [ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ]
+	ELSE
+	    POSTPONE LITERAL
+	THEN
     THEN ;
 : USER
     CREATE IMMEDIATE [FORTH] ,
   DOES> [FORTH] @ [CROSS] USERVAR
     INTERPRETING? NOT IF
-	[ 'CROSS-COMPILER ALITERAL [FORTH] CTCOMPILE, ]
+	[CROSS-COMPILER] CROSS-COMPILING? IF
+	    [ 'CROSS-COMPILER ALITERAL [FORTH] CTCOMPILE, ]
+	ELSE
+	    POSTPONE LITERAL
+	THEN
     THEN ;
 WORDLISTS>
 
@@ -199,6 +205,7 @@ WORDLISTS>
 
 .( Loading cross-compiler comment handling...)
 <WORDLISTS ONLY FORTH ALSO CROSS-COMPILER DEFINITIONS
+
 include comments.fs
 WORDLISTS>
 

@@ -207,7 +207,7 @@ C: (?BRANCH) ( f -- )
 
 \ Resolve a jump from here backwards to the address on the stack
 : JUMP-BACKWARD ( a -- )
-    TOP -
+    TOP - 
     COMPILE, ;
 WORDLISTS>
 

@@ -24,22 +24,13 @@
 \ ALIGN etc align on cell boundaries). Each cell is associated with an output
 \ word that emits it when the image is saved. For cells holding numbers this
 \ emits the value directly; for cells holding Attila (image) addresses, xts etc
-\ this emits an address of the C-level data structure.
+\ this emits an address of the C-level data structure; for cells holding CFAs,
+\ this emits a pointer to a C primitive by name.
 \
 \ The cells in the image need not be the same size as those in the host,
 \ but cannot (at present) be larger.
-\
-\ The image has a single code and data space, with everything allocated sequentially.
-\
-\ The image has a fixed maximum size. This should probably be refactored to allow
-\ extensible images
 
 \ ---------- Building and maintaining the target ----------
-
-\ The parts of the image
-VARIABLE (TARGET-TOP)            \ the current compilation address
-: (TARGET-HERE) (TARGET-TOP) ;   \ current data address, same as compilation
-VARIABLE (TARGET-LAST)           \ the last txt defined
 
 \ The number of host bytes needed to store one target cell:
 \    - 1 CELL for output word
@@ -50,8 +41,16 @@ VARIABLE (TARGET-LAST)           \ the last txt defined
 \ when the image block is created
 0 VALUE IMAGE
 
+\ The highest address actually stored to in the image
+VARIABLE HIGHEST-MODIFIED-IMAGE-ADDRESS
+: T>HIGHEST ( taddr -- )
+    DUP HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] @ > IF
+	DUP HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] !
+    THEN ;
+
 \ Return the host address of the given target image address
 : T> \ ( taddr -- addr )
+    T>HIGHEST
     /CELL /MOD
     /IMAGECELL * + IMAGE + 1 CELLS + ;
 
@@ -59,28 +58,6 @@ VARIABLE (TARGET-LAST)           \ the last txt defined
 : T>EMIT \ ( taddr -- addr )
     /CELL /MOD
     NIP /IMAGECELL * IMAGE + ;
-
-\ Return the number of cells the image actually contains
-: IMAGECELLS \ ( -- n )
-    (TARGET-TOP) @ /CELL /MOD SWAP IF 1+ THEN ;
-
-
-\ ---------- Accessing the image ----------
-
-\ Reading and writing to and from the image's addresses. All the other
-\ image manipulations are built from these
-: C! T> [FORTH] C! ;
-: C@ T> [FORTH] C@ ;
-
-\ The (target) address of the image's i'th user variable
-: (SIMPLE-USERVAR)
-    /CELL * ;
-
-' (SIMPLE-USERVAR) IS USERVAR
-
-\ Reading and writing the output word for a cell
-: E! T>EMIT [FORTH] ! ;
-: E@ T>EMIT [FORTH] @ ;
 
 
 \ ---------- Saving the image ----------
@@ -132,146 +109,114 @@ VARIABLE (TARGET-LAST)           \ the last txt defined
     COUNT TYPE ;
 
 
-\ ---------- Platform and compilation primitives ----------
+\ ---------- Accessing the image ----------
 
-\ Cross-compiler access to important target addresses
-: TOP  (TARGET-TOP) @ ;
-: HERE (TARGET-HERE) @ ;
-: LASTXT (TARGET-LAST) @ ;
-: LASTXT! (TARGET-LAST) ! ;
+\ Reading and writing the output word for a cell
+: E! T>EMIT [FORTH] ! ;
+: E@ T>EMIT [FORTH] @ ;
 
-\ Compile a character
-: CCOMPILE, \ ( c -- )
-    TOP C!
-    1 (TARGET-TOP) +! ;
-
-\ Align code address on cell boundaries
-: CALIGN \ ( addr -- aaddr )
+\ Align a target address
+: T>ALIGN ( taddr -- taddr' )
     DUP /CELL MOD ?DUP 0<> IF /CELL SWAP - + THEN ;
-: CALIGNED \ ( -- )
-    TOP CALIGN TOP - ?DUP IF
-	0 DO
-	    0 CCOMPILE,
-	LOOP
-    THEN ;
-: CALIGNED? \ ( addr -- f )
-    DUP CALIGN = ;
 
-\ Compile value using target endianness
-\ sd: should be refactored using [IF] etc
-: COMPILE, \ ( n -- )
-    CALIGNED
+\ Test for address alignment
+: T>ALIGNED? \ ( addr -- addr )
+    DUP DUP T>ALIGN <> IF
+	. SPACE S" is not aligned on a cell boundary" ABORT
+    THEN ;
+
+\ Characters
+: C! T> [FORTH] C! ;
+: C@ T> [FORTH] C@ ;
+
+\ Values, stored using target endianness. We have to maintain endianness at this
+\ level, since otherwise code being cross-compiled that relied on endianness, for
+\ example by addressing into data words, wouldn't work. Although it's quite a lot of
+\ work in converting, this shouldn't be a problem on a development-class system
+: ! ( v taddr -- )
+    T>ALIGNED?
+    SWAP
     /CELL 0 DO
 	BIGENDIAN? IF
-	    DUP /CELL I - 1- 8 * RSHIFT 255 AND CCOMPILE,
+	    2DUP
+	    /CELL I - 1- 8 * RSHIFT 255 AND
+	    SWAP I + C!
 	ELSE
-	    DUP 255 AND CCOMPILE,
+	    2DUP
+	    255 AND
+	    SWAP I + C!
 	    8 RSHIFT
 	THEN
-    LOOP DROP ;
-
-\ Real (target) addresses are stored as values
-: RACOMPILE, COMPILE, ;
-
-\ Forth addresses are stored as offsets into the image
-: ACOMPILE, \ ( taddr -- )
-    CALIGNED
-    TOP T> [FORTH] !    \ store address in host endiannness
-    ['] EMIT-ADDRESS TOP E!
-    /CELL (TARGET-TOP) +! ;
-
-\ Target xts are stored as target addresses
-: XTCOMPILE, ACOMPILE, ;
-
-\ Strings need to be copied from host memory, hence the explicit use of host C@ and CHARS
-: SCOMPILE, \ ( addr n -- )
-    DUP CCOMPILE,
-    0 DO
-	DUP [FORTH] C@ CCOMPILE,
-	1 [FORTH] CHARS +
-    LOOP DROP CALIGNED ;
-
-\ For CFAs we assume that the caddr is a counted-string address of
-\ a symbol, and cross-compile it by writing the string into the
-\ image and setting the output word to write it out correctly. 
-: CFACOMPILE, \ ( cf -- )
-    CALIGNED
-    TOP T> [FORTH] !  \ store counted string address in host endianness
-    ['] EMIT-CFA TOP E!
-    /CELL (TARGET-TOP) +! ;
-
-\ In this model, data and code compilation are the same
-: C,       CCOMPILE, ;
-: ,        COMPILE, ;
-: RA,      RACOMPILE, ;
-: A,       ACOMPILE, ;
-: XT,      XTCOMPILE, ;
-: ALIGN    CALIGN ;
-: ALIGNED  CALIGNED ;
-: ALIGNED? CALIGNED? ;
-
-\ Reading and writing, with alignment checking
-: CHECK-ALIGNED \ ( addr -- addr )
-    DUP ALIGNED? NOT IF
-	. SPACE S" is not word-aligned" ABORT
-    THEN ;
-: !
-    CHECK-ALIGNED
-    DUP ROT T> [FORTH] !
+    LOOP DROP
     ['] EMIT-CELL SWAP E! ; 
-: @
-    CHECK-ALIGNED T> [FORTH] @ ;
+: @ ( taddr -- v )
+    T>ALIGNED?
+    0
+    /CELL 0 DO
+	BIGENDIAN? IF
+	    8 LSHIFT
+	    OVER I + C@ OR
+	ELSE
+	    OVER I + C@
+	    I 8 * LSHIFT OR
+	THEN
+    LOOP NIP ;
+
+\ Incrementing a location in one operation
+: +! ( n taddr -- )
+    DUP ROT
+    @ +
+    SWAP ! ;
+
+\ Real addresses, stored as values
 : RA! ! ;
 : RA@ @ ;
+
+\ Attila addresses, stored as offsets within the image
 : A!
     DUP ROT !
     ['] EMIT-ADDRESS SWAP E! ; 
 : A@ @ ;
+: A+! ( n taddr -- )
+    DUP ROT
+    @ +
+    SWAP A! ;
+
+\ xts, stored as addresses
 : XT! A! ;
 : XT@ A@ ;
-: CFA@ \ ( txt -- cf )
-    >CFA @ ;
-: CFA! \ ( cf txt -- )
-    >CFA DUP ROT !
-    ['] EMIT-CFA SWAP E! ;
 
-\ ALLOTting data space simply compiles zeros
-: ALLOT ( n -- )
-    0 DO
-	0 C,
-    LOOP ;
+\ CFAs, stored as pointers to host-side counted strings
+: (CFA@) T> [FORTH] @ ;
+: (CFA!) 
+    DUP ROT T> [FORTH] !
+    ['] EMIT-CFA SWAP E! ;
 
 
 \ ---------- Initialising and finalising the image ----------
-
-<WORDLISTS ONLY FORTH ALSO CROSS ALSO CODE-GENERATOR ALSO DEFINITIONS
 
 \ Initialise the image
 : (INITIALISE-IMAGE) \ ( -- )
     \ allocate the image and point IMAGE at it
     [FORTH] HERE TO IMAGE
     IMAGE-SIZE /IMAGECELL * [FORTH] ALLOT
-
+    0 HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] !
+    
     \ all cells are treated as data cells initially
     IMAGE-SIZE 0 DO
 	['] EMIT-CELL I /CELL * E!
-    LOOP
-    
-    \ initialise the image pointers
-    0 (TARGET-TOP)  [FORTH] !
-    0 (TARGET-LAST) [FORTH] !
-    
-    \ initialise the user variable space
-    USER-SIZE 0 DO
-	0 COMPILE,
     LOOP ;
-
+ 
 \ Finalise the image -- nothing to do in this model
 : (FINALISE-IMAGE) ( -- )
 ;
 
 
 \ ---------- Emitting the image ----------
+
+\ Return the number of cells the image actually contains
+: IMAGECELLS \ ( -- n )
+    HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] @ /CELL /MOD SWAP IF 1+ THEN ;
 
 \ Emit the image as a C data structure
 : EMIT-IMAGE \ ( -- )
@@ -282,8 +227,6 @@ VARIABLE (TARGET-LAST)           \ the last txt defined
 	SWAP          E@ EXECUTE ." ," CR
     LOOP
     ." };" CR ;
-
-WORDLISTS>
 
 \ Emit a small part of the image around the given target address
 : EMIT-AROUND \ ( taddr -- )

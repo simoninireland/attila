@@ -40,7 +40,7 @@
 \ Compile an anonymous word with no name, leaving its xt on the data stack
 \ after the final ;
 : :NONAME \ ( -- xt xt )
-    0 0 ['] (:) CFA@ (HEADER,)
+    0 0 ['] (:) CFA@ (WORD)
     START-DEFINITION
     DUP
     ] ;

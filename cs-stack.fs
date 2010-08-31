@@ -54,11 +54,9 @@ MAX-LOOP-DEPTH /CS * STACK CS
 \ The leaves stack
 MAX-LEAVES STACK LEAVES
 
-\ Access and update the elements of the control structure stack
+\ Access the elements of the control structure stack
 : (CS-BEGIN-ADDR) 1 CS ST-PICK ;
-: (CS-BEGIN-ADDR!) 1 CS ST>ADDR ! ;
 : (CS-R) CS ST@ ;
-: (CS-R!) CS ST>TOPADDR ! ;
 
 \ Return how many control structures deep we are
 : #CS \ ( -- n )

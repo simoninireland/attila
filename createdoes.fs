@@ -27,7 +27,7 @@
 \ Create a data block that returns its body address when executed
 : (DATA) \ ( addr n -- )
     START-DEFINITION
-    ['] (VAR) CFA@ (HEADER,)
+    ['] (VAR) CFA@ (WORD)
     END-DEFINITION
     DROP ;
     

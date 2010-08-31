@@ -48,7 +48,7 @@
     GENERATE-PRIMITIVES CR CR
 
     ." // Initial image" CR
-    EMIT-IMAGE CR CR ;
+    [CROSS] EMIT-IMAGE CR CR ;
 
 
 \ Save the image to the given file

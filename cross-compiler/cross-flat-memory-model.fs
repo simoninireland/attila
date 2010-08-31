@@ -18,99 +18,123 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Cross-compiler header compiler for flat memory model.
-\
-\ As with all memory models, it is vital that this file
-\ matches the details contained in the underlying memory model
-\ description, and that the right target words are cross-compiled
-\ to support it at run-tiime -- otherwise bad things will happen.
-\ sd: can we mechanise this? Probably not...
+\ Cross-compiler header compiler for flat memory model with a single
+\ linear code and data allocation.
+
+\ ---------- User variables ----------
+
+\ User variables live in the bottom cells of the image
+: (SIMPLE-USERVAR)
+    /CELL * ;
+
+' (SIMPLE-USERVAR) IS USERVAR
 
 
-\ ---------- Header navigation ----------
+\ ---------- Platform and compilation primitives ----------
 
-\ Convert an txt to the address of its code field (no-op in this model)
-' NOOP IS >CFA
+\ HERE and TOP are the same in this model, as are THERE and CEILING
+: TOP     (TOP) A@ ;
+: CEILING (CEILING) A@ ;
+: HERE    TOP ;
+: THERE   CEILING ;
+: LASTXT  LAST XT@ ;
 
-\ (Code field manipulation words are in the image manager)
+\ Compile a character
+: CCOMPILE, \ ( c -- )
+    TOP C!
+    /CHAR (TOP) A+! ;
 
-\ Convert an txt to a link pointer containing the xt of the next word in the
-\ definition chain
-: >LFA \ ( txt -- lfa )
-    1 CELLS - ;
-
-\ Convert a txt to its status field
-: >STATUS \ ( txt -- addr )
-    2 CELLS - 1+ ;
-
-\ Convert an xt to a name string. addr will be CALIGNED
-: >NAME \ ( txt -- addr namelen )
-    >LFA 1 CELLS - DUP C@
-    DUP >R
-    - 1-
-    1 CELLS - CALIGN
-    R> ;
-
-\ Convert a txt to indirect body (DOES> behaviour) if present
-: >IBA \ ( txt -- iba )
-    1 CELLS + ;
-
-\ Access IBA
-: IBA@ ( txt -- addr ) >IBA @ ;
-: IBA! ( addr txt -- ) >IBA ! ;
-
-
-\ ---------- Status and body management ----------
-
-\ Mask-in the given mask to the status of a word
-: SET-STATUS \ ( f txt -- )
-    >STATUS DUP C@
-    -ROT OR
-    SWAP C! ;
-
-\ Get the status of the given word
-: GET-STATUS \ ( txt -- s )
-    >STATUS C@ ;
-
-\ Convert txt to body address, accounting for iba if present
-: >BODY \ ( xt -- addr )
-    DUP >IBA
-    SWAP REDIRECTABLE? IF
-	1 CELLS +
-    THEN ;
-
-
-\ ---------- Header construction ----------
-
-\ Cross-compile a header for the name word with the given code field
-: (CROSS-PRIMITIVE-HEADER,) \ ( addr n cf -- txt )
-    CALIGNED                       \ start word on code cell boundary (if needed)
-    >R                             \ stash the code field
-    DUP >R                         \ compile the name
-    ?DUP 0> IF
+\ Align code address on cell boundaries
+: CALIGN T>ALIGN ;
+: CALIGNED \ ( -- )
+    TOP CALIGN TOP - ?DUP IF
 	0 DO
-	    DUP [FORTH] C@ CCOMPILE,
-	    1 CHARS +
+	    0 CCOMPILE,
 	LOOP
-    THEN
-    DROP
-    CALIGNED                       \ name and status on next cell boundary (if needed)
-    R> CCOMPILE,                   \ compile the name length
-    0 CCOMPILE,                    \ status byte
-    CALIGNED                       \ link poiinter on next cell boundary (if needed)
-    LASTXT DUP 0= IF               \ compile the link pointer
-	COMPILE,                   \ first word, LFA is 0
-    ELSE
-	ACOMPILE,                  \ other words, point LASTXT address 
-    THEN 
-    TOP                            \ the txt
-    R> CFACOMPILE,                 \ the code pointer
-    DUP LASTXT! ;                  \ update LAST
+    THEN ;
+: CALIGNED? \ ( addr -- f )
+    DUP CALIGN = ;
 
-\ Create a header and a locator
-: (CROSS-HEADER,) ( addr n cf -- txt )
-    >R 2DUP R> (CROSS-PRIMITIVE-HEADER,)
-    CREATE-WORD-LOCATOR ;
+\ Compile value
+: COMPILE, \ ( n -- )
+    CALIGNED
+    TOP !
+    /CELL (TOP) A+! ;
 
-' (CROSS-HEADER,) IS (HEADER,)
+\ Compile real (target) address
+: RACOMPILE,
+    CALIGNED
+    TOP RA!
+    /CELL (TOP) A+! ;
 
+\ Compile Forth address
+: ACOMPILE, \ ( taddr -- )
+    CALIGNED
+    TOP A!
+    /CELL (TOP) A+! ;
+
+\ Compile  target xt
+: XTCOMPILE,
+    CALIGNED
+    TOP XT!
+    /CELL (TOP) A+! ;
+
+\ Strings need to be copied from host memory, hence the explicit use of host C@ and CHARS
+: SCOMPILE, \ ( addr n -- )
+    CALIGNED
+    DUP CCOMPILE,
+    0 DO
+	DUP [FORTH] C@ CCOMPILE,
+	1 [FORTH] CHARS +
+    LOOP DROP CALIGNED ;
+
+\ Compile CFA
+: CFACOMPILE, \ ( cf -- )
+    CALIGNED
+    TOP (CFA!)
+    /CELL (TOP) A+! ;
+
+\ In this model, data and code compilation are the same
+: C,       CCOMPILE, ;
+: ,        COMPILE, ;
+: RA,      RACOMPILE, ;
+: A,       ACOMPILE, ;
+: XT,      XTCOMPILE, ;
+: ALIGN    CALIGN ;
+: ALIGNED  CALIGNED ;
+: ALIGNED? CALIGNED? ;
+
+\ ALLOTting data space simply compiles zeros
+: ALLOT ( n -- )
+    0 DO
+	0 C,
+    LOOP ;
+
+
+\ ---------- High-level image initialisation and finalisation ----------
+
+\ Initialise the image
+: INITIALISE-IMAGE
+    (INITIALISE-IMAGE)
+
+    \ allocate user variables
+    USER-SIZE 0 DO
+	0 I /CELL * !
+    LOOP
+
+    \ initialise core user variables
+    USER-SIZE  /CELL * (TOP)     A!
+    IMAGE-SIZE /CELL * (CEILING) A!
+    0 LAST A!
+    
+    \ initialise stacks and TIB
+    HERE (DATA-STACK) A!           \ data stack 
+    DATA-STACK-SIZE CELLS   ALLOT
+    HERE (RETURN-STACK) A!         \ return stack 
+    RETURN-STACK-SIZE CELLS ALLOT
+    HERE TIB A!                    \ terminal input buffer
+    TIB-SIZE                ALLOT ;
+
+\ Finalise the image prior to being output
+: FINALISE-IMAGE
+    (FINALISE-IMAGE) ;

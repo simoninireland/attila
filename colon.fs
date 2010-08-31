@@ -36,7 +36,7 @@ DATA (END-DEFINITION)   ' NOOP XT,
 \ The colon-definer
 : : ( "name" -- xt )
     START-DEFINITION
-    PARSE-WORD ['] (:) CFA@ (HEADER,)
+    PARSE-WORD ['] (:) CFA@ (WORD)
     ] ;
 
 \ Complete a colon-definition

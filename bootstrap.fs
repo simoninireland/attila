@@ -479,7 +479,7 @@ C: (DOES) ( -- body )
 \ ---------- Word compilation ----------
 
 \ Compile a word header. Note that this has to work with an empty name
-C: (HEADER,) start_word ( addr len cf -- xt )
+C: (WORD) start_word ( addr len cf -- xt )
     XT last;
 	
     xt = (XT) top;                                     // grab the xt	

@@ -257,7 +257,7 @@ C: >BODY xt_to_body ( xt -- addr )
 
 \ Create a header for the named word with the given code field. We must handle the
 \ name being of zero length for :NONAME definitions
-: (HEADER,) \ ( addr n cf -- xt )
+: (WORD) \ ( addr n cf -- xt )
     CALIGNED                 \ align TOP on the next cell boundary 
     >R                       \ stash the code field
     DUP >R                   \ ...and the name length
@@ -292,48 +292,40 @@ C: >BODY xt_to_body ( xt -- addr )
 : HIDDEN? ( xt -- f )
     GET-STATUS HIDDEN-MASK AND 0<> ;
 
+\ Test whether two word names match. This is just a case-insensitive
+\ string comparison, but could be extended if desired
+: NAMES-MATCH? \ ( addr1 len1 addr2 len2 -- f )
+    2 PICK = IF
+	SWAP 0 DO
+	    OVER C@ >UC OVER C@ >UC C= IF
+		/CHAR + SWAP /CHAR +
+	    ELSE
+		2DROP 0 EXIT
+	    THEN
+	LOOP
+	2DROP TRUE
+    ELSE
+	DROP 2DROP FALSE
+    THEN ;
 
 \ Find the named word in the word list starting from the given
 \ xt. Return 0 if the word can't be found, or it's xt and either
 \ 1 for normal or -1 for IMMEDIATE words
-C: (FIND) bracket_find ( addr namelen x -- )
-    CHARACTERPTR taddr;
-    CELL tlen;
-    XT xt;
-    CELLPTR link;
-    BYTEPTR status;
-	
-    xt = (XT) NULL;
-    while(x != (BYTEPTR) NULL) {
-        PUSH_CELL(x);
-        CALL(xt_to_name);
-        tlen = POP_CELL();
-        taddr = POP_CELL();
-        #ifdef DEBUGGING
-            printf("-> %s\n", create_unix_string(taddr, tlen));
-        #endif
-        PUSH_CELL(x);
-        CALL(xt_to_status);
-        status = (BYTEPTR) POP_CELL();
-        if((((*status) & HIDDEN_MASK) == 0) &&
-           (namelen == tlen) &&
-	   (strncasecmp(addr, taddr, namelen) == 0)) {
-	    xt = x;   x = NULL;
-	} else {
-            PUSH_CELL(x);
-            CALL(xt_to_lfa);
-	    link = POP_CELL();
-	    x = (XT) (XTPTR) (*link);
-	}
-    }
-
-    PUSH_CELL(xt);
-    if(xt != (XT) NULL) {
-	PUSH_CELL(xt);
-	CALL(xt_to_status);
-	status = (BYTEPTR) POP_CELL();
-        PUSH_CELL((*status & IMMEDIATE_MASK) ? -1 : 1);
-    }
-;C
-
+: (FIND) ( addr n x -- xt 1 | xt -1 | 0 )
+    BEGIN
+	DUP 0<>
+    WHILE
+	    DUP HIDDEN? NOT IF
+		DUP >NAME
+		4 PICK 4 PICK NAMES-MATCH? IF
+		    ROT 2DROP
+		    1 OVER IMMEDIATE? IF
+			NEGATE
+		    THEN
+		    EXIT
+		THEN
+	    THEN
+	    >LFA @
+    REPEAT
+    ROT 2DROP ;
 	    

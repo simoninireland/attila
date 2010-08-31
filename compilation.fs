@@ -107,7 +107,7 @@ DATA (FIND-BEHAVIOUR) XT,
 
 \ Extract the first character of the next word in the input stream
 : [CHAR] \ ( "word" -- )
-    PARSE-WORD CHAR
+    PARSE-WORD DROP C@
     POSTPONE LITERAL ; IMMEDIATE
 
 

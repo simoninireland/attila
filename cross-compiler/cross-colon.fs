@@ -252,9 +252,16 @@ WORDLISTS>
 : IMMEDIATE    [CROSS] IMMEDIATE-MASK    [CROSS] LASTXT [CROSS] SET-STATUS ; 
 : REDIRECTABLE [CROSS] REDIRECTABLE-MASK [CROSS] LASTXT [CROSS] SET-STATUS ; 
 
+\ Create a header and a locator
+: (CROSS-WORD) ( addr n cf -- txt )
+    >R 2DUP R> (HEADER,)
+    CREATE-WORD-LOCATOR ;
+
+'CROSS-COMPILER (CROSS-WORD) 'CROSS (WORD) (IS)
+
 \ The colon-compiler
 : COLON ( addr n -- txt )
-    [CROSS-COMPILER] ['] (:) [CROSS] CFA@ [CROSS] (HEADER,)
+    [CROSS-COMPILER] ['] (:) [CROSS] CFA@ [CROSS] (WORD)
     ] ;    
 : : ( "name" -- txt )
     PARSE-WORD [CROSS-COMPILER] COLON ;

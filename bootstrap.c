@@ -320,7 +320,7 @@ init_dictionary() {
   // COMPILE("TYPE");
   // LITERAL(10);   COMPILE("EMIT");
   LITERAL(&docolon);
-  COMPILE("(HEADER,)");
+  COMPILE("(WORD)");
   COMPILE("START-DEFINITION");
   COMPILE("]");
   NEXT();

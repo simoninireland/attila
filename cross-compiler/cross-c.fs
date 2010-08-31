@@ -145,7 +145,7 @@ DATA (PRIMTEXT) 20 1024 * ALLOT
     LASTXT EXECUTE >R
     R@ PRIMITIVE-NAME @ COUNT             \ cross-compile word onto target
     R@ PRIMITIVE-CFA @
-    [CROSS] (CROSS-PRIMITIVE-HEADER,)
+    [CROSS] (HEADER,)
 
     R@ TARGET-XT !                        \ store txt of word in locator
 
