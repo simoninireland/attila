@@ -29,9 +29,7 @@ include vm.fs
 cross-compiler>
 
 .( Initialising cross-compiler target image...)
-<code-generator
-initialise-image
-code-generator>
+[cross] initialise-image
 
 .( Initialising image with really basic primitives...)
 <target
@@ -44,16 +42,14 @@ include c-itil.fs
 target>
 
 .( Initialising cross-compiler loop support...)
-<cross-compiler
+<cross-compiler also cross-compiler
 include cs-stack.fs
 include loop-support.fs
-cross-compiler>
 
-.( Loading cross-compiler loop words...)
-<cross-compiler also cross-compiler
 include conditionals.fs
 include loops.fs
 include counted-loops.fs
+
 : START-DEFINITION ;
 : END-DEFINITION ;
 include createdoes.fs
@@ -79,7 +75,7 @@ include startup.fs
 target>
 
 .( Finalising target image...)
-[code-generator] FINALISE-IMAGE
+[CROSS] FINALISE-IMAGE
 <TARGET
 ' START (START) XT!   \ cold start vector (first word executed)
 ' OUTER EXECUTIVE XT! \ executive (outer interpreter)

@@ -46,7 +46,7 @@ include defer.fs                 \ DEFER ... IS
 
 \ The VM
 include vm.fs                    \ Virtual machine structures and constants 
-include ascii.fs                 \ ASCII character operations
+include ascii.fs                 \ ASCII operations
 
 \ Simple loops
 include bootstrap-loops.fs       \ Simple loops without proper control

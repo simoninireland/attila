@@ -103,7 +103,6 @@ crosscompiler = x-host.fs \
 	cross-compiler/cross-colon.fs \
 	cross-compiler/cross-vm.fs \
 	cross-compiler/cross-generate.fs \
-	cross-compiler/cross-initialisation.fs \
 	cross-compiler/cross-environments.fs
 
 # The system sources, used to cross-compile a basic virtual machine
