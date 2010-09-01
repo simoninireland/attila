@@ -289,7 +289,11 @@ init_dictionary() {
   COMPILE("PARSE");
   COMPILE("?DUP");
   COMPILE_IF(if7,th7,el7);
-    COMPILE("SLITERAL");
+    COMPILE("INTERPRETING?");
+    COMPILE("NOT");
+    COMPILE_IF(if9,th9,el9); 
+      COMPILE("SLITERAL");
+    COMPILE_THEN(if9,th9,el9);
   COMPILE_ELSE(if7,th7,el7);
     STRING("String not delimited");
     COMPILE("ABORT");
