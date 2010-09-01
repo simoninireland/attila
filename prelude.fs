@@ -41,6 +41,7 @@ include interpret-compile.fs     \ INTERPRET-COMPILE
 include variables.fs             \ VARIABLE
 include uservariables.fs         \ USER
 include constants.fs             \ CONSTANT
+include stringconstants.fs       \ SCONSTANT
 include values.fs                \ VALUE
 include defer.fs                 \ DEFER ... IS
 

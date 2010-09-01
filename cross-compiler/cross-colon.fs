@@ -221,12 +221,14 @@
 	THEN
     EXHAUSTED? UNTIL ;
 
-\ Cross-compile a "-delimited string from the input source as a literal
+\ Compile a "-delimited string from the input source as a literal
 : S" \ ( "string" -- )
     32 CONSUME \ spaces
     [FORTH] [CHAR] " PARSE
     ?DUP IF
-	[ 'CROSS-COMPILER SLITERAL [FORTH] CTCOMPILE, ]
+	INTERPRETING? NOT IF
+	    [ 'CROSS-COMPILER SLITERAL [FORTH] CTCOMPILE, ]
+	THEN
 \    ELSE
 \	S" String not delimited" ABORT
     THEN ; [FORTH] IMMEDIATE

@@ -34,6 +34,9 @@
 : CONSTANT \ ( n "name" -- )
     PARSE-IDENTIFIER
     ." #define " TYPE SPACE . CR ;
+: SCONSTANT \ ( addr n "name" -- )
+    PARSE-IDENTIFIER
+    ." #define " TYPE SPACE 34 EMIT TYPE 34 EMIT CR ;
 : USER \ ( n "name" -- )
     PARSE-IDENTIFIER
     ." #define USER_" TYPE SPACE . CR ;
