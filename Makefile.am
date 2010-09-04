@@ -18,9 +18,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-# ----- Main program -----
+# ----- Main programs -----
 
 bin_PROGRAMS = bootattila attila
+
+
+# ----- Supporting tools for bootstrapping -----
+
+dist_bin_SCRIPTS = tools/primgen \
+	tools/crosscompile.fs
 
 
 # ----- Sources -----
@@ -28,45 +34,46 @@ bin_PROGRAMS = bootattila attila
 # The bootstrapping sources
 bootattila_SOURCES = vm.h \
 	primgen.h \
+	bootstrap.fs \
 	bootstrap.h \
 	bootstrap.c \
-	bootattila.c
+	bootattila.c \
+	bootstrap-prelude.fs \
+	bootstrap-vm.fs
+
+# The generated primitives file
+nodist_bootattila_SOURCES = primitives.c
 
 # The cross-compiled sources
 attila_SOURCES = x-host.h \
 	x-host.fs
 
-BUILT_SOURCES = primitives.c attila.c
-
-
-# ----- The bootstrapped interpreter -----
-
-# The collected bootstrap primitives, as a C file
-nodist_bootattila_SOURCES = primitives.c
-
-primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
-	$(PERL) tools/primgen -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/c-core.fs $(srcdir)/c-fileio.fs $(srcdir)/c-io.fs
-
-
-# ----- The cross-compiled interpreter -----
-
-# The generated VM
+# The generated VM file
 nodist_attila_SOURCES = attila.c
 
-attila.c: bootattila
-	./bootattila <tools/crosscompile.fs
 
-attila: attila.c
+# ----- The bootstrapped interpreter primitives file -----
+
+primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
+	$(PERL) $(srcdir)/tools/primgen -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/c-core.fs $(srcdir)/c-fileio.fs $(srcdir)/c-io.fs
+
+
+# ----- The cross-compiled interpreter VM -----
+
+attila.c: bootattila
+	bootattila <$(srcdir)/tools/crosscompile.fs
 
 
 # ----- The system sources -----
 
-# The standard prelude, included in a "real" Forth system
-prelude = conditionals.fs \
+# All the Forth code intended for normal use
+forth = comments.fs \
+	conditionals.fs \
 	base.fs \
 	createdoes.fs \
 	interpret-compile.fs \
 	variables.fs \
+	uservariables.fs \
 	constants.fs \
 	values.fs \
 	defer.fs \
@@ -87,16 +94,20 @@ prelude = conditionals.fs \
 	scratch.fs \
 	formatting.fs \
 	lists.fs \
+	records.fs \
 	file.fs \
 	evaluate.fs \
 	c.fs \
 	wordlists.fs \
-	dynamic-memory.fs
+	dynamic-memory.fs \
+	decompiler.fs \
+	funit.fs
 
 # The cross-compiler
 crosscompiler = x-host.fs \
 	x-host.h \
 	c-image-fixedsize.fs \
+	cross-compiler/cross-compiler.fs \
 	cross-compiler/cross-locator.fs \
 	cross-compiler/cross-flat-memory-model.fs \
 	cross-compiler/cross-c.fs \
@@ -108,6 +119,7 @@ crosscompiler = x-host.fs \
 # The system sources, used to cross-compile a basic virtual machine
 regular = c-core.fs \
 	c-itil.fs \
+	itil.fs \
 	c-fileio.fs \
 	c-io.fs \
 	flat-memory-model.fs \
@@ -115,11 +127,18 @@ regular = c-core.fs \
 	compilation.fs \
 	colon.fs \
 	load.fs \
-	executive.fs
+	executive.fs \
+	startup.fs
 
+# Tests
+test = test/core-system-tests.fs \
+	test/arithmetic.fs \
+	test/stack.fs \
+	test/loops.fs \
+	test/allot.fs
 
 # ----- Distribution -----
 
-dist_pkgdata_DATA = $(prelude) $(crosscompiler) $(regular)
+dist_pkgdata_DATA = $(forth) $(crosscompiler) $(regular) $(test)
 DISTCLEANFILES = primitives.c
 

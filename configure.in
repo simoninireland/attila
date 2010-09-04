@@ -18,19 +18,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-# ---------- Release version ----------
-
-VERSION="0.9"
-
-
-# ---------- Setup ----------
-
-# autoconf and automake magic
-#AC_INIT(bootstrap.c)
-AC_INIT()
+# Autoconf and Automake magic
+AC_INIT([attila],[0.9])
 AC_PREREQ(2.54)
 AM_PROG_CC_STDC
-AM_INIT_AUTOMAKE(attila,$VERSION)
+AM_INIT_AUTOMAKE
 
 
 # ---------- Basic programs ----------
