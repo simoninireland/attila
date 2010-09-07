@@ -30,73 +30,74 @@ include comments.fs
 \ indicated in the comments for the files in the distribution).
 
 \ Simple control structures
-include conditionals.fs          \ IF ... ELSE ... THEN
+include conditionals.fs              \ IF ... ELSE ... THEN
 
 \ "Primitives" outside the VM core
-include base.fs                  \ Derived primitives
+include base.fs                      \ Derived primitives
 
 \ Advanced compilation words
-include createdoes.fs            \ CREATE ... DOES>
-include interpret-compile.fs     \ INTERPRET-COMPILE
-include variables.fs             \ VARIABLE
-include uservariables.fs         \ USER
-include constants.fs             \ CONSTANT
-include stringconstants.fs       \ SCONSTANT
-include values.fs                \ VALUE
-include defer.fs                 \ DEFER ... IS
+include createdoes.fs                \ CREATE ... DOES>
+include interpret-compile.fs         \ INTERPRET-COMPILE
+include variables.fs                 \ VARIABLE
+include uservariables.fs             \ USER
+include constants.fs                 \ CONSTANT
+include stringconstants.fs           \ SCONSTANT
+include values.fs                    \ VALUE ... TO
+include defer.fs                     \ DEFER ... IS
 
 \ The VM
-include vm.fs                    \ Virtual machine structures and constants 
-include ascii.fs                 \ ASCII operations
+include vm.fs                        \ Virtual machine structures and constants 
+include ascii.fs                     \ ASCII operations
 
 \ Simple loops
-include bootstrap-loops.fs       \ Simple loops without proper control
+include bootstrap-loops.fs           \ Simple loops without proper control
 
 \ Data structures
-include stacks.fs                \ General stacks
+include stacks.fs                    \ General stacks
 
 \ Control structures
-include cs-stack.fs              \ Control structures stack
-include loop-support.fs          \ Exits and other supports
+include cs-stack.fs                  \ Control structures stack
+include loop-support.fs              \ Exits and other supports
 \ hide the simple llops, replace with "proper" ones
 ' BEGIN  (HIDE)
 ' UNTIL  (HIDE)
 ' WHILE  (HIDE)
 ' AGAIN  (HIDE)
 ' REPEAT (HIDE)
-include loops.fs                 \ BEGIN ... AGAIN
-                                 \ BEGIN ... UNTIL
-                                 \ BEGIN ... WHILE ... REPEAT
-include counted-loops-runtime.fs \ DO ... LOOP and +LOOP
+include loops.fs                     \ BEGIN ... AGAIN
+                                     \ BEGIN ... UNTIL
+                                     \ BEGIN ... WHILE ... REPEAT
+include counted-loops-runtime.fs     \ DO ... LOOP and +LOOP
 include counted-loops.fs
-include case.fs                  \ CASE ... OF ... ENDOF ... ENDCASE
-include hooks.fs                 \ Dynamic behaviour at strategic points
+include case.fs                      \ CASE ... OF ... ENDOF ... ENDCASE
+include hooks.fs                     \ Dynamic behaviour at strategic points
+include conditional-compilation.fs   \ [IF] ... [ELSE] ... [THEN]
 
 \ Data types
-include chars.fs                 \ Character operations
-include strings.fs               \ Counted (short) strings
-include zstrings.fs              \ Null-terminated (long, C-style) strings
-include scratch.fs               \ String scratch area
-include formatting.fs            \ Formatted numeric output
-include lists.fs                 \ Linked lists
-include records.fs               \ record types with named fields
+include chars.fs                     \ Character operations
+include strings.fs                   \ Counted (short) strings
+include zstrings.fs                  \ Null-terminated (long, C-style) strings
+include scratch.fs                   \ String scratch area
+include formatting.fs                \ Formatted numeric output
+include lists.fs                     \ Linked lists
+include records.fs                   \ Record types with named fields
 
 \ File management
-include file.fs                  \ I/O re-direction
-include evaluate.fs              \ Execute code from strings
+include file.fs                      \ I/O re-direction
+include evaluate.fs                  \ Execute code from strings
 \ include file-templates.fs        \ File templates
 
 \ Foreign language support
-include c.fs                     \ C definitions (check for definitions)
+include c.fs                         \ C definitions (check for definitions)
 
 \ Word list control
-include wordlists.fs             \ Multiple word lists
+include wordlists.fs                 \ Multiple word lists
 
 \ Dynamic memory
-include dynamic-memory.fs        \ ALLOCATE, FREE, RESIZE
+include dynamic-memory.fs            \ ALLOCATE, FREE, RESIZE
 
 \ Compilation and debugging support
-include decompiler.fs            \ Word decompilation
+include decompiler.fs                \ Word decompilation
 
 \ Local variables
 \ include locals-base.fs           \ base definitions
