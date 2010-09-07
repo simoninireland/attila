@@ -26,31 +26,31 @@ include comments.fs
 \ language definition.
 
 \ Simple control structures
-include conditionals.fs          \ IF ... ELSE ... THEN
+include conditionals.fs
 
 \ "Primitives" outside the VM core
-include base.fs                  \ Derived primitives
+include base.fs
 
 \ Advanced compilation words
-include createdoes.fs            \ CREATE ... DOES>
-include interpret-compile.fs     \ INTERPRET-COMPILE
-include variables.fs             \ VARIABLE
-include uservariables.fs         \ USER
-include constants.fs             \ CONSTANT
-include values.fs                \ VALUE
-include defer.fs                 \ DEFER ... IS
+include createdoes.fs
+include interpret-compile.fs
+include variables.fs
+include uservariables.fs
+include constants.fs
+include values.fs
+include defer.fs
 
 \ The VM
-include bootstrap-vm.fs          \ Limited set of virtual machine constants 
-include ascii.fs                 \ ASCII character operations
+include bootstrap-vm.fs
+include ascii.fs
 
 \ Data structures
-include bootstrap-loops.fs       \ Simple bootstrapping loops
-include stacks.fs                \ General stacks
+include bootstrap-loops.fs
+include stacks.fs
 
 \ Control structure support
-include cs-stack.fs              \ Control structures stack
-include loop-support.fs          \ Exits and other supports
+include cs-stack.fs
+include loop-support.fs
 \ now hide the bootstrapping loops ahead of loading the "real" ones
 ' BEGIN  (HIDE)
 ' UNTIL  (HIDE)
@@ -59,28 +59,26 @@ include loop-support.fs          \ Exits and other supports
 ' REPEAT (HIDE)
 
 \ Control structures
-include loops.fs                 \ BEGIN ... AGAIN
-                                 \ BEGIN ... UNTIL
-                                 \ BEGIN ... WHILE ... REPEAT
-include counted-loops-runtime.fs \ DO ... LOOP and +LOOP
+include loops.fs
+include counted-loops-runtime.fs 
 include counted-loops.fs
-include case.fs                  \ CASE ... OF ... ENDOF ... ENDCASE
-include hooks.fs                 \ Dynamic behaviour at strategic points
+include case.fs
+include hooks.fs
+include conditional-compilation.fs
 
 \ Data types
-include chars.fs                 \ Character operations
-include strings.fs               \ Counted (short) strings
-include zstrings.fs              \ Null-terminated (long, C-style) strings
-include scratch.fs               \ String scratch area
-include formatting.fs            \ Formatted numeric output
-include lists.fs                 \ Linked lists
-include records.fs               \ record types with named fields
+include chars.fs
+include strings.fs
+include zstrings.fs
+include scratch.fs
+include formatting.fs
+include lists.fs
+include records.fs
 
 \ File management
-include file.fs                  \ I/O re-direction
-include evaluate.fs              \ Execute code from strings
+include file.fs
 
 \ Word list control
-include wordlists.fs             \ Multiple word lists
+include wordlists.fs
 
 
