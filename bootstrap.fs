@@ -493,6 +493,12 @@ C: (WORD) start_word ( addr len cf -- xt )
     *(user_variable(USER_LAST)) = xt;                  // LAST gets the xt we just compiled
 ;C
 
+\ Compare two words to see if they match. This is just a case-sensitive string comparison
+C: NAMES-MATCH? ( addr1 n1 addr2 n2 -- f )
+    f = ((n1 == n2) &&
+         (strncasecmp(addr1, addr2, n1) == 0));
+;C
+		
 \ Look up a word in a list, traversing the headers until we find the word
 \ or hit null. We return 0 if the word is not found, its xt and 1 if it
 \ is, and its xt and -1 if it is found an is immediate
