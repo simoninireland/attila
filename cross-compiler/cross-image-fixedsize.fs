@@ -92,34 +92,36 @@ DEFER EMIT-CFA
 \ Values, stored using target endianness. We have to maintain endianness at this
 \ level, since otherwise code being cross-compiled that relied on endianness, for
 \ example by addressing into data words, wouldn't work. Although it's quite a lot of
-\ work in converting, this shouldn't be a problem on a development-class system
+\ work in converting it shouldn't be a problem on a development-class system,
+\ especially as the appropriate endianness is chosen when the cross-compiler
+\ is loaded
 : ! ( v taddr -- )
     T>ALIGNED?
     SWAP
     /CELL 0 DO
-	BIGENDIAN? IF
+	[ BIGENDIAN? ] [IF]
 	    2DUP
 	    /CELL I - 1- 8 * RSHIFT 255 AND
 	    SWAP I + C!
-	ELSE
+	[ELSE]
 	    2DUP
 	    255 AND
 	    SWAP I + C!
 	    8 RSHIFT
-	THEN
+	[THEN]
     LOOP DROP
     ['] EMIT-CELL SWAP E! ; 
 : @ ( taddr -- v )
     T>ALIGNED?
     0
     /CELL 0 DO
-	BIGENDIAN? IF
+	[ BIGENDIAN? ] [IF]
 	    8 LSHIFT
 	    OVER I + C@ OR
-	ELSE
+	[ELSE]
 	    OVER I + C@
 	    I 8 * LSHIFT OR
-	THEN
+	[THEN]
     LOOP NIP ;
 
 \ Incrementing a location in one operation
