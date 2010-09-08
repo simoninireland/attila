@@ -52,13 +52,6 @@
 INTERPRET/COMPILE [WORDLIST]
 
     
-\ ---------- Helpers ----------
-
-\ Placeholder for C-level inclusions from architecture description
-: CINCLUDE \ ( "name" -- )
-    PARSE-WORD 2DROP ;
-
-
 \ ---------- The word lists ----------
 
 \ Placed in ROOT so that we can access them even when we're not
@@ -136,7 +129,7 @@ WORDLISTS>
 
 .( Loading image manager...)
 <WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
-include c-image-fixedsize.fs    \ sd: should come from elsewhere
+include cross-compiler/cross-image-fixedsize.fs    \ sd: should come from elsewhere
 WORDLISTS>
 
 .( Loading locator structures...)
@@ -166,12 +159,12 @@ WORDLISTS>
 
 .( Loading vm description generator...)
 <WORDLISTS ONLY FORTH ALSO CODE-GENERATOR ALSO DEFINITIONS
-include cross-compiler/cross-vm.fs
+include cross-compiler/cross-c-vm.fs
 WORDLISTS>
 
 .( Loading cross-compiler file generators... )
-<WORDLISTS ONLY FORTH ALSO CODE-GENERATOR ALSO DEFINITIONS
-include cross-compiler/cross-generate.fs
+<WORDLISTS ONLY FORTH ALSO CROSS ALSO CODE-GENERATOR ALSO DEFINITIONS
+include cross-compiler/cross-c-generate.fs
 WORDLISTS>
 
 

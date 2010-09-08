@@ -48,6 +48,10 @@ VARIABLE HIGHEST-MODIFIED-IMAGE-ADDRESS
 	DUP HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] !
     THEN ;
 
+\ Return the number of cells the image actually contains
+: IMAGECELLS \ ( -- n )
+    HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] @ /CELL /MOD SWAP IF 1+ THEN ;
+
 \ Return the host address of the given target image address
 : T> \ ( taddr -- addr )
     T>HIGHEST
@@ -60,34 +64,12 @@ VARIABLE HIGHEST-MODIFIED-IMAGE-ADDRESS
     NIP /IMAGECELL * IMAGE + ;
 
 
-\ ---------- Saving the image ----------
-
-\ sd: We use "normal" printing here because the endianness of the C compiler
-\ and the image match.
-
-\ Emit a cell as data: argument is a cell value
-: EMIT-CELL \ ( t -- )
-    ." (CELL) "
-    DUP 0< IF
-	." -" ABS
-    THEN
-    ." 0x" .HEX ;
-
-\ Emit a cell as an address within the image: argument is a taddr
-: EMIT-ADDRESS \ ( taddr -- )
-    /CELL /MOD                           \ aligned cell
-    ." (CELL) &image[0x" .HEX ." ]"
-    ?DUP 0<> IF                          \ byte within cell
-	SPACE ." + " .
-    THEN ;
-
-\ Emit a cfa as an address: argument is a counted string address
-: EMIT-CFA \ ( caddr -- )
-    ." (CELL) &"
-    COUNT TYPE ;
-
-
 \ ---------- Accessing the image ----------
+
+\ Defer the words that actually emit parts of the image
+DEFER EMIT-CELL
+DEFER EMIT-ADDRESS
+DEFER EMIT-CFA
 
 \ Reading and writing the output word for a cell
 : E! T>EMIT [FORTH] ! ;
@@ -188,42 +170,3 @@ VARIABLE HIGHEST-MODIFIED-IMAGE-ADDRESS
 \ Finalise the image -- nothing to do in this model
 : (FINALISE-IMAGE) ( -- )
 ;
-
-
-\ ---------- Emitting the image ----------
-
-\ Return the number of cells the image actually contains
-: IMAGECELLS \ ( -- n )
-    HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] @ /CELL /MOD SWAP IF 1+ THEN ;
-
-\ Emit the image as a C data structure
-: EMIT-IMAGE \ ( -- )
-    ." CELL image[0x" IMAGE-SIZE .HEX ." ] = {" CR
-    IMAGECELLS 0 DO
-	." /* 0x" I .HEX SPACE ." */ "  
-	I /CELL * DUP @
-	SWAP          E@ EXECUTE ." ," CR
-    LOOP
-    ." };" CR ;
-
-\ Emit a small part of the image around the given target address
-: EMIT-AROUND \ ( taddr -- )
-    11 0 DO
-	I 5 - 2DUP CELLS + DUP 0< IF
-	    2DROP
-	ELSE
-	    SWAP 0= IF
-		[FORTH] [CHAR] > EMIT
-	    ELSE
-		SPACE
-	    THEN
-	    DUP /CELL / .HEX SPACE
-	    DUP TOP < IF 
-		DUP @
-		SWAP E@ EXECUTE
-	    THEN
-	    CR
-	THEN
-    LOOP
-    DROP ;
-
