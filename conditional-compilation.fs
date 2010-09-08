@@ -52,5 +52,5 @@
     UNTIL ; IMMEDIATE
 
 \ No-op (everything is done by [IF] and [ELSE])
-: [THEN] ( -- ) ;
+: [THEN] ( -- ) ; IMMEDIATE
 
