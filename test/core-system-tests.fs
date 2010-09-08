@@ -23,9 +23,12 @@
 
 include funit.fs
 
-TESTCASES" Core system tests"
+TEST-CAMPAIGN" Core system tests"
+
 testcases test/stack.fs
 testcases test/arithmetic.fs
 testcases test/allot.fs
 testcases test/loops.fs
 testcases test/conditional-compilation.fs
+
+TEST-CAMPAIGN-REPORT
