@@ -61,7 +61,7 @@ primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
 # ----- The cross-compiled interpreter VM -----
 
 attila.c: bootattila
-	bootattila <$(srcdir)/tools/crosscompile.fs
+	cd $(srcdir) && $(abs_builddir)/bootattila <tools/crosscompile.fs
 
 
 # ----- The system sources -----
@@ -88,6 +88,7 @@ forth = comments.fs \
 	counted-loops.fs \
 	case.fs \
 	hooks.fs \
+	conditional-compilation.fs \
 	chars.fs \
 	strings.fs \
 	zstrings.fs \
@@ -106,14 +107,14 @@ forth = comments.fs \
 # The cross-compiler
 crosscompiler = x-host.fs \
 	x-host.h \
-	c-image-fixedsize.fs \
 	cross-compiler/cross-compiler.fs \
 	cross-compiler/cross-locator.fs \
 	cross-compiler/cross-flat-memory-model.fs \
+	cross-compiler/cross-image-fixedsize.fs \
 	cross-compiler/cross-c.fs \
 	cross-compiler/cross-colon.fs \
-	cross-compiler/cross-vm.fs \
-	cross-compiler/cross-generate.fs \
+	cross-compiler/cross-c-vm.fs \
+	cross-compiler/cross-c-generate.fs \
 	cross-compiler/cross-environments.fs
 
 # The system sources, used to cross-compile a basic virtual machine
@@ -135,7 +136,8 @@ test = test/core-system-tests.fs \
 	test/arithmetic.fs \
 	test/stack.fs \
 	test/loops.fs \
-	test/allot.fs
+	test/allot.fs \
+	test/conditional-compilation.fs
 
 # ----- Distribution -----
 

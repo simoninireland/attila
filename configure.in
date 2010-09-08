@@ -28,7 +28,7 @@ AM_INIT_AUTOMAKE
 # ---------- Basic programs ----------
 
 # uncomment if debugging
-AC_DEFINE(DEBUGGING,[1])
+# AC_DEFINE(DEBUGGING,[1])
 
 # compilation and installation
 AC_PROG_CC

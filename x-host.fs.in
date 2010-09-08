@@ -82,7 +82,7 @@ target>
 TARGET>
 
 .( Saving target image...)
-[CODE-GENERATOR] SAVE-IMAGE-AS attila.c
+[CODE-GENERATOR] SAVE-IMAGE-AS @abs_builddir@/attila.c
 
 .( Done)
 
