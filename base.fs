@@ -51,3 +51,19 @@
 \ The number of bytes needed to represent n cells
 : CHARS \ ( n -- bs )
     /CHAR * ;
+
+
+\ ---------- Filling memory ----------
+
+\ Fill an n-byte block of memory with a given byte value (usually 0). Safe
+\ for zero and negative amounts
+: CFILL ( addr n v -- )
+    ROT 1- BEGIN
+	DUP 0 >=
+    WHILE
+	    >R 2DUP R@ + C!
+	    R> 1-
+    REPEAT
+    DROP 2DROP ;
+
+	
