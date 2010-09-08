@@ -21,12 +21,22 @@
 \ Basic character operations, ASCII version 
 
 \ Character constants
-32 CONSTANT BL
-10 CONSTANT NL
+32 CONSTANT BL  \ blank (space)
+10 CONSTANT NL  \ newline
+ 9 CONSTANT TB  \ tab
+
+\ Test characters for equality
+: C= = ;
 
 \ Case testing
 : UC? 65 ( A )  90 ( Z ) 1+ WITHIN ;
-: LC? 97 ( a ) 122 ( z )  1+ WITHIN ;
+: LC? 97 ( a ) 122 ( z ) 1+ WITHIN ;
+
+\ Class testing
+: WS? ( c -- f )
+    DUP  10 C=
+    OVER 32 C= OR
+    SWAP  9 C= OR ;
 
 \ Case conversion
 : >UC \ ( c -- uc )
@@ -35,9 +45,7 @@
     THEN ;
 : >LC \ ( c -- lc )
     DUP UC? IF
-	65 ( A )  - 97 ( a ) +
+	65 ( A ) - 97 ( a ) +
     THEN ;
 
-\ Test characters for equality. This is sometimes character-set dependent (although
-\ we're probably just being overly picky)
-: C= = ;
+
