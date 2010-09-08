@@ -31,6 +31,7 @@ include comments.fs
 
 \ Simple control structures
 include conditionals.fs              \ IF ... ELSE ... THEN
+include bootstrap-loops.fs           \ Simple loops, without proper control
 
 \ "Primitives" outside the VM core
 include base.fs                      \ Derived primitives
@@ -49,16 +50,13 @@ include defer.fs                     \ DEFER ... IS
 include vm.fs                        \ Virtual machine structures and constants 
 include ascii.fs                     \ ASCII operations
 
-\ Simple loops
-include bootstrap-loops.fs           \ Simple loops without proper control
-
 \ Data structures
 include stacks.fs                    \ General stacks
 
 \ Control structures
 include cs-stack.fs                  \ Control structures stack
 include loop-support.fs              \ Exits and other supports
-\ hide the simple llops, replace with "proper" ones
+\ hide the simple loops, replace with "proper" ones
 ' BEGIN  (HIDE)
 ' UNTIL  (HIDE)
 ' WHILE  (HIDE)
