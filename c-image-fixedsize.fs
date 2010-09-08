@@ -62,30 +62,8 @@ VARIABLE HIGHEST-MODIFIED-IMAGE-ADDRESS
 
 \ ---------- Saving the image ----------
 
-\ Emit a byte as two characters, no leading zero supression
-: .BYTE \ ( n -- )
-    [FORTH] BASE [FORTH] @ HEX SWAP
-    <# ABS # # #> TYPE
-    [FORTH] BASE [FORTH] ! ;
-
-\ Emit a cell, converting from the target's endianness to a literal C value
-\ sd: we have to maintain target endianness up until this point to make sure
-\ that any access to target memory during cross-compilation on a per-byte basis
-\ gets the right values
-\ sd: should be refactored using [IF] etc
-: .HEX-ENDIAN ( t -- )
-    BIGENDIAN? IF
-	/CELL 0 DO
-	    DUP
-	    /CELL I - 1- 8 * RSHIFT .BYTE
-	LOOP
-    ELSE
-	/CELL 0 DO
-	    DUP
-	    255 AND .BYTE
-	    8 RSHIFT
-	LOOP
-    THEN DROP ;
+\ sd: We use "normal" printing here because the endianness of the C compiler
+\ and the image match.
 
 \ Emit a cell as data: argument is a cell value
 : EMIT-CELL \ ( t -- )
@@ -93,7 +71,7 @@ VARIABLE HIGHEST-MODIFIED-IMAGE-ADDRESS
     DUP 0< IF
 	." -" ABS
     THEN
-    ." 0x" .HEX-ENDIAN ;
+    ." 0x" .HEX ;
 
 \ Emit a cell as an address within the image: argument is a taddr
 : EMIT-ADDRESS \ ( taddr -- )
