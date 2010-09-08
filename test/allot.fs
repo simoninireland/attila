@@ -164,9 +164,11 @@ DATA BLOCK1 20 CELLS ALLOT
 BLOCK1 10 CELLS + CONSTANT BLOCK2
 BLOCK1  8 CELLS + CONSTANT BLOCK3
 
+\ Put a number range ( n1 ... n2-1 ) on the stack
 : RANGE ( n1 n2 -- n1 n1+1 n1+2 ... n2-1 )
     SWAP DO I LOOP ;
 
+\ Move an m-sized number range into a block
 : BLOCK-SETUP ( n0 n1 n2 ... nm-1 m addr -- )
     OVER 0 DO
 	OVER I - 1+ -ROLL
@@ -174,6 +176,7 @@ BLOCK1  8 CELLS + CONSTANT BLOCK3
     LOOP
     2DROP ;
 
+\ Check a block contains the given m-sized number range
 : BLOCK-TEST ( n0 n1 n2 ... nm-1 m addr -- f )
     OVER 0 DO
 	OVER I - 1+ -ROLL
@@ -202,3 +205,38 @@ BLOCK1  8 CELLS + CONSTANT BLOCK3
   0 10 RANGE 10 BLOCK3 BLOCK-TEST }
 
 
+TESTING" Block filling"
+
+\ Fill a block, the hard way
+: BLOCK-FILL ( addr n v -- )
+    SWAP >R SWAP R> 0 DO
+	2DUP I + C!
+    LOOP
+    2DROP ;
+
+\ Check a block contains the given value
+: BLOCK-FILL-TEST ( addr len v -- f )
+    SWAP 0 DO
+	OVER I + C@ OVER C= NOT IF
+	    2DROP FALSE EXIT
+	THEN
+    LOOP
+    2DROP TRUE ;
+
+\ Test the above code works (or at least is consistently wrong...)
+{ BLOCK1 20 0 BLOCK-FILL
+  BLOCK1 20 0 BLOCK-FILL-TEST -> TRUE } 
+
+\ Filling
+{ BLOCK2 5 32 CFILL
+  BLOCK2 5 32 BLOCK-FILL-TEST -> TRUE }
+
+\ Boundary overruns
+{ BLOCK2 5 32 CFILL
+  BLOCK2 1- C@ BLOCK2 5 + C@ -> 0 0 }
+
+\ Negative and zero fills
+{ BLOCK2 0 45 CFILL
+  BLOCK2 C@ -> 32 }
+{ BLOCK2 -1 45 CFILL
+  BLOCK2 1- C@ BLOCK2 C@ -> 0 32 }
