@@ -23,10 +23,11 @@
 bin_PROGRAMS = bootattila attila
 
 
-# ----- Supporting tools for bootstrapping -----
+# ----- Supporting scripts -----
 
 dist_bin_SCRIPTS = tools/primgen \
-	tools/crosscompile.fs
+	tools/crosscompile.fs \
+	tools/test.fs
 
 
 # ----- Sources -----
@@ -62,6 +63,14 @@ primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
 
 attila.c: bootattila
 	cd $(srcdir) && $(abs_builddir)/bootattila <tools/crosscompile.fs
+
+
+# ----- Testing -----
+
+test: attila
+	cd $(srcdir) && $(abs_builddir)/attila <tools/test.fs
+
+.PHONY: test
 
 
 # ----- The system sources -----
@@ -137,6 +146,7 @@ test = test/core-system-tests.fs \
 	test/stack.fs \
 	test/loops.fs \
 	test/allot.fs \
+	test/strings.fs \
 	test/conditional-compilation.fs
 
 # ----- Distribution -----
