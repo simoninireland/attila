@@ -27,6 +27,7 @@ include comments.fs
 
 \ Simple control structures
 include conditionals.fs
+include bootstrap-loops.fs
 
 \ "Primitives" outside the VM core
 include base.fs
@@ -45,7 +46,6 @@ include bootstrap-vm.fs
 include ascii.fs
 
 \ Data structures
-include bootstrap-loops.fs
 include stacks.fs
 
 \ Control structure support
