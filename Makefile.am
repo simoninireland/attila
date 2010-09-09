@@ -45,11 +45,8 @@ bootattila_SOURCES = vm.h \
 # The generated primitives file
 nodist_bootattila_SOURCES = primitives.c
 
-# The cross-compiled sources
-attila_SOURCES = x-host.h \
-	x-host.fs
-
-# The generated VM file
+# The cross-compiler sources and generated VM
+attila_SOURCES = x-host.h
 nodist_attila_SOURCES = attila.c
 
 
@@ -116,8 +113,7 @@ forth = prelude.fs \
 	funit.fs
 
 # The cross-compiler
-crosscompiler = x-host.fs \
-	x-host.h \
+crosscompiler = x-host.h \
 	cross-compiler/cross-compiler.fs \
 	cross-compiler/cross-locator.fs \
 	cross-compiler/cross-flat-memory-model.fs \
