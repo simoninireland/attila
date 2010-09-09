@@ -48,9 +48,17 @@
 : CELLS \ ( n -- bs )
     /CELL * ;
 
+\ Increment an address by one cell
+: CELL+ ( addr -- addr1 )
+    /CELL + ;
+
 \ The number of bytes needed to represent n cells
 : CHARS \ ( n -- bs )
     /CHAR * ;
+
+\ Increment an address by one character
+: CHAR+ ( addr -- addr1 )
+    /CHAR + ;
 
 
 \ ---------- Filling memory ----------
