@@ -21,13 +21,12 @@
 \ Test the core aspcets of the system. This test suite is intended to
 \ ensure Attila is functioning correctly after cross-compilation
 
-include funit.fs
-
 TEST-CAMPAIGN" Core system tests"
 
 testcases test/stack.fs
 testcases test/arithmetic.fs
 testcases test/allot.fs
+testcases test/strings.fs
 testcases test/loops.fs
 testcases test/conditional-compilation.fs
 
