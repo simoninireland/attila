@@ -23,9 +23,9 @@
 bin_PROGRAMS = bootattila attila
 
 
-# ----- Supporting scripts -----
+# ----- Supporting programs and scripts -----
 
-dist_bin_SCRIPTS = tools/primgen \
+EXTRA_DIST = tools/primgen \
 	tools/crosscompile.fs \
 	tools/test.fs
 
@@ -76,7 +76,8 @@ test: attila
 # ----- The system sources -----
 
 # All the Forth code intended for normal use
-forth = comments.fs \
+forth = prelude.fs \
+	comments.fs \
 	conditionals.fs \
 	base.fs \
 	createdoes.fs \
@@ -84,6 +85,7 @@ forth = comments.fs \
 	variables.fs \
 	uservariables.fs \
 	constants.fs \
+	stringconstants.fs \
 	values.fs \
 	defer.fs \
 	vm.fs \
@@ -151,6 +153,6 @@ test = test/core-system-tests.fs \
 
 # ----- Distribution -----
 
-dist_pkgdata_DATA = $(forth) $(crosscompiler) $(regular) $(test)
+nobase_dist_pkgdata_DATA = $(forth) $(crosscompiler) $(regular) $(test)
 DISTCLEANFILES = primitives.c
 
