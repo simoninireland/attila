@@ -72,10 +72,15 @@ INTERPRET/COMPILE ."
 : NULLSTRING 0 0 ;
 
 \ Copy a string to the given address (including the count, so addr2 is a
-\ counted string *not* just the characters)
+\ counted string *not* just the characters). Safe for empty (and negative-length,
+\ just in case) strings
 : SMOVE \ ( addr1 n addr2 -- )
-    2DUP C!
-    1+ SWAP CMOVE ;
+    OVER 0< NOT IF
+	2DUP C!
+	1+ SWAP CMOVE
+    ELSE
+	DROP 2DROP
+    THEN ;
 
 \ Turn an address into a counted string. Safe for null strings
 : COUNT \ ( addr -- addr' len )
@@ -95,12 +100,12 @@ VARIABLE (SCOMPARER)
 	    OVER C@ OVER C@ (SCOMPARER) XT@ EXECUTE IF
 		1 CHARS + SWAP 1 CHARS + SWAP
 	    ELSE
-		2DROP 0 EXIT
+		2DROP FALSE EXIT
 	    THEN
 	LOOP
-	1
+	TRUE
     ELSE
-	DROP 0
+	DROP FALSE
     THEN
     ROT 2DROP ;
 
@@ -114,15 +119,17 @@ VARIABLE (SCOMPARER)
 \ Check for inequality
 : S<> S= NOT ;
 
-\ Reverse the characters in the given string
+\ Reverse the characters in the given string. Safe for empty strings
 : REVERSE \ ( addr len -- )
-    2DUP CHARS + 1 CHARS - SWAP
-    2/ 0 DO                   \ start end
-	2DUP 2DUP C@ SWAP C@  \ start end start end ce cs
-	-ROT C!               \ start end start ce
-	SWAP C!               \ start end
-	1 CHARS - SWAP 1 CHARS + SWAP
-    LOOP
+    DUP 0> IF
+	2DUP CHARS + 1 CHARS - SWAP
+	2/ 0 DO                   \ start end
+	    2DUP 2DUP C@ SWAP C@  \ start end start end ce cs
+	    -ROT C!               \ start end start ce
+	    SWAP C!               \ start end
+	    1 CHARS - SWAP 1 CHARS + SWAP
+	LOOP
+    THEN
     2DROP ;
 
 \ Find the first index of the given character in a string, returning
