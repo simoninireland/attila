@@ -118,9 +118,28 @@ TESTING" String reversing"
 
 \ Empty and single-character strings
 { NULLSTRING STRING1 SMOVE
-  STRING1 COUNT REVERSE .s
+  STRING1 COUNT REVERSE 
   STRING1 COUNT NIP -> 0 }
 { S" h" STRING1 SMOVE
   STRING1 COUNT REVERSE
   STRING1 DUP C@
   SWAP 1+     C@ -> 1 104 }
+
+
+TESTING" Indexing"
+
+S" abhdefghij" STRING1 SMOVE
+{ STRING1 COUNT 97 INDEX -> 0 }
+{ STRING1 COUNT 104 INDEX -> 2 }
+{ STRING1 COUNT 106 INDEX -> 9 }
+{ STRING1 COUNT 4 INDEX -> -1 }
+
+
+TESTING" Translating"
+
+{ S" abhdefghij" STRING1 SMOVE
+  STRING1 COUNT S" abh" S" ttt" TRANSLATE
+  STRING1 COUNT S" tttdefgtij" S= -> TRUE }
+{ S" abhdefghij" STRING1 SMOVE
+  STRING1 COUNT S" zxr" S" ttt" TRANSLATE
+  STRING1 COUNT S" abhdefghij" S= -> TRUE }
