@@ -23,6 +23,21 @@
 \ These words are used to assist compilation. They may not be
 \ needed on stand-alone embedded systems.
 
+\ ---------- State management ----------
+
+\ Enter interpretation state
+: [ \ ( -- )
+    INTERPRETATION-STATE STATE ! ; IMMEDIATE
+
+\ Enter compilation state
+: ] \ ( -- )
+    COMPILATION-STATE STATE ! ;
+
+\ Check whether we're interpreting
+: INTERPRETING? \ ( -- f )
+    STATE @ INTERPRETATION-STATE = ;
+
+
 \ ---------- Literals ----------
 
 \ Compile the top of the stack as a literal
@@ -105,10 +120,13 @@ DATA (FIND-BEHAVIOUR) XT,
     POSTPONE [']
     ['] CTCOMPILE, CTCOMPILE, ; IMMEDIATE
 
-\ Extract the first character of the next word in the input stream
+\ Extract the first character of the next word in the input stream, leaving it
+\ on the stack or compiling it as a literal
 : [CHAR] \ ( "word" -- )
     PARSE-WORD DROP C@
-    POSTPONE LITERAL ; IMMEDIATE
+    INTERPRETING? NOT IF
+	POSTPONE LITERAL
+    THEN ; IMMEDIATE
 
 
 \ ---------- Recursion ----------
@@ -121,18 +139,3 @@ DATA (FIND-BEHAVIOUR) XT,
 \ Call the current word tail-recursively. This call doesn't return here,
 \ so use with care
 \ TBD
-
-
-\ ---------- State management ----------
-
-\ Enter interpretation state
-: [ \ ( -- )
-    INTERPRETATION-STATE STATE ! ; IMMEDIATE
-
-\ Enter compilation state
-: ] \ ( -- )
-    COMPILATION-STATE STATE ! ;
-
-\ Check whether we're interpreting
-: INTERPRETING? \ ( -- f )
-    STATE @ INTERPRETATION-STATE = ;
