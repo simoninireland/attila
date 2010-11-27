@@ -79,15 +79,6 @@
     TOP XT!
     /CELL (TOP) A+! ;
 
-\ Strings need to be copied from host memory, hence the explicit use of host C@ and CHARS
-: SCOMPILE, \ ( addr n -- )
-    CALIGNED
-    DUP CCOMPILE,
-    0 DO
-	DUP [FORTH] C@ CCOMPILE,
-	1 [FORTH] CHARS +
-    LOOP DROP CALIGNED ;
-
 \ Compile CFA
 : CFACOMPILE, \ ( cf -- )
     CALIGNED
@@ -104,7 +95,23 @@
 : ALIGNED  CALIGNED ;
 : ALIGNED? CALIGNED? ;
 
-\ ALLOTting data space simply compiles zeros
+\ Strings need to be copied from host memory, hence the explicit use of host C@ and CHARS
+: SCOMPILE, \ ( addr n -- )
+    CALIGNED
+    DUP CCOMPILE,
+    0 DO
+	DUP [FORTH] C@ CCOMPILE,
+	1 [FORTH] CHARS +
+    LOOP DROP CALIGNED ;
+: S, \ ( addr n -- )
+    ALIGNED
+    DUP C,
+    0 DO
+	DUP [FORTH] C@ C,
+	1 [FORTH] CHARS +
+    LOOP DROP ALIGNED ;
+
+\ ALLOTting data space simply data-compiles zeros
 : ALLOT ( n -- )
     0 DO
 	0 C,
