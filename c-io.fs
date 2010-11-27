@@ -60,15 +60,21 @@ C: REFILL fill_tib ( -- f )
 
 
 \ Place the address of the current input point in the TIB and the
-\ number of remaining characters onto the stack
-C: SOURCE ( -- addr n )
+\ number of remaining characters onto the stack, or 0 if none
+C: SOURCE ( -- )
   char *tib;
   int offset;
+  char *addr;
       
   tib = (char *) (*(user_variable(USER_TIB)));
   offset = (int) (*(user_variable(USER__IN)));
-  addr = (CELL) ((offset == -1) ? tib : tib + offset);
-  n = (CELL) ((offset == -1) ? 0 : strlen((char *) addr));
+  if(offset == -1)
+    PUSH_CELL(0);
+  else {
+    addr = tib + offset;
+    PUSH_CELL((CELL) addr);
+    PUSH_CELL((CELL) (strlen(addr)));
+  }
 ;C
 
 
