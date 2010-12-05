@@ -201,6 +201,10 @@ show_execute( XT xt ) {
         free(buf);
     }
 }
+
+// Character sets
+static CHARACTERPTR digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static CHARACTERPTR whitespace = " \n\t";
 ;CHEADER
 
 
@@ -567,3 +571,192 @@ C: WARM ( -- )
 C: BYE ( -- )
     exit(0);
 ;C
+
+
+\ ---------- I/O and parsing ----------
+
+\ Parse the next word, consuming leading whitespace. Leave either
+\ an address count pair or zero on the stack
+C: PARSE-WORD ( -- )
+  CELL c = 0;
+  char *tib = (char *) (*(user_variable(USER_TIB)));
+  int *offset = (int *) user_variable(USER__IN);
+  int newoffset;
+  int len;
+  char *newpoint;
+  CELL remaining;
+
+  do {
+    // fill the TIB if we need a line
+    if(*offset == -1) {
+      CALL(fill_tib);
+
+      // check for an exhausted input source, and fail if we have one
+      remaining = POP_CELL();
+      if(!remaining) {
+	PUSH_CELL(remaining);
+	return;
+      }
+    }
+    
+    // consume leading whitespace
+    len = strspn(tib + *offset, whitespace);
+    *offset += len;
+  
+    // parse everything except whitespace
+    len = strcspn(tib + *offset, whitespace);
+    if(len == 0)
+      *offset = -1;
+  } while(len == 0);
+  newoffset = *offset + len;
+  if(*(tib + newoffset) == '\0')
+    newoffset = -1;
+  
+  // push the result onto the stack
+  newpoint = tib + *offset;
+  PUSH_CELL(newpoint);
+  PUSH_CELL(len);
+
+  // update point
+  *offset = newoffset;
+;C
+
+
+\ Consume all instances of the delimiter character in the input line
+C: CONSUME ( c -- )
+  CELL remaining;
+  char *tib = (char *) (*(user_variable(USER_TIB)));
+  int *offset = (int *) user_variable(USER__IN);
+  char cc;
+
+  // fill the TIB if we need a line
+  if(*offset == -1) {
+    CALL(fill_tib);
+
+    // check for an exhausted input source
+    remaining = POP_CELL();
+    if(!remaining)
+      return;
+  }
+
+  while(cc = *(tib + *offset),
+	((cc != '\0') &&
+	 (cc == (char) c)))
+    (*offset)++;
+;C
+
+
+\ Parse the input stream up to the next instance of the delimiter
+\ character, returning null if there is no such delimiter before
+\ the end of the line
+C: PARSE ( c -- )
+  char *ptr, *end;
+  int len;
+  CELL remaining;
+  char *tib = (char *) (*(user_variable(USER_TIB)));
+  int *offset = (int *) user_variable(USER__IN);
+  char *point;
+
+  // fill the TIB if we need a line
+  if(*offset == -1) {
+    CALL(fill_tib);
+
+    // check for an exhausted input source, and fail if we have one
+    remaining = POP_CELL();
+    if(!remaining) {
+      PUSH_CELL(remaining);
+      return;
+    }
+  }
+
+  // search for the next delimiter character
+  point = tib + *offset;
+  ptr = index(point, c);
+  if(ptr == NULL) {
+    PUSH_CELL(ptr);
+    return;
+  }
+
+  // push the result onto the stack
+  len = ptr - point;
+  PUSH_CELL(point);
+  PUSH_CELL(len);
+
+  // update point
+  *offset += len + 1;
+  if(*(tib + *offset) == '\0')
+    *offset = -1;
+;C
+
+\ Print the given string on the terminal
+C: TYPE ( addr n -- )
+  FILE *output_sink = (FILE *) (*(user_variable(USER_OUTPUTSINK)));
+  char *buf;
+	
+  // copy string to null-terminated local buffer
+  buf = (CHARACTERPTR) malloc(n + 1);
+  memcpy(buf, (BYTEPTR) addr, n);   buf[n] = '\0';
+
+  // print and tidy up
+  fprintf(output_sink, "%s", buf);   fflush(output_sink);
+  free(buf);
+;C
+
+\ Print the top number on the stack
+C: . ( n -- )
+  FILE *output_sink = (FILE *) (*(user_variable(USER_OUTPUTSINK)));
+
+  fprintf(output_sink, "%ld", n);   fflush(output_sink);
+;C
+
+\ Print the whole stack
+C: .S prim_dot_s ( -- )
+    FILE *output_sink = (FILE *) (*(user_variable(USER_OUTPUTSINK)));
+    int i, n;
+
+    n = DATA_STACK_DEPTH();
+    fprintf(output_sink, "#%ld", n);
+    for(i = n - 1; i >= 0; i--) {
+        fprintf(output_sink, " %ld", *(DATA_STACK_ITEM(i)));
+    }
+    fflush(output_sink);
+;C
+
+\ Convert a token to a number if possible, pushing the result
+\ (if done) and a flag
+C: NUMBER? ( addr n -- )
+  CHARACTERPTR buf;
+  CHARACTERPTR digitptr;
+  int i, len, acc, digit;
+  int negative = 0;
+  int valid = 1;
+  int base = (int) *(user_variable(USER_BASE));
+
+  buf = create_unix_string(addr, n);
+
+  // convert number
+  acc = 0;   i = 0;
+  if(buf[i] == '-') {
+    negative = 1;
+    i++;
+  }
+  for(; i < n; i++) {
+    digitptr = index(digits, toupper(buf[i]));
+    digit = digitptr - digits;
+    if((digitptr == NULL) ||
+       (digit > base)) {
+      // illegal number character
+      valid = 0;
+      break;
+    }
+    acc = (acc * base) + digit;
+  }
+
+  if(valid) {
+    if(negative)
+      acc *= -1;
+    PUSH_CELL(acc);
+  }
+  PUSH_CELL(valid);
+;C
+	
