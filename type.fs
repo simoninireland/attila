@@ -26,11 +26,15 @@
 
 \ Display the given string
 : TYPE ( addr n -- )
-    0 DO
-	DUP C@ EMIT
-	/CHAR +
-    LOOP
-    DROP ;
+    ?DUP 0> IF
+	0 DO
+	    DUP C@ EMIT
+	    /CHAR +
+	LOOP
+	DROP
+    ELSE
+	DROP
+    THEN ;
 
 \ Abort to a warm-start with an error message
 : ABORT \ ( addr n -- )
