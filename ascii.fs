@@ -32,12 +32,12 @@
 : UC? 65 ( A )  90 ( Z ) 1+ WITHIN ;
 : LC? 97 ( a ) 122 ( z ) 1+ WITHIN ;
 
-\ Class testing
+\ Whitespace testing
 : WS? ( c -- f )
     DUP  10 C=
     OVER 32 C= OR
     SWAP  9 C= OR ;
-
+    
 \ Case conversion
 : >UC \ ( c -- uc )
     DUP LC? IF
@@ -47,5 +47,4 @@
     DUP UC? IF
 	65 ( A ) - 97 ( a ) +
     THEN ;
-
-
+	
