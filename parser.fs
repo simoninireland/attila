@@ -27,14 +27,14 @@
 \ Peek at the next character from the TIB, returning it or 0 if there are none
 : PEEK-CHAR ( -- c | 0 )
     SOURCE 0= IF
-	DROP 0
+	0
     ELSE
 	C@
     THEN ;
 
 \ Read a character from the TIB, returning it or 0 if there are none
 : READ-CHAR ( -- c | 0 )
-    PEEK-CHAR ?DUP IF
+    PEEK-CHAR DUP IF
 	1 >IN +!
     THEN ;
 
@@ -51,20 +51,20 @@
 	THEN
     LOOP ;
     
-\ Consume all instances of the given character in the TIB
+\ Consume all leading instances of the given character in the TIB
 : CONSUME ( c -- )
     BEGIN
 	PEEK-CHAR ?DUP 0= IF
 	    DROP LEAVE
 	ELSE
-	    OVER C= IF
+	    OVER C= NOT IF
 		DROP LEAVE
 	    THEN
 	THEN
 	READ-CHAR DROP
     AGAIN ;
 
-\ Consume all whitespace in the TIB
+\ Consume all leading whitespace in the TIB
 : CONSUME-WS ( -- )
     BEGIN
 	PEEK-CHAR ?DUP 0= IF
@@ -80,28 +80,59 @@
 
 \ ---------- Words ----------
 
-\ Parse up to the next instance of the given character
+\ Parse up to the next instance of the given character, or the end of the
+\ available input
 : PARSE ( c -- addr n | 0 )
-    SOURCE 0 DO
-	2DUP I + C@ C= IF
-	    NIP I
-	    DUP >IN +!
-	    EXIT
+    \ read until we have some input to parse
+    BEGIN
+	SOURCE ?DUP 0=
+    WHILE
+	    EXHAUSTED? IF
+		DROP 0 EXIT       \ no more input, fail
+	    ELSE
+		REFILL 0= IF
+		    DROP 0 EXIT
+		THEN
+	    THEN
+    REPEAT
+
+    0 SWAP
+    0 DO
+	READ-CHAR 3 PICK C= IF
+	    LEAVE                \ leave having consumed delimiter
+	                         \ but without it counting in the
+	                         \ string to be returned
+	ELSE
+	    1+
 	THEN
     LOOP
-    2DROP 0 ;
+    -ROT DROP ;
 
 \ Parse a word delimited on either side by whitespace or the end-of-line
 : PARSE-WORD ( -- addr n | 0 )
-    CONSUME-WS
-    SOURCE 0 DO
-	DUP I + C@ WS? IF
-	    I
-	    DUP >IN +!
+    \ read until we have a line containing non-whitespace
+    BEGIN
+	CONSUME-WS
+	SOURCE ?DUP 0=
+    WHILE
+	    EXHAUSTED? IF
+		0 EXIT       \ no more input, fail
+	    ELSE
+		REFILL 0= IF
+		    0 EXIT
+		THEN
+	    THEN
+    REPEAT
+
+    \ parse the next word
+    0 SWAP                   \ the length we've accepted
+    0 DO
+	READ-CHAR WS? IF
 	    EXIT
+	ELSE
+	    1+
 	THEN
-    LOOP
-    DROP SOURCE ;
+    LOOP ;
 
 
 \ ---------- Digits ----------
@@ -149,6 +180,7 @@ DATA DIGITS S" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" S,
     \ turn an (optional) sign into a multiplier
     1 ROT \ multiplier
     OVER C@ SIGN? IF
+	\ got a sign, deal with it
 	OVER C@ [CHAR] - C= IF
 	    \ negate the multiplier for a minus sign
 	    -ROT NEGATE ROT
