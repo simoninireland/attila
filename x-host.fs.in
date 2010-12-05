@@ -64,6 +64,8 @@ include counted-loops-runtime.fs
 
 include flat-memory-model.fs
 include itil-compilation.fs
+include type.fs
+include parser.fs
 include compilation.fs
 include colon.fs
 
