@@ -175,16 +175,6 @@ C: NR> ( -- n )
 
 \ ---------- Constants ----------
 
-\ False truth value
-C: FALSE ( -- f )
-    f = 0;
-;C
-
-\ True truth valuse, the ones-complement of FALSE
-C: TRUE ( -- f )
-    f = !0;
-;C
-
 \ The number of bytes per cell on this architecture
 C: /CELL ( -- bs )
     bs = sizeof(CELL);
