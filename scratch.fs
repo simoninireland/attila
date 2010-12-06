@@ -59,6 +59,13 @@ VARIABLE SCRATCH-POINTER
 	S" Scratch area overflow" ABORT
     THEN ;
 
+\ Add the given string
+: SHOLD ( addr n -- )
+    0 DO
+	DUP I + C@ HOLD
+    LOOP
+    DROP ;
+
 \ Represent the string in the scratch area on the stack, ready for use
 : SCRATCH> \ ( -- addr n )
     SCRATCH #SCRATCH ;
