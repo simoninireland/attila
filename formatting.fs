@@ -45,13 +45,13 @@
     2DUP REVERSE ;
 
 \ Convert a number to a digit character.
-: >DIGIT \ ( n -- c )
+: DIGIT> \ ( n -- c )
     DIGITS COUNT DROP SWAP CHARS + C@ ;
 
 \ Add the least significant digit of a number to the scratch area,
 \ leaving a quotient
 : # \ ( n -- q )
-    BASE @ /MOD SWAP >DIGIT HOLD ;
+    BASE @ /MOD SWAP DIGIT> HOLD ;
 
 \ Convert the rest of the number
 : #S \ ( n -- n' )
@@ -64,12 +64,16 @@
 : SIGN \ ( n -- )
     0 < IF [CHAR] - HOLD THEN ;
 
+\ Convert a number to a string using the normal formatting conventions
+: NUMBER> \ ( n -- addr n )
+    <# DUP ABS #S SWAP SIGN #> ;
+
 
 \ ---------- Utility routines ----------
 
 \ Print a number
 : . \ ( n -- )
-    <# DUP ABS #S SWAP SIGN #> TYPE ;
+    NUMBER> TYPE ;
 
 \ Print the contents of the cell at the given address
 : ? \ ( addr -- )
