@@ -19,15 +19,7 @@
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 \ Formatted numeric output
-\ Requires strings.fs, scratch.fs, counted-loops.fs
-
-\ ---------- The numeric character set ----------
-VARIABLE MAX-BASE
-DATA NUMERIC-CHARACTER-SET
-CLEAR-SCRATCH                                              \ manually initialise
-PARSE-WORD 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ >SCRATCH   \ copy to scratch area
-#SCRATCH MAX-BASE !                                        \ avoid overruns
-SCRATCH> DUP ALLOT NUMERIC-CHARACTER-SET SWAP CMOVE        \ move into character set
+\ Requires parser.fs, strings.fs, scratch.fs, counted-loops.fs
 
 
 \ ---------- Standard number bases ----------
@@ -54,12 +46,12 @@ SCRATCH> DUP ALLOT NUMERIC-CHARACTER-SET SWAP CMOVE        \ move into character
 
 \ Convert a number to a digit character.
 : >DIGIT \ ( n -- c )
-    NUMERIC-CHARACTER-SET + C@ ;
+    DIGITS COUNT DROP SWAP CHARS + C@ ;
 
 \ Add the least significant digit of a number to the scratch area,
 \ leaving a quotient
 : # \ ( n -- q )
-    BASE @ MAX-BASE @ MIN /MOD SWAP >DIGIT HOLD ;
+    BASE @ /MOD SWAP >DIGIT HOLD ;
 
 \ Convert the rest of the number
 : #S \ ( n -- n' )
