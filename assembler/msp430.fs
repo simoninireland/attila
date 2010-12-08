@@ -54,6 +54,18 @@
 	POSTPONE LITERAL
     THEN ; IMMEDIATE
 
+\ Print a 16-bit binary number, including leading 0 bits, without
+\ changing the number base
+: .BIN16 ( n -- )
+    BASE @
+    BINARY
+    SWAP <#
+    16 0 DO
+	#
+    LOOP
+    #> TYPE SPACE
+    BASE ! ;
+
 
 \ ---------- Forming instructions ----------
 
