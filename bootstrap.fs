@@ -722,6 +722,16 @@ C: .S prim_dot_s ( -- )
     fflush(output_sink);
 ;C
 
+\ Return the digits character set as a Forth-level counted string
+C: DIGITS ( -- caddr )
+  CHARACTERPTR buf;
+
+  buf = calloc(strlen(digits + 1), sizeof(CHARACTER));
+  buf[0] = strlen(digits);
+  strncpy(buf + 1, digits, buf[0]);
+  caddr = (CELL) buf;
+;C
+	
 \ Convert a token to a number if possible, pushing the result
 \ (if done) and a flag
 C: NUMBER? ( addr n -- )
