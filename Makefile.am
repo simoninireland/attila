@@ -62,10 +62,12 @@ attila.c: bootattila
 	cd $(srcdir) && $(abs_builddir)/bootattila <$(abs_builddir)/tools/crosscompile.fs
 
 
-# ----- Testing -----
+# ----- Self-testing -----
+
+check: test
 
 test: attila
-	cd $(srcdir) && $(abs_builddir)/attila <$(abs_builddir)/tools/test.fs
+	cd $(srcdir) && $(abs_builddir)/attila <$(srcdir)/tools/test.fs
 
 .PHONY: test
 
@@ -133,6 +135,7 @@ regular = c-core.fs \
 	itil.fs \
 	c-fileio.fs \
 	c-io.fs \
+	system-hooks.fs \
 	flat-memory-model.fs \
 	itil-compilation.fs \
 	compilation.fs \
@@ -144,11 +147,14 @@ regular = c-core.fs \
 
 # Tests
 test = test/core-system-tests.fs \
-	test/arithmetic.fs \
 	test/stack.fs \
-	test/loops.fs \
+	test/arithmetic.fs \
+	test/words.fs \
 	test/allot.fs \
+	test/ascii.fs \
 	test/strings.fs \
+	test/formatting.fs \
+	test/loops.fs \
 	test/conditional-compilation.fs \
 	test/hooks.fs \
 	test/parser.fs
