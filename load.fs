@@ -26,6 +26,15 @@
     EXECUTIVE @ EXECUTE
     FROM> ;
 
+\ Test whether the given file exists and is readable
+: READABLE? ( addr n -- f )
+    R/O OPEN-FILE IF
+	DROP FALSE
+    ELSE
+	CLOSE-FILE DROP
+	TRUE
+    THEN ;
+    
 \ Load a file
 : LOAD \ ( addr len -- )
     2DUP R/O OPEN-FILE IF
