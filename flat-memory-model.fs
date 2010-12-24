@@ -217,19 +217,19 @@ C: >IBA xt_to_iba ( xt -- iba )
 
 \ Make the last word defined IMMEDIATE
 : IMMEDIATE \ ( -- )
-    1 ( IMMEDIATE-MASK ) LASTXT SET-STATUS ;
+    IMMEDIATE-MASK LASTXT SET-STATUS ;
 
 \ Test whether the given word is IMMEDIATE
 : IMMEDIATE? \ ( xt -- f )
-    GET-STATUS 1 ( IMMEDIATE-MASK ) AND 0<> ; 
+    GET-STATUS IMMEDIATE-MASK AND 0<> ; 
 
 \ Make the last word defined REDIRECTABLE
 : REDIRECTABLE \ ( -- )
-    2 ( REDIRECTABLE-MASK ) LASTXT SET-STATUS ; 
+    REDIRECTABLE-MASK LASTXT SET-STATUS ; 
 
 \ Test whether the given word is REDIRECTABLE
 : REDIRECTABLE? \ ( xt -- f )
-    GET-STATUS 2 ( REDIRECTABLE-MASK ) AND 0<> ; 
+    GET-STATUS REDIRECTABLE-MASK AND 0<> ; 
 
 \ Convert xt to body address, accounting for iba if present. This
 \ has to be coded as a primitive called xt_to_body, which is used
