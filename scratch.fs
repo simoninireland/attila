@@ -53,7 +53,7 @@ VARIABLE SCRATCH-POINTER
 
 \ Add a specific character to the scratch area
 : HOLD \ ( c -- )
-    SCRATCH-POINTER @ C!
+    SCRATCH-POINTER A@ C!
     1 SCRATCH-POINTER +!
     #SCRATCH SCRATCH-SIZE >= IF
 	S" Scratch area overflow" ABORT
