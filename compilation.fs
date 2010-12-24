@@ -66,14 +66,10 @@
 : S" \ ( "string" -- )
     32 CONSUME \ spaces
     [CHAR] " PARSE
-    ?DUP IF
-	STATE @ INTERPRETATION-STATE = IF
-	    \ leave the string on the stack
-	ELSE
-	    POSTPONE SLITERAL \ compile the string as a string literal
-	THEN
-\    ELSE
-\	S" String not delimited" ABORT
+    STATE @ INTERPRETATION-STATE = IF
+	\ leave the string on the stack
+    ELSE
+	POSTPONE SLITERAL \ compile the string as a string literal
     THEN ; IMMEDIATE
 
 
