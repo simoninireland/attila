@@ -28,8 +28,10 @@ testcases test/arithmetic.fs
 testcases test/allot.fs
 testcases test/ascii.fs     \ assuming system uses an ASCII encoding
 testcases test/strings.fs
+testcases test/formatting.fs
 testcases test/loops.fs
 testcases test/conditional-compilation.fs
+testcases test/hooks.fs
 testcases test/parser.fs
 
 TEST-CAMPAIGN-REPORT
