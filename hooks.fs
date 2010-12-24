@@ -34,6 +34,7 @@
 \ as soon as a word returns TRUE. Hooked words are run oldest-to-youngest.
 \
 \ Hooks are dynamic, so the structure is maintained in data memory.
+\ The run-time component is in hooks-runtime.fs
 
 \ Create a hook with the given name
 : (HOOK) ( addr n -- )
@@ -60,16 +61,3 @@
     0 A,          \ store link
       A, ;        \ store xt of hooked word
   
-\ Run the words hung on a hook
-: RUN-HOOK ( h -- f )
-    BEGIN
-	@ DUP 0<>
-    WHILE
-	    DUP >R
-	    1 CELLS + @ EXECUTE
-	    R> SWAP DUP 0<> IF
-		NIP EXIT
-	    ELSE
-		DROP
-	    THEN
-    REPEAT ;
