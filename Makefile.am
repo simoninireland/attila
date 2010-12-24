@@ -138,6 +138,7 @@ regular = c-core.fs \
 	compilation.fs \
 	colon.fs \
 	load.fs \
+	include.fs \
 	executive.fs \
 	startup.fs
 
