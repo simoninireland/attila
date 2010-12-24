@@ -97,6 +97,7 @@ Makefile
 vm.fs
 bootstrap-vm.fs
 x-host.fs
+tools/crosscompile.fs
 ])
 AC_OUTPUT
 
