@@ -45,10 +45,19 @@ TESTING" Parsing"
 
 TESTING" String equality"
 
-{ S" Hello" S" Hello"  S=   -> TRUE }
-{ S" Hello" S" Hello " S=   -> FALSE }
-{ S" Hello" S" hello"  S=CI -> TRUE }
-{ S" hello" S" hello"  S=CI -> TRUE }
+{ S" Hello"  S" Hello"  S=   -> TRUE }
+{ S" Hello"  S" Hello " S=   -> FALSE }
+{ S" Hello"  S" hello"  S=CI -> TRUE }
+{ S" hello"  S" hello"  S=CI -> TRUE }
+
+
+TESTING" Null string handling"
+
+{ NULLSTRING NULLSTRING S=   -> TRUE } 
+{ S" "       NULLSTRING S=   -> TRUE } 
+{ NULLSTRING S" "       S=   -> TRUE }
+{ S" 1"      NULLSTRING S=   -> FALSE }
+{ NULLSTRING S" 1"      S=   -> FALSE }
 
 
 TESTING" Counting"
