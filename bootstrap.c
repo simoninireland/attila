@@ -83,7 +83,7 @@ init_dictionary() {
   NEXT();
 
   // default START-DEFINITION behaviour
-  // can be remapped later using ( xt ) (START-DEFINITION) !
+  // can be remapped later using ( xt ) (START-DEFINITION) ADD-HOOK
   VARIABLE("(START-DEFINITION)");
   COMPILE_DATA_REFERENCE_TO("DUMMY-HOOK");
 
@@ -96,7 +96,7 @@ init_dictionary() {
   NEXT();
 
   // default END-DEFINITION behaviour
-  // can be remapped later using ( xt ) (END-DEFINITION) !
+  // can be remapped later using ( xt ) (END-DEFINITION) ADD-HOOK
   VARIABLE("(END-DEFINITION)");
   COMPILE_DATA_REFERENCE_TO("DUMMY-HOOK");
 
