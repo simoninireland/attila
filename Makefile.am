@@ -59,13 +59,13 @@ primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
 # ----- The cross-compiled interpreter VM -----
 
 attila.c: bootattila
-	cd $(srcdir) && $(abs_builddir)/bootattila <tools/crosscompile.fs
+	cd $(srcdir) && $(abs_builddir)/bootattila <$(abs_builddir)/tools/crosscompile.fs
 
 
 # ----- Testing -----
 
 test: attila
-	cd $(srcdir) && $(abs_builddir)/attila <tools/test.fs
+	cd $(srcdir) && $(abs_builddir)/attila <$(abs_builddir)/tools/test.fs
 
 .PHONY: test
 
@@ -95,11 +95,14 @@ forth = prelude.fs \
 	counted-loops-runtime.fs \
 	counted-loops.fs \
 	case.fs \
+	hooks-runtime.fs \
 	hooks.fs \
 	conditional-compilation.fs \
 	chars.fs \
 	strings.fs \
 	zstrings.fs \
+	type.fs \
+	parser.fs \
 	scratch.fs \
 	formatting.fs \
 	lists.fs \
@@ -145,10 +148,12 @@ test = test/core-system-tests.fs \
 	test/loops.fs \
 	test/allot.fs \
 	test/strings.fs \
-	test/conditional-compilation.fs
+	test/conditional-compilation.fs \
+	test/hooks.fs \
+	test/parser.fs
 
 # ----- Distribution -----
 
 nobase_dist_pkgdata_DATA = $(forth) $(crosscompiler) $(regular) $(test)
-DISTCLEANFILES = primitives.c
+DISTCLEANFILES = primitives.c attila.c
 
