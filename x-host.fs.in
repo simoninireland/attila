@@ -53,6 +53,7 @@ include counted-loops.fs
 : START-DEFINITION ;
 : END-DEFINITION ;
 include createdoes.fs
+include hooks.fs
 cross-compiler>
 
 .( Populating target image...)
@@ -61,6 +62,7 @@ include ascii.fs
 include c-fileio.fs
 include c-io.fs
 include counted-loops-runtime.fs
+include hooks-runtime.fs
 
 include flat-memory-model.fs
 include itil-compilation.fs
