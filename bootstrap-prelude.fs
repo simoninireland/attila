@@ -63,7 +63,6 @@ include loops.fs
 include counted-loops-runtime.fs 
 include counted-loops.fs
 include case.fs
-include hooks.fs
 include conditional-compilation.fs
 
 \ Data types
