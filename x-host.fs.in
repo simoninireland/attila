@@ -20,6 +20,8 @@
 
 \ Driver file for host cross-compilation
 
+\ ---------- Phase 1 cross-compiler set-up ----------
+
 \ Load the cross-compiler
 include cross-compiler/cross-compiler.fs
 
@@ -27,6 +29,9 @@ include cross-compiler/cross-compiler.fs
 <cross-compiler also cross-compiler
 include vm.fs
 cross-compiler>
+
+
+\ ---------- Minimal image population ----------
 
 .( Initialising cross-compiler target image...)
 [cross] initialise-image
@@ -41,42 +46,71 @@ include c-core.fs
 include c-itil.fs
 target>
 
-.( Initialising cross-compiler loop support...)
+
+\ ---------- Phase 2 cross-compiler set-up ----------
+
+.( Initialising cross-compiler support...)
 <cross-compiler also cross-compiler
+\ loop support
 include cs-stack.fs
 include loop-support.fs
 
+\ loop cross-compilation
 include conditionals.fs
 include loops.fs
 include counted-loops.fs
 
+\ CREATE...>DOES>
 : START-DEFINITION ;
 : END-DEFINITION ;
 include createdoes.fs
+
+\ hooks
+include hooks-runtime.fs
 include hooks.fs
 cross-compiler>
 
+
+\ ---------- Image population ----------
+
 .( Populating target image...)
 <target
+\ basic facilities
 include ascii.fs
-include c-fileio.fs
-include c-io.fs
 include counted-loops-runtime.fs
-include hooks-runtime.fs
 
+\ memory model
 include flat-memory-model.fs
 include itil-compilation.fs
+
+\ hooks
+include hooks-runtime.fs
+include system-hooks.fs
+
+\ terminal and file i/o
+include c-fileio.fs
+include c-io.fs
 include type.fs
+
+\ parsing and colon-compilation
 include parser.fs
 include compilation.fs
 include colon.fs
 
-include executive.fs
+\ code loading
 include file.fs
 include load.fs
+include include.fs
 
+\ interactive executive
+include executive.fs
+
+\ start-up behaviour
 include startup.fs
 target>
+
+
+\ ---------- Image finalisation and output ----------
 
 .( Finalising target image...)
 [CROSS] FINALISE-IMAGE
