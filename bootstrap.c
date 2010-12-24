@@ -74,32 +74,43 @@ init_dictionary() {
 
   
   // ---------- Compilation hooks and wrappers ----------
-  // sd: these should realy be DEFERred words, but we don't necessarily
-  // have DEFER and anyway we'd need FIND it make it work, so instead
-  // we have the hooks as variables that are accessed by wrappers words
+  // sd: these are minimal hooks that only hold a single word,
+  // basically enough to get wordlists up and running 
+
+  // dummy hook function
+  DEFINE("DUMMY-HOOK");
+  LITERAL(0);
+  NEXT();
 
   // default START-DEFINITION behaviour
   // can be remapped later using ( xt ) (START-DEFINITION) !
   VARIABLE("(START-DEFINITION)");
-  COMPILE_DATA_REFERENCE_TO("NOOP");
+  COMPILE_DATA_REFERENCE_TO("DUMMY-HOOK");
 
   // outer START-DEFINITION
   DEFINE("START-DEFINITION");
   COMPILE("(START-DEFINITION)");
   COMPILE("@");
   COMPILE("EXECUTE");
+  COMPILE("DROP");
   NEXT();
 
   // default END-DEFINITION behaviour
   // can be remapped later using ( xt ) (END-DEFINITION) !
   VARIABLE("(END-DEFINITION)");
-  COMPILE_DATA_REFERENCE_TO("NOOP");
+  COMPILE_DATA_REFERENCE_TO("DUMMY-HOOK");
 
   // outer END-DEFINITION
   DEFINE("END-DEFINITION");
   COMPILE("(END-DEFINITION)");
   COMPILE("@");
   COMPILE("EXECUTE");
+  COMPILE("DROP");
+  NEXT();
+
+  // make variables masquerade as hooks
+  DEFINE("ADD-TO-HOOK");
+  COMPILE("!");
   NEXT();
 
   // a flat find
