@@ -287,7 +287,7 @@ FORTH-WORDLIST PARSE-WORD FORTH (VOCABULARY)
 \ ---------- Set-up ----------
 
 \ Update current wordlist with each new word defined by chaining
-\ the appropriate behaviour onto the front of the (END-DEFINITION) hook
+\ the appropriate behaviour onto the (END-DEFINITION) hook
 : (END-DEFINITION-WORDLISTS) \ ( xt -- xt 0 )
     DUP GET-CURRENT >WID FALSE ;
 ' (END-DEFINITION-WORDLISTS) (END-DEFINITION) ADD-TO-HOOK
