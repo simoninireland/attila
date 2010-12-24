@@ -288,10 +288,9 @@ FORTH-WORDLIST PARSE-WORD FORTH (VOCABULARY)
 
 \ Update current wordlist with each new word defined by chaining
 \ the appropriate behaviour onto the front of the (END-DEFINITION) hook
-: (END-DEFINITION-WORDLISTS) \ ( xt -- xt )
-    DUP GET-CURRENT >WID
-    [ (END-DEFINITION) XT@ ] LITERAL EXECUTE ;
-' (END-DEFINITION-WORDLISTS) (END-DEFINITION) XT!
+: (END-DEFINITION-WORDLISTS) \ ( xt -- xt 0 )
+    DUP GET-CURRENT >WID FALSE ;
+' (END-DEFINITION-WORDLISTS) (END-DEFINITION) ADD-TO-HOOK
 
 \ Patch the Forth wordlist to include everything defined up to this point,
 \ which includes the root wordlist
