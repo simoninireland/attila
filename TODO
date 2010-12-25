@@ -5,12 +5,17 @@ Include paths
 
 String constants, including for cross-compilation
 
-make checkdist working
-
 Refactor flat-memory-model.fs, itil.fs and c-itil.fs to minimise duplication
 
 Allow constant creation on target during cross-compilation (refactor CROSS-COMPILING? etc)
 
+Better character parsing, for control characters and backslash-escapes
+
+Start-up and warm-start hooks
+
+Modular number/word parsing, using hooks again?
+
+Simplify cross-compiler structure (again)
 
 
 $Date$
