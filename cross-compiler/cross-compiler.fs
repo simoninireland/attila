@@ -122,11 +122,6 @@ DEFER NEXT,
 include vm.fs
 WORDLISTS>
 
-.( Loading target character handlers...)
-<WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
-include ascii.fs
-WORDLISTS>
-
 .( Loading image manager...)
 <WORDLISTS ONLY FORTH ALSO CROSS ALSO DEFINITIONS
 include cross-compiler/cross-image-fixedsize.fs    \ sd: should come from elsewhere
