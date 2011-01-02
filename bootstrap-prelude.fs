@@ -78,6 +78,7 @@ include records.fs
 include file.fs
 
 \ Word list control
+: ADD-TO-HOOK ! ;
 include wordlists.fs
 
 
