@@ -77,6 +77,11 @@ include hooks-runtime.fs
 include hooks.fs
 cross-compiler>
 
+<cross
+\ word header manipulation
+include words-itil-named.fs
+cross>
+
 
 \ ---------- Image population ----------
 \ - Load other capabilities into image
@@ -91,10 +96,6 @@ include ascii.fs
 include flat-memory-model.fs
 include itil-compilation.fs
 include words-itil-named.fs
-
-\ memory model
-include flat-memory-model.fs
-include itil-compilation.fs
 
 \ hooks
 include hooks-runtime.fs
