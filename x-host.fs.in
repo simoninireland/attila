@@ -67,20 +67,20 @@ include conditionals.fs
 include loops.fs
 include counted-loops.fs
 
-\ CREATE...>DOES>
+\ CREATE...DOES>
 : START-DEFINITION ;
 : END-DEFINITION ;
 include createdoes.fs
 
-\ hooks
+\ hooks support
+<cross
+include words-itil-named.fs
 include hooks-runtime.fs
+cross>
+
+\ hooks front-line words
 include hooks.fs
 cross-compiler>
-
-<cross
-\ word header manipulation
-include words-itil-named.fs
-cross>
 
 
 \ ---------- Image population ----------
