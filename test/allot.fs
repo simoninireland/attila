@@ -35,17 +35,16 @@ TESTING" Sizes and calculations"
 
 TESTING" Allotting"
 
-ALIGNED
-{ HERE
+{ ALIGNED HERE
   1 CHARS ALLOT
   HERE SWAP - -> /CHAR }
-{ HERE
+{ ALIGNED HERE
   1 CELLS ALLOT
   HERE SWAP - -> /CELL }
-{ HERE
+{ ALIGNED HERE
   0 ALLOT
   HERE SWAP - -> 0 }
-{ HERE
+{ ALIGNED HERE
   -1 ALLOT
   HERE SWAP - -> 0 }
 
