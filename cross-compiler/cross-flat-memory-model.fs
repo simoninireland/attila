@@ -96,13 +96,16 @@
 : ALIGNED? CALIGNED? ;
 
 \ Strings need to be copied from host memory, hence the explicit use of host C@ and CHARS
+: CSEQCOMPILE, \ ( addr n -- )
+    ?DUP 0> IF
+	0 DO
+	    DUP [FORTH] C@ CCOMPILE,
+	    [FORTH] /CHAR +
+	LOOP
+    THEN
+    DROP CALIGNED ;
 : SCOMPILE, \ ( addr n -- )
-    CALIGNED
-    DUP CCOMPILE,
-    0 DO
-	DUP [FORTH] C@ CCOMPILE,
-	1 [FORTH] CHARS +
-    LOOP DROP CALIGNED ;
+    CALIGNED DUP CCOMPILE, CSEQCOMPILE, ;
 : S, \ ( addr n -- )
     ALIGNED
     DUP C,
