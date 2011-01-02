@@ -103,13 +103,10 @@ forth = prelude.fs \
 	chars.fs \
 	strings.fs \
 	zstrings.fs \
-	type.fs \
-	parser.fs \
 	scratch.fs \
 	formatting.fs \
 	lists.fs \
 	records.fs \
-	file.fs \
 	evaluate.fs \
 	c.fs \
 	wordlists.fs \
@@ -131,6 +128,7 @@ crosscompiler = x-host.h \
 
 # The system sources, used to cross-compile a basic virtual machine
 regular = c-core.fs \
+	c-flat-memory-model-runtime.fs \
 	c-itil.fs \
 	itil.fs \
 	c-fileio.fs \
@@ -138,8 +136,12 @@ regular = c-core.fs \
 	system-hooks.fs \
 	flat-memory-model.fs \
 	itil-compilation.fs \
-	compilation.fs \
+	words-itil-named.fs \
+	type.fs \
+	parser.fs \
 	colon.fs \
+	compilation.fs \
+	file.fs \
 	load.fs \
 	include.fs \
 	executive.fs \
