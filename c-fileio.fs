@@ -186,4 +186,4 @@ C: RESET-I/O reset_io ( -- )
     fclose((FILE *) *user_variable(USER_OUTPUTSINK));
    *user_variable(USER_OUTPUTSINK) = stdout; 
 ;C
-  
+
