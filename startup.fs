@@ -20,13 +20,17 @@
 
 \ Normal interactive start-up
 \
-\ Ths START word performs the actions needed to start the system from
+\ This START word performs the actions needed to start the system from
 \ scratch. By default this is to load the standard prelude and then
 \ warm-start the interpreter, setting the future restart point to
 \ the executive.
 \
 \ As a general rule, this word should never be executed from within
 \ a session.
+
+\ Handy words to be hung on the startup hook
+: ANNOUNCE     S" Attila v.1.0" TYPE     0 ;
+: LOAD-PRELUDE S" prelude.fs"   INCLUDED 0 ;
 
 \ Start an Attila session
 : START ( -- )
@@ -36,13 +40,10 @@
     \ re-set the restart vector, so that WARM will jump
     \ to it when called
     ['] OUTER (START) XT!
-
-    \ annouce the system
-    S" Attila v.1.0" TYPE
     
-    \ include the standard prelude
-    S" prelude.fs" INCLUDED
+    \ run the start-up hook
+    STARTUP-HOOK RUN-HOOK
 
-    \ warm-start 
+    \ warm-start the system 
     WARM ;
 
