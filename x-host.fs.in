@@ -21,6 +21,8 @@
 \ Driver file for host cross-compilation
 
 \ ---------- Phase 1 cross-compiler set-up ----------
+\ - Load the cross-compiler
+\ - Load the virtual machine description
 
 \ Load the cross-compiler
 include cross-compiler/cross-compiler.fs
@@ -32,6 +34,8 @@ cross-compiler>
 
 
 \ ---------- Minimal image population ----------
+\ - Set up the image
+\ - Load really basic primitives, inner interpreter
 
 .( Initialising cross-compiler target image...)
 [cross] initialise-image
@@ -43,11 +47,14 @@ C: USERVAR uservar ( n -- addr )
 ;C
 
 include c-core.fs
+include c-flat-memory-model-runtime.fs
 include c-itil.fs
 target>
 
 
 \ ---------- Phase 2 cross-compiler set-up ----------
+\ - Load control structures
+\ - Load hooks support
 
 .( Initialising cross-compiler support...)
 <cross-compiler also cross-compiler
@@ -72,12 +79,18 @@ cross-compiler>
 
 
 \ ---------- Image population ----------
+\ - Load other capabilities into image
 
 .( Populating target image...)
 <target
 \ basic facilities
-include ascii.fs
 include counted-loops-runtime.fs
+
+\ character, memory, threading and word models
+include ascii.fs
+include flat-memory-model.fs
+include itil-compilation.fs
+include words-itil-named.fs
 
 \ memory model
 include flat-memory-model.fs
@@ -111,13 +124,22 @@ target>
 
 
 \ ---------- Image finalisation and output ----------
+\ - Patch image with final pointers
+\ - Save image to disc ready for (cross-)compilation
+
+.( Setting hooks and vectors)
+<TARGET
+\ Initial vectors
+' START (START)   XT!   \ cold start vector (first word executed)
+' OUTER EXECUTIVE XT!   \ executive (outer interpreter)
+
+\ Hooks
+' ANNOUNCE     ' STARTUP-HOOK >BODY ADD-TO-HOOK
+' LOAD-PRELUDE ' STARTUP-HOOK >BODY ADD-TO-HOOK
+TARGET>
 
 .( Finalising target image...)
 [CROSS] FINALISE-IMAGE
-<TARGET
-' START (START) XT!   \ cold start vector (first word executed)
-' OUTER EXECUTIVE XT! \ executive (outer interpreter)
-TARGET>
 
 .( Saving target image...)
 [CODE-GENERATOR] SAVE-IMAGE-AS @abs_builddir@/attila.c
