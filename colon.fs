@@ -23,12 +23,12 @@
 \ ---------- Start and end hooks ----------
 
 \ Hooks
-DATA (START-DEFINITION) ' NOOP XT,
-DATA (END-DEFINITION)   ' NOOP XT,
+HOOK (START-DEFINITION)
+HOOK (END-DEFINITION) 
 
-\ Hook functions
-: START-DEFINITION (START-DEFINITION) XT@ EXECUTE ;
-: END-DEFINITION   (END-DEFINITION)   XT@ EXECUTE ;
+\ Brackets to run the start and end hooks, ignoring any bailout status
+: START-DEFINITION (START-DEFINITION) RUN-HOOK DROP ;
+: END-DEFINITION   (END-DEFINITION)   RUN-HOOK DROP ;
 
 
 \ ---------- The colon-compiler ----------
