@@ -21,6 +21,18 @@
 \ The standard outer executive
 \ sd: this could be modularised to allow easier modification and hooking
 
+\ ---------- Parsing words ----------
+
+\ Hook for word parsers
+HOOK PARSE-WORD-HOOK
+
+
+\ ---------- Parsing numbers ----------
+
+
+
+\ ---------- The executive ----------
+
 \ The outer executive
 : OUTER \ ( -- )
     BEGIN
