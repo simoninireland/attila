@@ -21,6 +21,27 @@
 \ Hooks run-time support
 \
 \ The words needed to run hooks. This allows hooks to be cross-compiled.
+
+\ ---------- Hook construction ----------
+
+\ Traverse a hook to the final link
+: HOOK>LINK ( h -- addr )
+    BEGIN
+	DUP @ DUP 0<>
+    WHILE
+	    NIP
+    REPEAT
+    DROP ;  
+    
+\ Add a word to a hook
+: ADD-TO-HOOK ( xt h -- )
+    HOOK>LINK
+    HERE SWAP A!  \ link previous link to HERE
+    0 A,          \ store link
+      A, ;        \ store xt of hooked word
+
+
+\ ---------- User-facing words ----------
   
 \ Run the words hung on a hook
 : RUN-HOOK ( h -- f )
