@@ -96,19 +96,22 @@ VARIABLE (SCOMPARER)
 : (SCOMPARE) \ ( addr1 len1 addr2 len2 xt -- f )
     (SCOMPARER) XT!
     2 PICK = IF
-	SWAP 0 DO
-	    OVER C@ OVER C@ (SCOMPARER) XT@ EXECUTE IF
-		1 CHARS + SWAP 1 CHARS + SWAP
-	    ELSE
-		2DROP FALSE EXIT
-	    THEN
-	LOOP
-	TRUE
+	OVER 0= IF
+	    DROP TRUE
+	ELSE
+	    SWAP 0 DO
+		OVER C@ OVER C@ (SCOMPARER) XT@ EXECUTE IF
+		    1 CHARS + SWAP 1 CHARS + SWAP
+		ELSE
+		    2DROP FALSE EXIT
+		THEN
+	    LOOP
+	    TRUE
+	THEN
     ELSE
 	DROP FALSE
     THEN
     ROT 2DROP ;
-
 
 \ Check for string equality
 : S= ['] C= (SCOMPARE) ;
