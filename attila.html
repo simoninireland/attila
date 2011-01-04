@@ -3,7 +3,7 @@
 <head>
 <script id="versionArea" type="text/javascript">
 //<![CDATA[
-var version = {title: "TiddlyWiki", major: 2, minor: 6, revision: 0, date: new Date("Mar 18, 2010"), extensions: {}};
+var version = {title: "TiddlyWiki", major: 2, minor: 6, revision: 1, date: new Date("Aug 18, 2010"), extensions: {}};
 //]]>
 </script>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -43,7 +43,7 @@ DAMAGE.
 <!--}}}-->
 
 <!--PRE-HEAD-END-->
-<title> Attila - an abstract, re-targetable threaded interpreter </title>
+<title> Attila - an abstract re-targetable threaded interpreter </title>
 <style id="styleArea" type="text/css">
 #saveTest {display:none;}
 #messageArea {display:none;}
@@ -512,267 +512,104 @@ Also see [[AdvancedOptions]]</pre>
 </div>
 <!--POST-SHADOWAREA-->
 <div id="storeArea">
-<div title="ArithmeticWords" creator="sd" modifier="sd" created="201008161225" modified="201008281547" tags="words + - * /MOD / */" changecount="2">
-<pre>! Arithmetic words
+<div title="(default) on http://www.tiddlytools.com/#SinglePageModePlugin" modifier="simoninireland" created="201101041607" modified="201101041608" tags="systemServer" changecount="2">
+<pre>|''Type:''|file|
+|''URL:''|http://www.tiddlytools.com/|
+|''Workspace:''|(default)|
 
-!! Basic arithmetic words
+This tiddler was automatically created to record the details of this server</pre>
+</div>
+<div title="About" creator="simoninireland" modifier="simoninireland" created="201101041528" changecount="1">
+<pre>!About Attila
 
-{{{ + }}} ( a b -- a+b ) &quot;plus&quot;
+Attila is a from-the-ground-up implementation of a threaded interpreted language in the style of Forth. Attila has a number of features that make it different from other Forth systems:
 
-Add a and b as single-precision signed numbers.
+* It has a ''minimal core'' that allows it to generate very small systems, appropriate for user on sensor motes and embedded processors
+* It is ''cross-compiled'', allowing the vast majority of the system to be written (and changed) in Forth with only a tiny core of primitives
+* As a consequence, it is ''extremely portable'', since only the primitive core needs to be ported to a new system
+* It is ''extensible'' and comes with an extensive (and growing) collection of libraries and application code
 
-{{{ - }}} ( a b -- a-b ) &quot;minus&quot;
+Attila has been written as an experiment in extensible language design. You can read about its [[history|History]], [[architecture|Architecture]] and [[future plans|Todo]], and [[make your own contribution|HowToContribute]] to help make Attila grow better.  </pre>
+</div>
+<div title="AlignmentWords" creator="simoninireland" modifier="simoninireland" created="201101041558" tags="memory alignment words ALIGN ALIGNED CALIGN CALIGNED" changecount="1">
+<pre>{{{ALIGN}}} ( addr -- addr' )
 
-subtract b from a as single-precision signed numbers.
+Ensure that addr is cell-aligned.
 
-{{{ * }}} ( a b -- a*b ) &quot;times&quot;
+{{{ALIGNED}}} ( -- )
 
-Multiply a and b as single-precision signed numbers.
+Ensure that {{{HERE}}} is cell-aligned.
 
-{{{ /MOD }}} ( a b -- quot mod ) &quot;plus&quot;
+{{{CALIGN}}} ( addr -- addr' ) &quot;see align&quot;
 
-Perform integer division of a by b, leaving the quotient and remainder as signed single-precision numbers.
+Ensure that addr is code-aligned.
 
-{{{ / }}} ( a b -- a/b ) &quot;divide&quot;
+{{{CALIGNED}}} ( -- ) &quot;see aligned&quot;
 
-Divide a by b, leaving the quotient. Equivalent to {{{ /MOD DROP }}}.
+Ensure that {{{TOP}}} is code-aligned.
+</pre>
+</div>
+<div title="Arithmetic" creator="simoninireland" modifier="simoninireland" created="201101041536" modified="201101041536" tags="arithmetic" changecount="3">
+<pre>!Arithmetic
 
-{{{ */}}} ( a b c -- (a*b)/c ) &quot;times divide&quot;
 
-Multiply a by b and divide by c, using a double-precision intermediate value for (a * b).
+!!Arithmetic words
+&lt;&lt;tiddler ArithmeticWords&gt;&gt;
+
+</pre>
+</div>
+<div title="ArithmeticWords" creator="simoninireland" modifier="simoninireland" created="201101041536" modified="201101041543" tags="arithmetic words + - * / MOD /MOD */MOD" changecount="6">
+<pre>{{{+}}} ( a b -- a + b ) &quot;plus&quot;
+{{{-}}} ( a b -- a - b ) &quot;minus&quot;
+{{{*}}} ( a b -- a * b ) &quot;times&quot;
+
+Single-precision addition, subtraction and multiplication.
+
+{{{/MOD}}} ( a b -- r q ) &quot;slash mod&quot;
+{{{/}}} ( a b -- a / b ) &quot;slash&quot;
+{{{MOD}}} ( a b -- a % b )
+
+{{{/MOD}}} returns the remainder and quotient of single-precision integer division. {{{/}}} and {{{MOD}}} project-out the quotient and remainder respectively.
+
+{{{*/MOD}}} ( a b c -- r q ) &quot;star slash mod&quot;
+
+Return the quotient and remainder of ((a * b) / c, computing the multiplication in double-precision.
 
 
 </pre>
 </div>
-<div title="BootstrapProcess" creator="sd" modifier="sd" created="201008181721" modified="201008182005" tags="bootstrap install" changecount="4">
-<pre>! The bootstrap process
+<div title="CodeCompilationWords" creator="simoninireland" modifier="simoninireland" created="201101041556" modified="201101041601" tags="compilation code words COMPILE, CCOMPILE, ACOMPILE, RACOMPILE, XTCOMPILE, CTCOMPILE," changecount="2">
+<pre>{{{COMPILE,}}} ( a -- ) &quot;compile comma&quot;
 
-Attila is intended to be portable, abstract and extensible using cross-compilation. That is to say, a major goal of Attila is to be able to write further versions of Attila in Attila itself, and use the system to re-build itself as required. This contrasts with languages like Java whose compilers typically aren't written in Java.
+Compile the top value of the stack into code memory. This uses {{{/CELL}}} bytes of memory and will be {{{CALIGNED}}}.
 
-The initial build process takes a stripped-down version of Attila and uses it to generate a &quot;standard&quot; version ready for use.
+{{{CCOMPILE,}}} ( c -- ) &quot;see compile comma&quot;,
 
+Compile a character into code memory. This uses {{{/CHAR}}} bytes.
 
-!! Stage 0: components
+{{{ACOMPILE,}}} ( addr -- ) &quot;ay compile comma&quot;
 
-The basic low-level components of Attila are:
+Compile the top value, representing the address of some Attila structure, into code memory. Addresses are {{{CALIGNED}}}.
 
-* The basic primitives of the language provided in {{{ c-core.fs }}}, {{{ c-fileio.fs }}} and {{{ c-io.fs }}}
-* A basic memory model and assorted other primitives in {{{ bootstrap.fs }}}
-* A hand-built basic dictionary in {{{ bootstrap.c }}}
-* The main program in {{{ bootattila.c }}}
+{{{RACOMPILE,}}} ( raddr -- ) &quot;are ay compile comma&quot;
 
-The only interesting part of this is {{{ bootstrap.c }}}. This is a simple dictionary of words built using C macros, and defining things like the outer executive and colon-compiler. These clearly need to be available to compile any further code, and clearly can't be built from Forth code themselves at this stage.
+Compile the top value representing a real memory address into code memory. Addresses are {{{CALIGNED}}}.
 
+{{{XTCOMPILE,}}} ( xt -- ) &quot;ex tee compile comma&quot;
 
-!! Stage 1: building a basic interpreter
+Compile a xt into code memory, The xt will be {{{CALIGNED}}}
 
-To bootstrap an Attila interpreter, we first need to turn the primitive descriptions in {{{ c-core.fs }}} and so on into C code we can compile. This is done using a Perl script which provides the same functionality as the [[primitive compiler|PrimitiveWords]] in the cross-compiler. The script takes the stylised Forth code and outputs C.
+{{{CTCOMPILE,}}} ( xt -- ) &quot;see tee compile comma&quot;
 
-This C file is then compiled alongside the bootstrapping dictionary in {{{ bootstrap.c }}} to create a working interpreter, {{{ bootattila }}}. This is a completely working system, which you can demonstrate by running it, loading the standard prelude and executing some code.
- 
-
-!! Stage 2: cross-compiling an interpreter
-
-The next stage is to use the Attila cross-compiler to build an interpreter for the host. This may not //sound// like cross-compiling, as the target is the same machine as the initial bootstrap runs on, but it means that the final Attila system is stable and built according to a standard model without the compromises inherent in the bootstrapped interpreter. (For example we can change the colon-compiler by editing its definition in {{{ colon.fs }}} rather than by changing the hand-built version in {{{ bootstrap.c }}}.) The cross-compiler pre-processes primitives -- the same files as used by the bootstrap system, only this time processed using Forth rather than Perl --  and generates a file {{{ attila.c }}} that represents the complete virtual machine. This is then compiled to generate {{{ attila }}}, the &quot;real&quot; Attila virtual machine.
-
-We run a test suite through {{{ attila }}} to make sure the system is working properly. The test suite is constantly evolving, but is basically designed to catch any common problems with cross-compilation like data type sizes, endian-ness and the like. 
-
-
-!! Stage 3: checking fertility
-
-Finally, we use {{{ attila }}} to run the cross-compiler again to generate another interpreter, {{{ attila2 }}}, and run the test suite. through it. This stage makes sure that the Attila interpreter we cross-compiled is &quot;fertile&quot;, and can correctly cross-compile itself again. This gives confidence that we can change the system and cross-compile it again as required.
-
-At this stage we can dispense completely with the bootstrap code and support files, since they'll never be used again.
- 
- </pre>
-</div>
-<div title="ColonDefinitionWords" creator="sd" modifier="sd" created="201008281647" modified="201008281648" tags="words : ; :NONAME" changecount="2">
-<pre>! Colon-definition words
-
-(See [[here|MemoryModelWords]] for low-level details of header creation and the like.)
-
-!! The colon-compiler
-
-{{{:}}} ( &quot;name&quot; -- xt ) &quot;colon&quot;
-
-A [[defining word|TermDefiningWord]] that creates a new word and starts compiling its body.
-
-{{{;}}} ( xt -- ) &quot;semi&quot;
-
-End a colon-definition
-
-{{{:NONAME}}} ( -- xt xt ) &quot;no name&quot;
-
-Begin an anonymous colon definition. The word's xt will be left on the stack after the closing {{{;}}}.
-
-
-!! Note for experts
-
-In Forth the behaviour of the colon-compiler is traditionally very much tied-up with the behaviour of the outer executive. In fact the implementations of {{{:}}} and the like are essentially just for header creation and status manipulation. Attila follows this scheme at present, although this may change: the traditional approach is minimal, but doesn't really meet with modern software engineering principles. </pre>
-</div>
-<div title="CompilerOverview" creator="sd" modifier="sd" created="201008171541" modified="201008251510" tags="compiler overview" changecount="3">
-<pre>! The compiler
-
-!! Threaded interpretation
-
-Threaded interpretation is a method of compilation that is based almost entirely on subroutine calls. Each procedure -- called a //word// -- is created by stringing-together a sequence of references to other words (plus some control structures). When invoked, a word invokes the sequence of words in its body, which in turn invoke the words in //their// bodies, and so on.
-
-This sounds like it never ends, but some words -- //primitive// words -- have behaviours that are not coded using threaded interpretation. Typically their functions are provided by C or machine code. However, it turns out that the vast majority of behaviour can be provided using &quot;normal&quot; words with only a small set of primitives. In contrast to many other languages which have large run-time systems, a threaded interpreter typically has only a small core run-time and then a lot of threaded-interpreted words. This makes the languages more flexible, since there's less written in C or machine code to be ported or optimised.
-
-!! Direct //versus// indirect threading
-
-There are two basic ways to implement a threaded interpreter, depending on how the bodies of words are represented. In a //direct-threaded interpreter//, a word body is a sequence of machine-language subroutine calls. Executing a word simply jumps to the start of its body, which then jumps to the bodies of other words. In an //indirect-threaded interpreter//, by contrast, word bodies contain the //addresses// of other words, and a word is executed using a fast [[inner interpreter|InnerInterpreterWords]] written in machine code. Direct-threading can be somewhat faster, since all word invocations occur directly from machine code; Indirect-threading is typically more compact since there are no repeated machine code subroutine-call instructions.
-
-Attila uses indirect threading, in common with most Forth systems, but the threading model is abstracted and so can easily be changed to direct threading by [[cross-compilation|CrossCompilerOverview]] if speed is an issue.
-
-
-!! Performance of threaded interpreters
-
-Since a threaded interpreter uses subroutine calls throughout, it's clearly vital that subroutine calls are efficient.
-
-  
-</pre>
-</div>
-<div title="ConstantValueWords" creator="sd" modifier="sd" created="201008281555" tags="words CONSTANT VARIABLE VALUE TO" changecount="1">
-<pre>! Constants, values and variables
-
-!! Constants
-
-{{{ CONSTANT }}} ( n &quot;name&quot; -- )
-
-Create a new word representing the constant n. The value n will be substituted whenever the created word is encountered. Constants should therefore be regarded as literally constant, and should never be changed post-definition.
-
-
-!! Values
-
-Values are similar to constants except they can be re-defined. Previous compiled uses of the value are unchanged; future compiled uses reflect the new value.
-
-{{{ VALUE }}} ( n &quot;name&quot; -- )
-
-Create a new word representing the value n. The value n will be substituted whenever the created word is encountered. 
-
-{{{ TO }}} ( xt n -- )
-
-Update the value of the value represented by the xt to the new value n. The typical idiom for this, to update a value {{{ V }}}, would be {{{ ' V IS 45 }}}.
-
-
-!! Variables
-
-Variables are represented as cell-sized boxes of memory, accessed using {{{ ! }}} and {{{ @ }}}.
-
-{{{ VARIABLE }}} ( &quot;name&quot; -- )
-
-Create a new word that, when executed, returns the address of a cell of memory.
- 
-
-</pre>
-</div>
-<div title="ControlFlowWords" creator="sd" modifier="sd" created="201008170806" modified="201008171115" tags="words IF ELSE THEN CASE OF ENDOF ENDCASE BEGIN AGAIN WHILE REPEAT UNTIL DO LOOP +LOOP I J K LEAVE" changecount="7">
-<pre>! Control flow structures
-
-Attila builds control flow using words that appear in stylised groups. As such it doesn't make sense to describe each word's behaviour individually (although we could have done): instead we'll describe the constructs as a whole.
-
-
-!! Conditionals
-
-Simple boolean conditionals are constructed using {{{ IF }}} ... {{{ ELSE }}} ... {{{THEN }}}, with the condition being tested and used to select the first or optional second block. For example:
-
-&gt; 2 3 * 10 &lt; IF
-&gt;     .&quot; Six is less than ten&quot;
-&gt; ELSE
-&gt;     .&quot; Six has become greater than ten, somehow&quot;
-&gt; THEN
-
-This structure can seem a little reversed until you get used to it, because of the use of RPN.
-
-More complex, multi-test conditionals use the {{{ CASE }}} ... {{{ OF }}} ... {{{ ENDOF }}} ... {{{ ENDCASE }}} construction, where an initial value is tested against a list of conditions until one is found to be true:
-
-&gt; 2 3 * CASE
-&gt;    1 OF
-&gt;      .&quot; One&quot;
-&gt;    ENDOF
-&gt;    6 OF
-&gt;       .&quot; Six -- which is right, in case you were wondering...&quot; 
-&gt;    ENDOF
-&gt;    DUP OF
-&gt;       .&quot; We got &quot; .
-&gt;    ENDOF
-&gt; ENDCASE
-
-Each value before {{{ OF }}} is tested for equality against the leading value before {{{ CASE }}}. The last clause using {{{ DUP }}} always succeeds.
-
-
-!! Bounded loops
-
-A bounded loop runs through a sequence of values:
-
-&gt; 10 0 DO
-&gt;    .&quot; Index &quot; I . CR
-&gt; LOOP
-
-This loop runs from 0 to 9 (until less than the maximum index), running the body of the loop for each index. The index value of the //shallowest/// {{{ DO }}} loop is accessed using {{{ I }}}; for nested loops, the outer indices can also be accessed using {{{ J }}} (next-shallowest) and {{{ K }}} (next-next-shallowest):
-
-&gt; 5 0 DO
-&gt;    5 0 DO
-&gt;       5 0 DO
-&gt;          .&quot; ( &quot; I . SPACE J . SPACE K . SPACE .&quot;)&quot; CR
-&gt;       LOOP
-&gt;    LOOP
-&gt; LOOP
-
-{{{ LOOP }}} increases the index by one. To use another number, use {{{ +LOOP }}}:
-
-&gt; 10 0 DO
-&gt;    .&quot; Index &quot; I CR
-&gt; 2 +LOOP
-
-The test occurs at the //bottom// of the loop, so a {{{ DO }}} loop will always execute at least once.
-
-
-!! Unbounded loops
-
-Unbounded loops operate using a boolean test to decide whether they continue. The simplest is an infinite loop:
-
-&gt; BEGIN
-&gt;    .&quot; .&quot;
-&gt; AGAIN
-
-Testing at the bottom:
-
-&gt; 10 BEGIN
-&gt;    DUP . SPACE
-&gt;    1-
-&gt; 0= UNTIL
-
-Testing at the top:
-
-&gt; 10 BEGIN
-&gt;    DUP 0&gt;
-&gt; WHILE
-&gt;    DUP . SPACE
-&gt;    1-
-&gt; REPEAT
-
-
-!! Leaving loops
-
-You can escape from the middle of a loop using {{{ LEAVE }}}, which immediately jumps to the end of the shallowest loop. ({{{ IF }}} constructs don't count as loops.)
-
-&gt; 10 BEGIN
-&gt;    DUP 5 = IF
-&gt;       LEAVE
-&gt;    THEN
-&gt;    DUP . SPACE
-&gt;    1-
-&gt; AGAIN
+Compile the compilation token associated with the given xt into code memory.
 
 
 </pre>
 </div>
-<div title="Copyright" creator="sd" modifier="sd" created="201008161042" modified="201008161238" changecount="5">
+<div title="Copyright" creator="YourName" modifier="YourName" created="201101041521" changecount="1">
 <pre>! Copyright
 
-Copyright (c) 2007 -- 2010, Simon Dobson &lt;simon.dobson@computer.org&gt;. All rights reserved.
+Copyright (c) 2007 -- 2011, Simon Dobson &lt;[[simon.dobson@computer.org|mailto:simon.dobson@computer.org]]&gt;. All rights reserved.
 
 Attila is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 
@@ -781,928 +618,337 @@ Attila is distributed in the hope that it will be useful, but WITHOUT ANY WARRAN
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 </pre>
 </div>
-<div title="CreateDoesWords" creator="sd" modifier="sd" created="201008281602" modified="201008281621" tags="words CREATE DOES&gt;" changecount="8">
-<pre>! Defining words
+<div title="DataStack" creator="simoninireland" modifier="simoninireland" created="201101041544" modified="201101041552" tags="stack [[data stack]]" changecount="2">
+<pre>!The data stack
 
-Words are typically either code (colon-definitions) or data ([[simple data structures|SimpleDataStructureWords]], [[constants|ConstantValueWords]] and the like). A more complex programming idiom is to create words that create //new// words -- essentially extending the compiler with &quot;words that build words&quot; as {{{:}}} does. {{{DATA}}} (see [[here|SimpleDataStructureWords]]) is a simple example: it creates a new word whose behaviour is to return its data address.
+!!Data stack words
 
-To do this we need a word that performs two distinct behaviours:
-
-# At //compile time//, it creates a new word, performs any necessary initialisation, and sets the new word's behaviour to be whatever is required. Each call to the defining word will create a new word, all of whose behaviours will be the same but which might have different data and so on.
-# At //compile-time//, each defined word executes its assigned behaviour with access to its own data segment.
-
-The construction that does this is called {{{CREATE}}} ... {{{DOES&gt;}}}.
-
-{{{ CREATE }}} ( &quot;name&quot; -- )
-
-Creates a new word whose default behaviour is to return its data body address. Essentially this is what {{{DATA}}} does, but words created with {{{CREATE}}} can have their behaviours re-directed.
-
-{{{ DOES&gt; }}} ( -- )
-
-Re-directs the behaviour of the last-created word to the code following {{{DOES&gt;}}}.
-
-
-!! An example
-
-That sounds nonsense, so an example will make things clear.
-
-Suppose we want to define a collection of words that print logging messages in different languages. We could define them all by hand:
-
-&gt; : ~LOG-ERROR ( addr n -- )
-&gt;    LANGUAGE CASE
-&gt;       ENGLISH OF
-&gt;          .&quot; Error: &quot;
-&gt;       ENDOF
-&gt;       FRENCH OF
-&gt;          .&quot; Erreur: &quot;
-&gt;       ENDOF
-&gt;    ENDCASE
-&gt;    TYPE ;
-
-(for appropriate definitions of {{{ENGLISH}}} and {{{FRENCH}}} as constants 0 and 1 respectively). We might do this a lot, however. It would be better programming style to allow families of language-specific output words. We can do this by placing the alternative strings on the stack and then having a word that selects between them:
-
-&gt; : LOG ( addr1 n1 addr2 n2 &quot;name&quot; -- )
-&gt;    CREATE
-&gt;    2SWAP SWAP , ,
-&gt;         SWAP , ,
-&gt;    DOES&gt; ( lang addr -- )
-&gt;       SWAP 2* CELLS + 2@ TYPE ;
-
-What happens here? When we run {{{LOG MESSAGE}}}, {{{LOG}}} expects two strings on the stack. It creates a new word -- {{{MESSAGE}}} in this case -- allocates data space for 4 cells, and then copies the two strings' addresses and lengths into this space. So far so good. It then uses {{{DOES&gt;}}} to set the run-time behaviour of {{{MESSAGE}}} to read a value off the stack and use it as an offset into the string table (0 for the first string, 1 for the second, ...). It retrieves the string and types it out. The address on the stack is the address of {{{MESSAGE}}}'s data body, where the strings were stored, and is placed there automatically when {{{MESSAGE}}} executes. So we can run {{{ENGLISH MESSAGE}}} and output the first string, or {{{FRENCH MESSAGE}}} for the second.</pre>
-</div>
-<div title="CrossCompilerCodingStyle" creator="sd" modifier="sd" created="201008261418" tags="cross-compiler overview style" changecount="1">
-<pre>! Writing cross-compiler-friendly code
-
-
-!! Separate {{{ IMMEDIATE }}} words from their run-time support
-
-This is especially true for new defining words: keep the {{{ IMMEDIATE }}} words used in compiling your code separate from the words used at run-time. The reasons for this is simple: if you want to use your defining words in cross-compiled code, they have to be loaded into the cross-compiler and run on the host: they may not be included on the target. Conversely, the run-time support will need to be on the target, and may not be run on the host. Putting all the words in one file makes this separation difficult to accomplish, unless you stud the file with cross-compiler directives; separating them into two different files allows each to be loaded using the appropriate cross-compiler words.
-
-
-!! Don't use word lists
-
-The cross-compiler doesn't at present support word lists on the target: all target words are in a single word list. This might change in the future, but it seems largely unnecessary given that word lists are primarily a development feature, and a development system should really load most of itself from disc rather than having everything in a large virtual machine image.</pre>
-</div>
-<div title="CrossCompilerGotchas" creator="sd" modifier="sd" created="201008161923" modified="201008170810" tags="cross-compiler" changecount="3">
-<pre>! Cross-compiler &quot;gotchas&quot;
-
-The following are points that trip-up users of the cross-compiler. They may be fixed in time.
-
-
-!! Cell sizes
-
-The cross-compiler can't currently build code for a machine whose cell size ({{{ /CELL }}}) is bigger than the host's.
-
-
-!! {{{ CREATE }}} ... {{{ DOES&gt; }}} doesn't
-
-The {{{  CREATE }}} ... {{{ DOES&gt; }}} construction is a common way to build new defining words. The cross-compiler supports {{{ CREATE }}} ... {{{ DOES&gt; }}} to a limited extent. The limitation -- which is kind of obvious, but only after you've tripped over it a few times -- is that the word created by {{{ CREATE }}} can't be executed on the host, as its {{{ DOES&gt; }}} behaviour is cross-compiled. This is annoying and unexpected when you first encounter it.
-
-It's hard to see a way around other than supporting several definitions and selecting between them.
+&lt;&lt;tiddler DataStackWords&gt;&gt;
 </pre>
 </div>
-<div title="CrossCompilerOverview" creator="sd" modifier="sd" created="201008161209" modified="201008171518" tags="cross-compiler overview" changecount="3">
-<pre>! The Attila cross-compiler 
+<div title="DataStackWords" creator="simoninireland" modifier="simoninireland" created="201101041551" modified="201101041552" tags="stack [[data stack]] words DUP SWAP OVER DROP NIP TUCK ROT -ROT ROLL -ROLL PICK 2DUP 2SWAP 2OVER 2DROP" changecount="2">
+<pre>{{{DUP}}} ( a -- a a ) &quot;dupe&quot;
 
-Attila is designed to be //cross-compiled//. Cross-compilation is when an Attila interpreter is used to generate //another// Attila interpreter, which may be intended for a different platform and a different purpose to the original interpreter. Cross-compilation is an extremely useful technique as is allows Attila to be written largely in itself. This means that a programmer who knows Attila (and Forth generally) can look at and understand how the Attila compiler works, since it's written in Attila. Moreover it means that the compiler can be customised largely without knowing any other language (although a bit of C is generally needed too). This makes the Attila language surprisingly easy to customise.
+Duplicate the top value on the stack.
 
-Equally importantly, Attila can be cross-compiled for other platforms such as embedded systems. The generated interpreter could be considerable more compact that the original, and might (for example) dispense with Attila's interactive and debugging features. This means that, with care, adding interactive and debugging features to programs won't &quot;bloat&quot; them when they land on an embedded system. Indeed, the embedded interpreter need not include the Attila compiler at all (since it will be used only for executing compiled code). The target could use a different, more compact memory model that dispenses with word headers and the like, rendering the code very compact and efficient.
+{{{DROP}}} ( a -- )
 
+Drop the top value.
 
-!! How the cross-compiler works
+{{{SWAP}}} ( a b -- b a )
 
-(Before reading the following, make sure you're familiar with how the [[compiler|CompilerOverview]] works.)
+Swap the top two values.
 
-The Attila compiler is written largely in Attila, and provides words for reading and compiling source code. On a &quot;normal&quot; system these words create word headers, compile compilation tokens and the like. Words like {{{ : }}}, {{{ IF }}} provide compilation behaviours that are translated into code for run-time.
+{{{OVER}}} ( a b -- a b a )
 
-In writing a //cross//-compiler, we need to perform three fundamental tasks:
+Copy the second value over the first onto the top of the stack
 
-# Change the low-level compilation and access words so that, rather than compiling code for the host, they compile code intended for the target
-# Change the high-level compiler words so that the structures they compile operate on the target
-# Devise some structure for representing the target code in the host, and storing it for later use
+{{{NIP}}} ( a b -- b )
 
-(Of course these are just the top-level tasks, and there's a lot of other fiddly stuff to be done too.)
+Drop the second value on the stack, leaving the top unchanged.
 
-In essence the process is to create a word set that provides the same low-level words as the &quot;normal&quot; compiler -- for creating words and headers, compiling words and data etc -- but manipulating a cross-compiled image of an Attila virtual machine rather than the &quot;real&quot; one in the host. Then we load the compiler on top of this new word set. This means that the //same// compiler is in memory twice: one for the host and once for the cross-compiler. If we compile code using the cross-compiling compiler, it generates code in the target image which we can then output; if we compile code in the host compiler, it affects the host.
+{{{TUCK}}} ( a b -- b a b )
 
-The problems come from keeping these two compilers apart. A lost of Attila code is actually what are called //defining words//, words whose purpose is to define new words. {{{ CONSTANT }}} is am example: it creates a new word and assigns a behaviour to it that will, when the new word is run, cause it to behave as a constant, in-lined value. Clearly this is a word that we might want to use in cross-compiled code, but we want it to run //on the host// when creating constants whose values will be inlined //into code on the target//: the two compilers intersect. Keeping them apart, and making sure that we pick the right version of the two (or more!) instance of a word we have available at the appropriate time, is the challenge to writing the cross-compiler. 
+Tuck a copy of the top value underneath the second value.
+
+{{{ROT}}} ( a b c -- c a b )
+{{{-ROT}}} ( a b c -- b c a ) &quot;minus rot&quot;
+
+Rotate the top three values clockwise (anti-clockwise) respectively.
+
+{{{PICK}}} { ni ... n1 n0 i -- ni ... n1 n0 ni )
+
+Copy the i'th element to the top, counting down from zero without counting the count itself.
+
+{{{ROLL}}} ( ni ... n1 n0 i -- no ni ... n1 )
+{{{-ROLL}}} ( ni ... n1 n0 i -- ... n1 n0 ni ) &quot;minus roll&quot;
+
+Roll the top i item clockwise (anti-clockwise) respectively, counting from zero without counting the count itself.
+
+{{{2DUP}}} ( a b -- a b a b ) &quot;too dupe&quot;
+{{{2SWAP}}} ( a b c d -- c d a b ) &quot;too swap&quot;
+{{{2DROP}}} ( a b -- ) &quot; too drop&quot;
+{{{2OVER}}} ( a b c d -- a b c d a b ) &quot;too over&quot;
+
+Like {{{DUP}}}, {{{SWAP}}}, {{{DROP}}} and {{{OVER}}} respectively, but working with double values.
 </pre>
 </div>
-<div title="CrossCompilerVocabularies" creator="sd" modifier="sd" created="201008161217" modified="201008161837" tags="cross-compiler" changecount="4">
-<pre>! Cross-compiler vocabularies
+<div title="DefaultTiddlers" creator="simoninireland" modifier="simoninireland" created="201101041524" changecount="1">
+<pre>[[About]]</pre>
+</div>
+<div title="Documentation" creator="simoninireland" modifier="simoninireland" created="201101041613" modified="201101041614" changecount="5">
+<pre>!Documentation
 
-The cross-compiler divides itself into four word lists: {{{ CROSS }}}, {{{ TARGET }}}, {{{ CROSS-COMPILER }}} and {{{ CODE-GENERATOR }}}.
+You're looking at it! More precisely, Attila is documented using [[Tiddlywiki|http://www.tiddlywiki.org]], a web sire in a single HTML page with Javascript navigation. You can view this page on the web at the Attila site, or you can save it locally for use off-line. You then get a copy of the entire Attila web &quot;site&quot; on your disc.
 
+To save this page, use ''File &gt;&gt; Save as...'' in your browser. In Firefox you need to choose &quot;Web page, HTML only&quot; from the drop-down list at the bottom of the dialogue box.</pre>
+</div>
+<div title="Download" creator="simoninireland" modifier="simoninireland" created="201101041639" modified="201101041639" tags="download install" changecount="2">
+<pre>!Downloading and installation
 
-!! The {{{ CROSS }}} vocabulary
+Attila is a development tool intended for use by developers. These instructions therefore assume you're happy with basic notions of downloading, compilation and installation on Unix-like systems.
 
-{{{ CROSS }}} holds all the words that manipulate the target image directly. This includes low-level compilation words like {{{ COMPILE, }}} and {{{ (HEADER,) }}}. This word list also contains words that maintain the image of the target in the hosts's address space.
+!!Basic instructions
 
+&gt; wget http://www.attila-language.org/latest.tar.gz
+&gt; tar xfz latest.tar.gz
+&gt; cd att*
+&gt; ./configure
+&gt; make
+&gt; sudo make install
 
-!! The {{{ TARGET }}} vocabulary
+!!The nitty-gritty
 
-{{{ TARGET }}} holds words that represent words on the target. Each word is a [[structure|RecordWords]] holding details of the word such as its name and (for [[primitives|PrimitiveWords]]) its primitive name and code.
+Attila uses GNU autoconf to provide its initial compilation environment. When you run configure, autoconf will examine your system and generate the files needed to compile Attila on it. We refer to this as the host system. When you type make, a bootstrap version of Attila will be compiled. This is a basic Forth system that uses a lot of hand-crafting to get an initial image up and running. Attila will then load its cross-compiler and cross-compile a version of itself for the host system. This version is written almost entirely in Forth, and so can be used as a basis for building new, customised Attila variations. The cross-compiled version then runs the Attila test suite to make sure it's running correctly. make install will then install the cross-compiled system and all its associated source code to the appropriate place for your system. You can then delete the installation directory and the tarball.
+ </pre>
+</div>
+<div title="MainMenu" creator="simoninireland" modifier="simoninireland" created="201101041522" modified="201101041532" changecount="4">
+<pre>!!Getting started
+* [[Downloading and installation|Download]]
+* [[Quick-start|Quickstart]]
 
-Why not simply access the target image? Because the target image might not maintain word names at all: for an embedded system one might dispense with word headers entirely, and therefore not be able to access the names of words. Using {{{ TARGET }}} allows the cross-compiler to hold whatever information it needs about words, regardless of whether this information will be available on the target.
+!!The language
+* [[Programming]]
+* [[Architecture]]
+* [[The compiler|Compiler]]
+* [[The cross-compiler|CrossCompiler]]
+* [[Language reference|Language]]
 
+!!Community
+* [[Documentation]]
+* [[How to contribute|HowToContribute]]
+* [[Bibliography and useful sites|Bibliography]]
 
-!! The {{{ CROSS-COMPILER }}} vocabulary
-
-{{{ CROSS-COMPILER }}} holds the high-level cross-compilation words like {{{ IF }}} and {{{ : }}}. These are maintained separately from the low-level cross-compiler words on {{{ CROSS }}} to make it easier to define new high-level cross-compilation words.
-
-
-!! The {{{ CODE-GENERATOR }}} vocabulary
-
-Finally, {{{ CODE-GENERATOR }}} store all the words used to actually generate an image file, typically (but not necessarily) in C. This includes words to manage the target image, write it to disc, and generate any additional files that might be needed.
+[[Copyright]]
 </pre>
 </div>
-<div title="DataMemoryAccessWords" creator="sd" modifier="sd" created="201008161134" modified="201008161154" tags="words memory ! @ C! C@ XT! XT@ A! A@ RA! RA@" changecount="7">
-<pre>! Data memory access words
+<div title="ReturnStackWords" creator="simoninireland" modifier="simoninireland" created="201101041631" tags="stack [[return stack]] words &gt;R R&gt; R@" changecount="1">
+<pre>{{{&gt;R}}} ( a -- ) (R: -- a ) &quot;to are&quot;
 
-Attila supports both character- and cell-based access to memory. Memory access may be subject to [[alignment constraints|MemoryManagementWords]] on some architectures.
+Push the top value on the data stack onto the return stack.
 
-!! Common memory access words
+{{{R@}}} ( -- a ) (R: a -- a ) &quot;are fetch&quot;
 
-{{{ ! }}} ( n addr -- ) &quot;store&quot;
+Copy the topvalue on the return stack to the data stack, leaving the return stack unchanged.
 
-Store n in the cell addressed by addr. On some architectures addr must be cell-aligned.
+{{{R&gt;}}} ( -- a ) (R: a -- ) &quot;from are&quot;
 
-{{{ @ }}} ( addr -- n ) &quot;fetch&quot;
-
-Retrieve the cell value stored at addr. On some architectures addr must be cell-aligned.
-
-{{{ C! }}} ( c addr -- ) &quot;see store&quot;
-
-Store the character c in address addr.
-
-{{{ C@ }}} { addr -- c ) &quot;see fetch&quot;
-
-Retrieve the character stored at addr.
-
-
-!! Less common memory access words
-
-These words are &quot;manipulators&quot; used to store and fetch different &quot;kinds&quot; of cells. Usually they are synonomous with the basic {{{ ! }}} and {{{ @ }}}, but can be different when  [[cross-compiling|CrossCompilerOverview]] when different kinds of cell can need subtly different handling. It's therefore worth using them as documented in case your code gets cross-compiled later.
-
-{{{ XT! }}} ( xt addr -- ) &quot;ex tee store&quot;
-{{{ XT@ }}} ( addr -- xt ) &quot;ex tee fetch&quot;
-
-Store and fetch execution tokens. A typical use is to store the xt of a word in a variable or structure, and then retrieve and {{{ EXECUTE }}} it.  
-
-{{{ A! }}} ( a addr -- ) &quot;ay store&quot;
-{{{ A@ }}} ( addr -- a ) &quot;ay fetch&quot;
-
-Store and fetch an Attila address at another Attila address.
-
-{{{ RA! }}} ( n addr -- ) &quot;are ay store&quot;
-{{{ RA@ }}} ( addr -- n ) &quot;are ay fetch&quot;
-
-Store a &quot;real&quot; memory address into Attila memory.
-
-
-
+Pop the top value off the return stack and leave it on the data stack.
 </pre>
 </div>
-<div title="DataStackWords" creator="sd" modifier="sd" created="201008171530" tags="words DUP ?DUP DROP SWAP 2DUP 2DROP 2SWAP NIP TUCK ROT -ROT PICK DEPTH" changecount="1">
-<pre>! Data stack manipulation words
+<div title="SinglePageModePlugin" modifier="simoninireland" created="200508151715" modified="201101041608" tags="plugin systemConfig" server.type="file" server.host="www.tiddlytools.com/#SinglePageModePlugin" server.page.revision="201011301918" changecount="1">
+<pre>/***
+|Name|SinglePageModePlugin|
+|Source|http://www.TiddlyTools.com/#SinglePageModePlugin|
+|Documentation|http://www.TiddlyTools.com/#SinglePageModePluginInfo|
+|Version|2.9.7|
+|Author|Eric Shulman|
+|License|http://www.TiddlyTools.com/#LegalStatements|
+|~CoreVersion|2.1|
+|Type|plugin|
+|Description|Show tiddlers one at a time with automatic permalink, or always open tiddlers at top/bottom of page.|
+This plugin allows you to configure TiddlyWiki to navigate more like a traditional multipage web site with only one tiddler displayed at a time.
+!!!!!Documentation
+&gt;see [[SinglePageModePluginInfo]]
+!!!!!Configuration
+&lt;&lt;&lt;
+&lt;&lt;option chkSinglePageMode&gt;&gt; Display one tiddler at a time
+&gt;&lt;&lt;option chkSinglePagePermalink&gt;&gt; Automatically permalink current tiddler
+&gt;&lt;&lt;option chkSinglePageKeepFoldedTiddlers&gt;&gt; Don't close tiddlers that are folded
+&gt;&lt;&lt;option chkSinglePageKeepEditedTiddlers&gt;&gt; Don't close tiddlers that are being edited
+&lt;&lt;option chkTopOfPageMode&gt;&gt; Open tiddlers at the top of the page
+&lt;&lt;option chkBottomOfPageMode&gt;&gt; Open tiddlers at the bottom of the page
+&lt;&lt;option chkSinglePageAutoScroll&gt;&gt; Automatically scroll tiddler into view (if needed)
 
-Attila operates using an explicit stack of values, with words accessing (&quot;popping&quot;) and placing &quot;pushing&quot; values from and to it.
+Notes:
+* The &quot;display one tiddler at a time&quot; option can also be //temporarily// set/reset by including a 'paramifier' in the document URL: {{{#SPM:true}}} or {{{#SPM:false}}}.
+* If more than one display mode is selected, 'one at a time' display takes precedence over both 'top' and 'bottom' settings, and if 'one at a time' setting is not used, 'top of page' takes precedence over 'bottom of page'.
+* When using Apple's Safari browser, automatically setting the permalink causes an error and is disabled.
+&lt;&lt;&lt;
+!!!!!Revisions
+&lt;&lt;&lt;
+2010.11.30 2.9.7 use story.getTiddler()
+2008.10.17 2.9.6 changed chkSinglePageAutoScroll default to false
+| Please see [[SinglePageModePluginInfo]] for previous revision details |
+2005.08.15 1.0.0 Initial Release.  Support for BACK/FORWARD buttons adapted from code developed by Clint Checketts.
+&lt;&lt;&lt;
+!!!!!Code
+***/
+//{{{
+version.extensions.SinglePageModePlugin= {major: 2, minor: 9, revision: 7, date: new Date(2010,11,30)};
+//}}}
+//{{{
+config.paramifiers.SPM = { onstart: function(v) {
+	config.options.chkSinglePageMode=eval(v);
+	if (config.options.chkSinglePageMode &amp;&amp; config.options.chkSinglePagePermalink &amp;&amp; !config.browser.isSafari) {
+		config.lastURL = window.location.hash;
+		if (!config.SPMTimer) config.SPMTimer=window.setInterval(function() {checkLastURL();},1000);
+	}
+} };
+//}}}
+//{{{
+if (config.options.chkSinglePageMode==undefined)
+	config.options.chkSinglePageMode=false;
+if (config.options.chkSinglePagePermalink==undefined)
+	config.options.chkSinglePagePermalink=true;
+if (config.options.chkSinglePageKeepFoldedTiddlers==undefined)
+	config.options.chkSinglePageKeepFoldedTiddlers=false;
+if (config.options.chkSinglePageKeepEditedTiddlers==undefined)
+	config.options.chkSinglePageKeepEditedTiddlers=false;
+if (config.options.chkTopOfPageMode==undefined)
+	config.options.chkTopOfPageMode=false;
+if (config.options.chkBottomOfPageMode==undefined)
+	config.options.chkBottomOfPageMode=false;
+if (config.options.chkSinglePageAutoScroll==undefined)
+	config.options.chkSinglePageAutoScroll=false;
+//}}}
+//{{{
+config.SPMTimer = 0;
+config.lastURL = window.location.hash;
+function checkLastURL()
+{
+	if (!config.options.chkSinglePageMode)
+		{ window.clearInterval(config.SPMTimer); config.SPMTimer=0; return; }
+	if (config.lastURL == window.location.hash) return; // no change in hash
+	var tids=decodeURIComponent(window.location.hash.substr(1)).readBracketedList();
+	if (tids.length==1) // permalink (single tiddler in URL)
+		story.displayTiddler(null,tids[0]);
+	else { // restore permaview or default view
+		config.lastURL = window.location.hash;
+		if (!tids.length) tids=store.getTiddlerText(&quot;DefaultTiddlers&quot;).readBracketedList();
+		story.closeAllTiddlers();
+		story.displayTiddlers(null,tids);
+	}
+}
 
 
-{{{ DUP }}} ( a -- a a ) &quot;dupe&quot;
+if (Story.prototype.SPM_coreDisplayTiddler==undefined)
+	Story.prototype.SPM_coreDisplayTiddler=Story.prototype.displayTiddler;
+Story.prototype.displayTiddler = function(srcElement,tiddler,template,animate,slowly)
+{
+	var title=(tiddler instanceof Tiddler)?tiddler.title:tiddler;
+	var tiddlerElem=story.getTiddler(title); // ==null unless tiddler is already displayed
+	var opt=config.options;
+	var single=opt.chkSinglePageMode &amp;&amp; !startingUp;
+	var top=opt.chkTopOfPageMode &amp;&amp; !startingUp;
+	var bottom=opt.chkBottomOfPageMode &amp;&amp; !startingUp;
+	if (single) {
+		story.forEachTiddler(function(tid,elem) {
+			// skip current tiddler and, optionally, tiddlers that are folded.
+			if (	tid==title
+				|| (opt.chkSinglePageKeepFoldedTiddlers &amp;&amp; elem.getAttribute(&quot;folded&quot;)==&quot;true&quot;))
+				return;
+			// if a tiddler is being edited, ask before closing
+			if (elem.getAttribute(&quot;dirty&quot;)==&quot;true&quot;) {
+				if (opt.chkSinglePageKeepEditedTiddlers) return;
+				// if tiddler to be displayed is already shown, then leave active tiddler editor as is
+				// (occurs when switching between view and edit modes)
+				if (tiddlerElem) return;
+				// otherwise, ask for permission
+				var msg=&quot;'&quot;+tid+&quot;' is currently being edited.\n\n&quot;;
+				msg+=&quot;Press OK to save and close this tiddler\nor press Cancel to leave it opened&quot;;
+				if (!confirm(msg)) return; else story.saveTiddler(tid);
+			}
+			story.closeTiddler(tid);
+		});
+	}
+	else if (top)
+		arguments[0]=null;
+	else if (bottom)
+		arguments[0]=&quot;bottom&quot;;
+	if (single &amp;&amp; opt.chkSinglePagePermalink &amp;&amp; !config.browser.isSafari) {
+		window.location.hash = encodeURIComponent(String.encodeTiddlyLink(title));
+		config.lastURL = window.location.hash;
+		document.title = wikifyPlain(&quot;SiteTitle&quot;) + &quot; - &quot; + title;
+		if (!config.SPMTimer) config.SPMTimer=window.setInterval(function() {checkLastURL();},1000);
+	}
+	if (tiddlerElem &amp;&amp; tiddlerElem.getAttribute(&quot;dirty&quot;)==&quot;true&quot;) { // editing... move tiddler without re-rendering
+		var isTopTiddler=(tiddlerElem.previousSibling==null);
+		if (!isTopTiddler &amp;&amp; (single || top))
+			tiddlerElem.parentNode.insertBefore(tiddlerElem,tiddlerElem.parentNode.firstChild);
+		else if (bottom)
+			tiddlerElem.parentNode.insertBefore(tiddlerElem,null);
+		else this.SPM_coreDisplayTiddler.apply(this,arguments); // let CORE render tiddler
+	} else
+		this.SPM_coreDisplayTiddler.apply(this,arguments); // let CORE render tiddler
+	var tiddlerElem=story.getTiddler(title);
+	if (tiddlerElem&amp;&amp;opt.chkSinglePageAutoScroll) {
+		// scroll to top of page or top of tiddler
+		var isTopTiddler=(tiddlerElem.previousSibling==null);
+		var yPos=isTopTiddler?0:ensureVisible(tiddlerElem);
+		// if animating, defer scroll until after animation completes
+		var delay=opt.chkAnimate?config.animDuration+10:0;
+		setTimeout(&quot;window.scrollTo(0,&quot;+yPos+&quot;)&quot;,delay); 
+	}
+}
 
-Duplicate the top value.
-
-{{{ ?DUP }}} ( a -- a a | a ) &quot;query dupe&quot;
-
-Test the top stack item and duplicate it if it is not zero.
-
-{{{ DROP }}} ( a -- )
-
-Drop the top item.
-
-{{{ SWAP }}} ( a b -- b a )
-
-Exchange the top two items.
-
-{{{ 2DUP }}} ( a b -- a b a b ) &quot; too dupe&quot;
-
-Duplicate the top two stack items (or the top double cell, depending on your point of view).
-
-{{{ 2DROP }}} ( a b -- ) &quot; too drop&quot;
-
-Drop the top two items.
-
-{{{ 2SWAP }}} ( a b c d -- c d a b ) &quot; too swap&quot;
-
-Swap the two pair of items for the next pair.
-
-{{{ NIP }}} ( a b -- b )
-
-Drop the second stack item, leaving the top item untouched.
-
-{{{ TUCK }}} ( a b -- b a b )
-
-Tuck the top item under the second.
-
-{{{ ROT }}} ( a b c -- c a b )
-
-Rotate the top three stack items clockwise.
-
-{{{ -ROT }}} ( a b c -- b c a ) &quot;minus rot&quot;
-
-Rotate the top three items counter-clockwise.
-
-{{{ PICK }}} ( a3 a2 a1 a0 n -- a3 a2 a1 a0 an )
-
-Pick the n'th item and copy it to the top of the stack, counting elements from zero and not including the counter itself.
-
-{{{ DEPTH }}} ( -- n )
-
-return the number of items on the stack, not including the depth value itself.
-  
-</pre>
+if (Story.prototype.SPM_coreDisplayTiddlers==undefined)
+	Story.prototype.SPM_coreDisplayTiddlers=Story.prototype.displayTiddlers;
+Story.prototype.displayTiddlers = function() {
+	// suspend single/top/bottom modes when showing multiple tiddlers
+	var opt=config.options;
+	var saveSPM=opt.chkSinglePageMode; opt.chkSinglePageMode=false;
+	var saveTPM=opt.chkTopOfPageMode; opt.chkTopOfPageMode=false;
+	var saveBPM=opt.chkBottomOfPageMode; opt.chkBottomOfPageMode=false;
+	this.SPM_coreDisplayTiddlers.apply(this,arguments);
+	opt.chkBottomOfPageMode=saveBPM;
+	opt.chkTopOfPageMode=saveTPM;
+	opt.chkSinglePageMode=saveSPM;
+}
+//}}}</pre>
 </div>
-<div title="DataTypes" creator="sd" modifier="sd" created="201008161154" modified="201008161200" tags="types cell [[double cell]] char string zstring" changecount="3">
-<pre>! Data types
-
-!! Cells
-
-Cells are the &quot;normal&quot; unit of value in Attila. A cell can be used to store an integer, an address, the execution token of a word, and so forth. The size of a cell is returned by {{{ /CELL }}} (see [[memory management|MemoryManagementWords]]).
-
-!! Double cells
-
-Two cells treated as a single value, typically a large integer.
-
-!! Characters
-
-Characters for input and output. Characters are typically a single byte, although they could be two-byte unicode characters in the future (see [[memory management|MemoryManagementWords]]).
-
-!! Strings
-
-The &quot;standard&quot; string type in Attila is the counted string consisting of a block of memory, the first byte of which is a character count and the remainder are the characters. This limits strings to at most 256 characters.
-
-!! Zstrings
-
-For longer strings, Attila provides a [[zstring word set|ZStringWords]] that provide null-terminated (C-style) strings. These are less convenient and less standard than &quot;normal&quot; strings, but can be of arbitrary length</pre>
+<div title="SiteSubtitle" creator="YourName" modifier="YourName" created="201101041521" changecount="1">
+<pre>an abstract re-targetable threaded interpreter</pre>
 </div>
-<div title="DefaultTiddlers" creator="sd" modifier="sd" created="201008161041" modified="201008261428" changecount="3">
-<pre>[[WhatIsAttila]]</pre>
-</div>
-<div title="DeferWords" creator="sd" modifier="sd" created="201008281643" modified="201008281643" tags="words DEFER IS (IS)" changecount="2">
-<pre>! Deferring words
-
-In Forth, a word can only be referred to after it has been defined: there are no &quot;forward&quot; definitions. This can be awkward, since one sometimes finds one word defined in terms of another and //vice versa// -- mutually-recursive definitions. A way of handling this is to allow a word to be defined without a body, and then assign its body later. This is performed by {{{DEFER}}}.
-
-Suppose we want to write two mutually-recursive words. We {{{DEFER}}} the first and then write the second, which (since the first word now exists in the dictionary) has access to it:
-
-&gt; DEFER ONE
-&gt; : TWO 10 0 I . CR ONE LOOP ;
-
-We then write the body of the first word and assign it to {{{ONE}}}. Since {{{TWO}}} has been defined already, this new code can refer to it:
-
-&gt; : ONE-BODY 10 1 TWO LOOP ;
-&gt; ' ONE-BODY IS ONE
-
-If we don't want to generate an extra name, we can create an [[anonymous word|ColonDefinitionWords]] instead:
-
-&gt; :NONAME 10 1 TWO LOOP ;
-&gt; IS ONE
-
-Another use for {{{DEFER}}} is to define words whose definitions can be provided by including one of a number of files. The rest of the system refers to the deferred word, which is resolved against the desired implementation before the system runs.
-
-
-!! Deferring words
-
-{{{DEFER}}} ( &quot;name&quot; -- )
-
-A [[defining word|TermDefiningWord]] that creates a word &quot;alias&quot;, initially with a (fatal) dummy behaviour.
-
-{{{IS}}} ( xt &quot;name&quot; -- )
-
-Assign the given word as the behaviour of the given word, which should have been created using {{{DEFER}}}.
-
-{{{(IS)}}} ( xt dxt -- ) &quot;bracket is&quot;
-
-Assign xt as the behaviour of the deferred word identified by dxt.
-</pre>
-</div>
-<div title="Documentation" creator="sd" modifier="sd" created="201008261424" modified="201008261427" changecount="4">
-<pre>! Documentation
-
-You're looking at it! More specifically, Attila is documentaed using [[TiddlyWiki|http://www.tiddlywiki.com]], a &quot;web site in a page&quot; that lets you download and interact with the entire documentation set in a single, simple action.
-
-To store the documentation locally, just save this page to your disc -- //File &gt;&gt; Save as...// on most browsers. (On Firefox, make sure to choose &quot;Web page, HTML only&quot; and not &quot;Web page, complete&quot; from the save dialogue.) When you open the file, you'll find the entire Attila site available for use offline.
-</pre>
-</div>
-<div title="DownloadInstall" creator="sd" modifier="sd" created="201008181702" modified="201008182005" tags="download install" changecount="8">
-<pre>! Downloading and installing Attila
-
-Attila is written largely in itself with a small core of portable C code. It has been tested on a range of machines including Intel-based Linux machines, Intel- and ~PPC-based Macs.
-
-To install:
-
-# Download the latest Attila tarball from here
-# Unpack the tarball in a suitable directory, using {{{ tar xfz attila-latest.tar.gz }}} (where {{{ attila-latest.tar.gz }}} is the name of the tarball you downloaded in the previous step).
-# {{{ cd }}} into the directory created.
-# {{{ ./configure }}}
-# {{{ make }}}
-# {{{ sudo make install }}}
-
-See the file {{{ INSTALL }}} for details of other things you can change.
-
-If you want to understand more about how Attila constructs itself, the details are [[here|BootstrapProcess]].
-
-
-
-
-</pre>
-</div>
-<div title="ForthCodingStyle" creator="sd" modifier="sd" created="201008261411" modified="201008301046" tags="overview style" changecount="3">
-<pre>! Forth coding style guide
-
-Here are a few coding style tips. See also [[tips for cross-compiler-friendly code|CrossCompilerCodingStyle]]. 
-
-!! Obey the naming conventions where appropriate
-
-Forth coding generates a //lot// of words. To keep them straight and to keep code readable, the standard Forth [[naming conventions|NamingConventions]] are very helpful and well worth learning. They shouldn't be used slavishly, however: adopt and adpat as appropriate to create the most readable code.
- 
-
-!! Code bottom-up
-
-Forth is amenable to a bottom-up style of coding, where you build abstractions on top of abstractions. This contrasts with the top-down style in which you define interfaces and then implement them, leading to more interfaces lower down. </pre>
-</div>
-<div title="MainMenu" creator="YourName" modifier="sd" created="201008161039" modified="201008261430" changecount="11">
-<pre>!! About Attila
-* [[Downloading and installing|DownloadInstall]]
-* [[Documentation|Documentation]]
-* [[Copyright|Copyright]]
-
-!! Language overview
-* [[Data types|DataTypes]]
-* [[Memory management|MemoryManagementWords]]
-* [[Data memory access|DataMemoryAccessWords]]
-* [[Finding words|WordFindingWords]]
-* [[Coding style tips|ForthCodingStyle]]
-
-!! Advanced issues
-* [[Interpretation model|InterpreterOverview]]
-* [[Memory model|MemoryModelOverview]]
-* [[Cross-compilation|CrossCompilerOverview]]
-</pre>
-</div>
-<div title="MemoryManagementWords" creator="sd" modifier="sd" created="201008161142" modified="201008281653" tags="words memory /CELL /CHAR CELLS CHARS ALIGN ALIGNED ALLOT CALIGN CALIGNED" changecount="10">
-<pre>! Memory management words
-
-Memory management in Attila is encapsulated in a small word set that controls the allocation and manipulation of //static// memory that is allocated and never released: //dynamic// memor, which in intended for use and the release, is controlled by [[a different word set|DynamicMemoryManagementWords]].
-
-Memory in Attila can be broadly divided into //code// memory within the code segments of words and //data// memory used for data storage -- see the [[memory model overview|MemoryModelOverview]] for more details. Code memory is generally controlled using the [[code memory compilation words|CodeMemoryAccessWords]]. Data memory is accessed using the [[data memory word set|DataMemoryAccessWords]].
-
-
-!! Size calculations
-
-{{{ CELLS }}} ( n -- nb )
-
-Return the number of bytes needed to represent n cells. Typically seen in the form {{{ 45 CELLS ALLOT }}}.
-
-
-{{{ CHARS }}} ( n -- nb )
-
-Return the number of bytes needed to represent n characters, which is typically (not not necessarily) the same.
-
-
-!! Data memory alignment and allocation 
-
-
-{{{ ALIGN }}} ( addr -- addr1 )
-
-Take an address and align it on the next-highest cell boundary.
-
-{{{ ALIGNED }}} ( -- )
-
-Ensure {{{ HERE }}} is aligned on a cell boundary.
-
-{{{ ALLOT }}} ( nb -- )
-
-Allocate nb bytes of data memory. The first byte will be cell-aligned.
-
-
-!! Code memory alignment
-
-{{{ CALIGN }}} ( addr -- addr1 ) &quot;see aligned&quot;
-
-Take an address and code-align it on the next-highest cell boundary.
-
-{{{ CALIGNED }}} ( -- ) &quot;see align&quot;
-
-Ensure {{{ TOP }}} is aligned on a cell boundary.
-</pre>
-</div>
-<div title="MemoryModelOverview" creator="sd" modifier="sd" created="201008181658" tags="memory overview" changecount="1">
-<pre>! Memory models
-
-
-Attila supports the following memory models:
-
-* [[Static, fixed-sized|StaticFixedMemoryModel]] intended for embedded devices and other systems where it's important to fix the maximum memory footprint.
-</pre>
-</div>
-<div title="NamingConventions" creator="sd" modifier="sd" created="201008301029" modified="201008301046" tags="overview style" changecount="9">
-<pre>! Word naming conventions
-
-In Forth, all words are treated fairly equally. To help keep things clear, there are a few naming conventions that it can help to adhere to and recognise:
-
-* Words are usually defined and referred to in capital letters, so {{{DUP}}} rather than {{{dup}}} -- although in code the compiler recognises either and even mixed cases, and it's often more attractive to write in lower case
-* Immediate words appear in square brackets, for example {{{[COMPILE]}}}, {{{[']}}}
-* Words that test the stack to determine an action have leading question marks, for example {{{?DUP}}}
-* Words that test some condition and leave a flag on the stack have trailing question marks, for example {{{IMMEDIATE?}}}
-* Words that store and fetch data from memory have trailing exclamation marks and at-signs respectively,  typically preceded by what sort of data they manipulate, for example {{{XT!}}}, {{{RA@}}}
-* Words intended to provide lower-level, not-usually-used-by-users functions appear in brackets, for example {{{(:)}}}
-
-These are only //conventions//, of course, and no harm will come if they're ignored -- except in terms making your code less readable to people who //do// follow the conventions. That's a good enough reason to follow them. There are also good reasons //not// to: control structures are immediate but don't use square brackets ({{{BEGIN}}} not {{{[BEGIN]}}}) because they're so common and it's of no real relevance to the programmer that they actually //are// immediate.</pre>
-</div>
-<div title="SimpleDataStructureWords" creator="sd" modifier="sd" created="201008281559" modified="201008281559" tags="words DATA (DATA)" changecount="2">
-<pre>! Simple data structures
-
-The simplest data structure is a block of memory with no other explicit structure: it's up to the programmer to manage the memory, or (more usually) to write a set of words that manages it. See [[records|RecordWords]] for an example. If the word created should do something more complex than just return a data address, it's behaviour can be specified using the [[defining words|CreateDoesWords]].
-
-{{{ DATA }}} ( &quot;name&quot; -- )
-
-Create a word that returns the address of its body. No data is allocated by default, so one often sees code of the form {{{ DATA TEST 25 CELLS ALLOT }}} to create a word {{{ TEST }}} with space for 25 cells of data.
-
-{{{ (DATA) }}} ( addr n -- ) &quot;bracket data&quot;
-The primitive form of {{{ DATA }}} that takes the name of the word to create off the stack.
-</pre>
-</div>
-<div title="SiteSubtitle" creator="YourName" modifier="YourName" created="201008161038" changecount="1">
-<pre>an abstract, re-targetable threaded interpreter</pre>
-</div>
-<div title="SiteTitle" creator="YourName" modifier="YourName" created="201008161037" changecount="1">
+<div title="SiteTitle" creator="YourName" modifier="YourName" created="201101041521" changecount="1">
 <pre>Attila</pre>
 </div>
-<div title="StandardPrelude" creator="sd" modifier="sd" created="201008181729" modified="201008301021" tags="prelude prelude.fs overview" changecount="4">
-<pre>! The standard prelude
-
-The standard prelude, prelude.fs, is a single file that builds a &quot;standard&quot; Forth system on top of a virtual machine. It causes the virtual machine to load and compile all the source code describing a standard system. This includes the following language features:
-
-* [[Control structures|ControlFlowWords]], conditionals and loops
-* [[Defining words|DefiningWords]] for constants, variables and values
-* [[Strings|StringWords]] and [[long strings (zstrings)|ZStringWords]]
-* [[Word lists|WordListWords]] allowing words to be grouped into collections
-* [[Dynamic memory management|DynamicMemoryManagementWords]] for allocating and releasing memory flexibly
-* [[Records|RecordWords]] for building record structures
-* [[Lists|ListWords]] of values
-* [[Formatted text I/O|IOWords]]
-* [[File I/O|FileIOWords]] for access mass media
-* A description of the [[virtual machine's characteristics|VMWords]]
-* A simple [[decompiler|DecompilerWords]]
-
-The prelude is loaded automatically when Attila is run.
-  
-
-</pre>
-</div>
-<div title="StartupSequence" creator="sd" modifier="sd" created="201008301017" modified="201008301020" tags="startup prelude.fs startup.fs" changecount="4">
-<pre>! Start-up sequence
-
-When the standard interpreter is run, it performs the following actions:
-
-# Sets-up the initial stacks by reading their addresses from {{{(DATA-STACK)}}} and {{{(RETURN-STACK)}}} respectively
-# Sets-up the initial terminal I/O to use standard input and output
-# Calls the word in the start vector {{{(START)}}}, which by default is {{{START}}} and:
-## Calls {{{(RESET)}}}, which:
-### Resets the stacks
-### Resets the default number base to 10 ({{{DECIMAL}}})
-### Sets the system into interpretation state
-### Disables debugging
-### Resets the I/O sub-system
-### Empties any pending input
-## Re-sets the start vector {{{(START)}}} to hold {{{OUTER}}}, so the the outer executive runs next time the system restarts
-## Announces the system on the terminal
-## Loads the standard prelude from prelude.fs
-## Warm-starts the system by calling {{{WARM}}}
-
-The net result of this is to place the system ready to receive input with the standard language loaded. The [[standard prelude|StandardPrelude]] contains a reasonably complete and reasonably standard Forth system, with extensions.
-
-[[Cross-compiled|CrossCompilerOverview]] systems can re-define the start-up behaviour as required by placing the appropriate start-up word into {{{(START)}}} during cross-compilation.</pre>
-</div>
-<div title="StyleSheet" creator="sd" modifier="sd" created="201008161241" modified="201008261429" tags="template" changecount="46">
-<pre>/***
-!! General layout
-***/
-
-/*{{{*/
-
-body {
-  font-family: times;
-  font-size: 10pt;
-}
-
-h1 {
-  font-size: 14pt;
-}
-
-h2 {
-  font-size: 10pt;
-  font-style: italic;
-}
-
-div.viewer code {
-  font-size: 10pt;
-}
-
-h2 code {
-  font-style: normal;
-}
-
-div.viewer pre {
-  font-size: 10pt;
-}
-
-div.viewer blockquote {
-  font-size: 10pt;
-  font-family: courier, mono;
-  white-space: pre;
-  color: #884441;
-}
-
-#mainMenu {
-  position: absolute;
-  left: 1em;
-  width: 15em;
-}
-
-#displayArea {
-  position: absolute;
-  left: 5em;
-}
-
-#sidebar {
-  position: absolute;
-  right: 1em;
-}
+<div title="StackComments" creator="simoninireland" modifier="simoninireland" created="201101041616" modified="201101041628" tags="[[documentation conventions]] [[stack pictures]] [[stack comments]]" changecount="3">
+<pre>!Stack comments
 
-/*}}}*/
+Forth words are usually described using stack effect comments describing how they manipulate the stack or stacks.
 
-/***
-!! Tiddlers
-***/
+!!Stack pictures
 
-/*{{{*/
+A ''stack'' is just a stack of values where we generally access the top-most values only. A ''stack picture'' is a &quot;drawing&quot; or a stack to show the top-most values. Each value is represented by a word or a number, so for example the stack picture
 
-.title {
-  font-size: 8pt;
-}
+&gt; a b
 
-.subtitle {
-  font-size: 8pt;
-}
+denotes a stack whose top-most two values are a and b, with b on top: the top of the stack is to the right of the picture. Similarly the stack picture
 
-.tagging {
-  margin: 0.5em 0.5em 0.5em 0;
-  float: left;
-  display: none;
-}
+&gt; addr n
 
-.isTag .tagging {
-  display: inline;
-}
+denotes two values, the second-most of which is an address. See the section on [[data types|DataTypes]] to see what sorts of conventions are used to describe different types.
 
-.tagged {
-  margin: 0.5em;
-  float:right;
-}
+A stack picture is typically an incomplete rendition of a stack, since there may be more values further down. By convention a word's stack effect shows all the values it affects: a word should not consume any more words off the stack than are mentioned in its stack effect. This allows words to be composed properly.
 
-.tagging, .tagged {
-  font-size: 0.9em;
-  padding: 0.25em;
-}
+!!Different stack effects
 
-.tagging ul, .tagged ul {
-  list-style: none;
-  display: inline;
-  margin: 0.25em;
-  padding: 0;
-}
+A simple stack comment might look like this:
 
-.tagClear {
-  clear: both;
-}
+&gt; ( a b -- b a )
 
-/*}}}*/
+(This is actually the stack comment for the word {{{SWAP}}}.) The comment has two stack picturessurrounded by brackets and separated by a dash. The left-hand stack picture denotes the state of the stack ''before'' the word is executed; the right-hand picture shows the stack ''after'' the word has executed.
 
+Some words -- not many -- can have several different stack effects. A good example is {{{DIGIT?}}}, which takes a character and returns ''either'' a digit value and a true flag ''or'' a false flag:
 
-/***
-!! Main menu
-***/
+&gt; ( c -- d -1 | 0 )
 
-/*{{{*/
+In this case the vertical bar in the final stack picture separates the two options. We'll ''either'' see a final stack of the form ( d -1 ) ''or'' we'll see ( 0 ).
 
-#mainMenu {
-  text-align: left;
-}
+!!Different stacks
 
-/*}}}*/
-</pre>
-</div>
-<div title="TermColonDefinition" creator="sd" modifier="sd" created="201008281634" tags="term" changecount="1">
-<pre>! Colon definitions
+Attila can have several different stacks. The data stack is the &quot;default&quot; stack that the vast majority of words manipulate, but some words may maniplate the [[return stack|ReturnStack]], the [[control structures stack|ControlStructureStack]], the [[floating point stack|FloatingPointStack]] and so forth. In these cases it's important to provide stack effects for ''all'' the tacks affected, and to be clear about ''which'' stack has which effect. To do this we annotate stack pictures with additional letters in their comments as required, for example:
 
-A word that has a behaviour defined as Forth code, using the {{{:}}} and {{{;}}} words. Colon-definitions are the most common way of writing Forth code. See [[here|ColonDefinitionWords]] for all the associated words.</pre>
-</div>
-<div title="TermDefiningWord" creator="sd" modifier="sd" created="201008281632" modified="201008281647" tags="term" changecount="2">
-<pre>! Defining words
+&gt; (R: -- addr )
 
-Defining words are words that support the creation of new words. They provide a mechanism for extending the language, since each defining word can be used to create families of //other// words with a given behaviour.
+if we add an address to the return stack, or
 
-The classic defining word is {{{:}}} for creating new &quot;normal&quot; words.
+&gt; (F: a b -- c )
 
-Most defining words use the {{{CREATE}}} ... {{{DOES&gt;}}} construct (see [[here|CreateDoesWords]] to create new words and assign run-time behaviour to them. </pre>
-</div>
-<div title="TermExecutive" creator="sd" modifier="sd" created="201008301026" tags="term executive" changecount="1">
-<pre>! Executive
-
-The outermost interactive loop of a Forth system. The executive typically reads user input and executes it, allowing access to all the words in the dictionary and to the colon-compiler and other [[defining words|TermDefiningWord]].
-  </pre>
-</div>
-<div title="TermPrelude" creator="sd" modifier="sd" created="201008301025" modified="201008301025" tags="term prelude prelude.fs" changecount="3">
-<pre>! Prelude
-
-The language that is loaded into an interactive system by default. This allows a &quot;standard&quot; (or indeed non-standard) language to be made available immediately, without it being compiled-in to the virtual machine. This separation reduces the need to re-compile the virtual machine.
-
-The prelude is just a Forth file that's {{{INCLUDE}}}'d automatically without user intervention. As such it's easy to define new preludes for different languages as required. &quot;Turnkey&quot; systems can also be built, where the prelude executes user code rather than dropping into the [[outer executive|TermExecutive]].
-
-The [[standard prelude|StandardPrelude]] prelude.fs includes a fairly complete and reasonably standard Forth language, and is loaded by default in interactive systems.</pre>
-</div>
-<div title="UserVariableWords" creator="sd" modifier="sd" created="201008281630" tags="words USERVAR USER" changecount="1">
-<pre>! User variables
-
-{{{USER}}} ( n &quot;name&quot; -- )
-
-A [[defining word|TermDefiningWords]] that creates a word the refers to the n'th user variable. When executed, the address of the user variable will be returned.
-
-{{{USERVAR}}} ( n -- addr )
-
-Return the address of the n'th user variable.
- </pre>
-</div>
-<div title="VMWords" creator="sd" modifier="sd" created="201008281710" modified="201008281711" tags="words" changecount="4">
-<pre>! The virtual machine
-
-!! Health warning
-
-In the interests of openness, and according to Forth tradition, we document all the user variables available. This doesn't mean they should be used in anything other than exceptional circumstances. Most user variables that are of any &quot;normal&quot; use whatsoever have other words associated with them (pointed out below) that should be used in preference to accessing the user variables raw.
-
-
-!! Platform constants
-
-{{{IMAGE-SIZE}}} ( -- n )
-
-Return the initial size of the image in cells. This is a rough guide to the memory footprint of a system, but does not include primitives, libraries or other additions. Depending on the [[memory model|MemoryModelOverview]] the image may grow if required.
-
-{{{DATA-STACK-SIZE}}} ( -- n )
-
-Return the size of the data stack in cells.
-
-{{{RETURN-STACK-SIZE}}} (  -- n )
-
-Return the size of the return stack in cells.
-
-{{{USER-SIZE}}} ( -- n )
-
-Return the number of user variables supported.
-
-{{{TIB-SIZE}}} ( -- nb )
-
-Return the size of the terminal input buffer in bytes, which may be 0 for non-interactive systems.
-
-{{{/CELL}}} ( -- nb ) &quot;per cell&quot;
-
-Return the number of bytes required to represent a cell: typically 2, 4 or 8. Architectures with alignment will often require that a cell address is divisible by {{{/CELL}}}.
-
-{{{/CHAR}}} ( - nb ) &quot;per char&quot;
-
-Return the number of bytes required to store a character: typically 1, occasionally 2. 
-
-
-!! Language constants
-
-{{{FALSE}}} ( -- f )
-
-Place the constant for falsity on the stack.
-
-{{{TRUE}}} ( -- f )
-
-Place the constant for truth on the stack.
-
-
-!! Core user variables
-
-{{{COLDSTART}}} ( -- addr )
-
-Variable holding the cold-start vector, used to store the xt of the word executed when the system first starts up (typically {{{COLD}}}).
-
-{{{(DATA-STACK)}}} ( -- addr ) &quot;bracket data stack&quot;
-
-Variable holding the address of the base of the data stack. Do not touch.
-
-{{{(RETURN-STACK)}}} ( -- addr ) &quot;bracket return stack&quot;
-
-Variable holding the address of the base of the return stack. Do not touch.
-
-{{{(TOP)}}} ( -- addr ) &quot;bracket top&quot;
-
-Variable holding the first free code address in the system. Use {{{TOP}}} instead.
-
-{{{(CEILING)}}} ( -- addr ) &quot;bracket sealing&quot;
-
-Variable holding the current maximum code address.
-
-{{{(HERE)}}} ( -- addr ) &quot;bracket here&quot;)
-
-Variable holding the first free data address in the system. Use {{{HERE}}} instead.
-
-{{{(THERE)}}} ( -- addr ) &quot;bracket there&quot;
-
-Variable holding  the current maximum data address.
-
-{{{LAST}}} ( -- addr )
-
-Variable holding the xt of the last word defined. Use {{{LASTXT}}} to access this.
-
+if use two floating-point values to produce a third. 
  
-
-!! User variables for interactive systems
-
-{{{EXECUTIVE}}} ( -- addr )
-
-Variable holding the xt of the outer executive that runs the interactive loop.
-
-{{{STATE}}} ( -- addr )
-
-Variable holding the current system interactive state. This is manipulated by defining words, chiefly {{{:}}}, {{{;}}} {{{[}}} and {{{]}}}, and queried by {{{INTERPRETING?}}}: it never needs to be accessed directly.
-
-{{{BASE}}} ( addr -- )
-
-Variable holding the current number base.
-
-{{{INPUTSOURCE}}} ( -- addr )
-
-Variable holding the address of the current input source from which all terminal input occurs. The input source is an internal structure accessed using the [[file word set|FileWords]].
-
-{{{OUTPUTSINK}}} ( -- addr )
-
-Variable holding the address of the current output sink to which all terminal output is sent. The output sink is an internal structure accessed using the [[file word set|FileWords]].
- 
-{{{TIB}}} ( -- addr )
-
-Variable holding the address of the [[terminal input buffer (TIB)|TermTIB]].
-
-{{{&gt;IN}}} ( -- addr ) &quot;to in&quot;
-
-Offset within the TIB of the next character to read.
-
-
-!! Variables available on some systems
-
-{{{TRACE}}} ( -- addr )
-
-Variable holding the trace flag, which causes the default inner interpreter to generate debugging output. Available on development systems,
-
-{{{CURRENT}}} ( -- addr )
-
-Variable holding the [[wordlist|TermWordlist]] that will get any newly-defined words. Available on systems that intend to use [[wordlists and vocabularies|WordlistWords]].</pre>
-</div>
-<div title="WhatIsAttila" creator="sd" modifier="sd" created="201008161040" modified="201008161244" changecount="5">
-<pre>! What is Attila?
-
-Attila is an //abstract//, //re-targetable// interpreter for //threaded-interpreted languages//. As a system it has the following goals:
-
-* To support compilation of a Forth-like language
-* To be cross-compiled, allowing the compiler to be enriched and changed over time
-* To target both workstation-class and embedded-class devices without loss of efficiency or flexibility </pre>
-</div>
-<div title="WordDescriptionOverview" creator="sd" modifier="sd" created="201008161230" modified="201008161236" tags="convention overview [[stack comment]]" changecount="3">
-<pre>! Word descriptions
-
-In this document, all Attila words are defined using a common format that looks like this:
-
-{{{ &gt;NAME }}} ( xt -- addr n ) &quot;to name&quot;
-
-The description is divided into three sections:
-
-# The Attila name of the word. This is always in capital letters, although Attila is case-neutral when words are typed: the above could be written in a program as {{{ &gt;NAME }}} or {{{ &gt;name }}} or even {{{ &gt;Name }}}.
-# The stack comment for the word. In the simple form here, it contains a &quot;picture&quot; of the stack before and after the word is executed, separated -- : in this case that stack initially contains a single cell called xt, and after execution of {{{ &gt;NAME }}} contains two cells addr and n, with n on top.
-# A suggestion on how to pronounce the word, if it's not obvious (&quot;obvious&quot; to a native English speaker, that is).
-
-It's common to use suggestive names for values, like xt (for execution tokens) and addr (for addresses). These don't have any meaning to the compiler.
-
-Some words consume other words from the stack, which is indicated in the stack comment using a value in quotes, for example:
-
-{{{ ' }}} ( &quot;name&quot; -- xt ) &quot;tick&quot;
-
-which consumes a word from the input stream and returns an xt.
-
-Some words have two or more different possible stack effects, usually depending on whether their action succeeds or fails. The classic example of this is:
-
-{{{ FIND }}} ( addr n -- xt flag | 0 )
-
-which takes two cells addr and n and returns //either// two cells xt and flag //or// a single zero. Another example is:
-
-{{{ ?DUP }}} ( n -- n n | n ) &quot;query dupe&quot;
-
-Which takes a value off the stack and duplicates it if it's not zero.
-
-Very occasionally it's necessary to indicate which stack a word manipulates, or that it does different things at compile-time //versus// run-time. Such words have more detailed stack comments which are explained in their description.
 </pre>
-</div>
-<div title="WordFindingWords" creator="sd" modifier="sd" created="201008261409" modified="201008281622" tags="words FIND [[ []] ] (HIDE) (UNHIDE) HIDDEN?" changecount="3">
-<pre>! Words for finding words
-
-
-!! Finding words
-
-{{{ FIND }}} ( addr n -- xt 1 | xt -1 | 0 )
-
-Find a word in the current search order. If the named word is found, return its xt and a flag that is 1 for a &quot;normal&quot; word and -1 for an immediate word; if not, return 0.
-
-{{{ ' }}} ( &quot;name&quot; -- xt )
-
-Lookup the next word in the input stream and return its xt, failing of the word can't be found.
-
-{{{ ['] }}} ( &quot;name&quot; -- ) (immediate)
-
-Lookup the next word at compile-time, failing if it can't be found. Then compile code that places the xt of this word on the stack at run-time.
-
-The difference between {{{ ' }}} and {{{ ['] }}} are quite subtle, so here's an example. The following code:
-
-&gt; : TEST ['] DUP . ;
-
-will, then run, display the xt of the word {{{ DUP }}}, which was looked-up at compile-time and compiled as a literal. By contrast, the following code: 
-
-&gt; : ~TEST1 ' . ;
-&gt; ~TEST1 DUP
-
-will //also// display the xt of {{{ DUP }}}, or any other word provided at run-time: the lookup occurs when the containing word is run rather than when it is compiled.
-
-{{{ (FIND) }}} ( addr n -- xt 1 | xt -1 | 0 ) &quot;bracket find&quot;
-
-The low-level finder. Typically this understands a single list of words that is traversed to locate the named word.
-
-{{{ (FIND-BEHAVIOUR) }}} ( -- addr ) &quot;bracket find behaviour&quot;
-
-A variable holding the address of the currently-installed finder. Initially this is {{{ (FIND) }}}: systems with [[word lists|WordlistWords]] modify {{{ (FIND-BEHAVIOUR) }}} to understand multiple word lists and search orders.
-
-
-!! Hiding
-
-Hiding allows words to be removed from the search order after definition. This can be used for a number of purposes, for example to hide &quot;internal&quot; words from users, although this is considered [[poor style|ForthCodingStyle]] by some. Another use is in fine-tuning word lists during complex compilation manoevres.
-
-Once a word is hidden, //it can't be found// -- which sounds obvious, but means you can't then find it's xt to un-hide it. If you will want to un-hide a word later, you need to stach its xt somewhere find-able first for later use with {{{ (UNHIDE) }}}. 
-
-{{{ (HIDE) }}} ( xt -- ) &quot;bracket hide&quot;
-
-Mark the given word as hidden.
-
-{{{ (UNHIDE) }}} ( xt -- ) &quot;bracket unhide&quot;
-
-Mark the given word as visible (not hidden).
-
-</pre>
-</div>
-<div title="WordStatusWords" creator="sd" modifier="sd" created="201008281628" tags="words IMMEDIATE REDIRECTABLE HIDDEN IMMEDIATE? REDIRECTABLE? HIDDEN?" changecount="1">
-<pre>! Words for querying the status of words
-
-{{{IMMEDIATE}}} ( -- )
-
-Makes the last-defined word immediate. Immediate words execute even in compilation mode, and are often used to implement control structures.
-
-{{{IMMEDIATE?}}} ( xt -- f ) &quot;immediate query&quot;
-
-Test whether the given word is immediate.
-
-{{{REDIRECTABLE}}} ( -- )
-
-Make the last-defined word re-directable. This is performed automatically by {{{CREATE}}} (see [[here|CreateDoesWords]]), and there's almost never any need it do it manually (and doing so may have fatal consequences).
-
-{{{REDIRECTABLE?}}} ( xt -- f ) &quot;redirectable query&quot;
-
-Test whether a word is re-directable. This is used internally, but there's seldom any need for it in normal code.
-
-{{{HIDDEN?}}} ( xt -- f ) &quot;hidden query&quot;
-
-Test whether a word is [[hidden from the search mechanism|WordFindingWords]]. Again, there's seldom any need for this in normal code, but it might be needed if you re-write the basic word finder.  </pre>
-</div>
-<div title="sd" creator="sd" modifier="sd" created="201008161322" modified="201008161324" tags="[[contact details]]" changecount="6">
-<pre>! Simon Dobson
-
-School of Computer Science
-University of St Andrews, UK
-
-e: [[simon.dobson@cs.st-andrews.ac.uk|mailto:simon.dobson@cs.st-andrews.ac.uk]]
-w: http://www.simondobson.org
-skype: simoninireland
- </pre>
 </div>
 </div>
 <!--POST-STOREAREA-->
@@ -2039,7 +1285,8 @@ merge(config.messages,{
 	invalidFieldName: "Invalid field name %0",
 	fieldCannotBeChanged: "Field '%0' cannot be changed",
 	loadingMissingTiddler: "Attempting to retrieve the tiddler '%0' from the '%1' server at:\n\n'%2' in the workspace '%3'",
-	upgradeDone: "The upgrade to version %0 is now complete\n\nClick 'OK' to reload the newly upgraded TiddlyWiki"});
+	upgradeDone: "The upgrade to version %0 is now complete\n\nClick 'OK' to reload the newly upgraded TiddlyWiki",
+	invalidCookie: "Invalid cookie '%0'"});
 
 merge(config.messages.messageClose,{
 	text: "close",
@@ -2225,7 +1472,6 @@ merge(config.macros.importTiddlers,{
 	step1Html: "Specify the type of the server: <select name='selTypes'><option value=''>Choose...</option></select><br>Enter the URL or pathname here: <input type='text' size=50 name='txtPath'><br>...or browse for a file: <input type='file' size=50 name='txtBrowse'><br><hr>...or select a pre-defined feed: <select name='selFeeds'><option value=''>Choose...</option></select>",
 	openLabel: "open",
 	openPrompt: "Open the connection to this file or server",
-	openError: "There were problems fetching the tiddlywiki file",
 	statusOpenHost: "Opening the host",
 	statusGetWorkspaceList: "Getting the list of available workspaces",
 	step2Title: "Step 2: Choose the workspace",
@@ -2467,6 +1713,7 @@ function main()
 {
 	var t10,t9,t8,t7,t6,t5,t4,t3,t2,t1,t0 = new Date();
 	startingUp = true;
+	var doc = jQuery(document);
 	jQuery.noConflict();
 	window.onbeforeunload = function(e) {if(window.confirmExit) return confirmExit();};
 	params = getParameters();
@@ -2482,21 +1729,21 @@ function main()
 		store.addNotification(config.notifyTiddlers[s].name,config.notifyTiddlers[s].notify);
 	t1 = new Date();
 	loadShadowTiddlers();
-	jQuery().trigger("loadShadows");
+	doc.trigger("loadShadows");
 	t2 = new Date();
 	store.loadFromDiv("storeArea","store",true);
-	jQuery().trigger("loadTiddlers");
+	doc.trigger("loadTiddlers");
 	t3 = new Date();
 	invokeParamifier(params,"onload");
 	t4 = new Date();
 	readOnly = (window.location.protocol == "file:") ? false : config.options.chkHttpReadOnly;
 	var pluginProblem = loadPlugins();
-	jQuery().trigger("loadPlugins");
+	doc.trigger("loadPlugins");
 	t5 = new Date();
 	formatter = new Formatter(config.formatters);
 	invokeParamifier(params,"onconfig");
 	story.switchTheme(config.options.txtTheme);
-	showBackstage = !readOnly;
+	showBackstage = showBackstage !== undefined ? showBackstage : !readOnly;
 	t6 = new Date();
 	for(var m in config.macros) {
 		if(config.macros[m].init)
@@ -2525,7 +1772,7 @@ function main()
 		displayMessage("Total: " + (t10-t0) + " ms");
 	}
 	startingUp = false;
-	jQuery().trigger("startup");
+	doc.trigger("startup");
 }
 
 // Called on unload. All functions called conditionally since they themselves may have been unloaded.
@@ -2576,7 +1823,7 @@ function loadPlugins()
 	for(var i=0; i<nPlugins; i++) {
 		var p = getPluginInfo(tiddlers[i]);
 		installedPlugins[i] = p;
-		var n = p.Name;
+		var n = p.Name || p.title;
 		if(n)
 			map[n] = p;
 		n = p.Source;
@@ -2612,6 +1859,9 @@ function loadPlugins()
 				} catch(ex) {
 					p.log.push(config.messages.pluginError.format([exceptionText(ex)]));
 					p.error = true;
+					if(!console.tiddlywiki) {
+						console.log("error evaluating " + tiddler.title, ex);
+					}
 				}
 				pluginInfo.startupTime = String((new Date()) - startTime) + "ms";
 			} else {
@@ -3204,10 +2454,10 @@ config.formatters = [
 				// Pretty bracketted link
 				var link = lookaheadMatch[3];
 				e = (!lookaheadMatch[2] && config.formatterHelpers.isExternalLink(link)) ?
-						createExternalLink(w.output,link) : createTiddlyLink(w.output,decodeURIComponent(link),false,null,w.isStatic,w.tiddler);
+						createExternalLink(w.output,link) : createTiddlyLink(w.output,link,false,null,w.isStatic,w.tiddler);
 			} else {
 				// Simple bracketted link
-				e = createTiddlyLink(w.output,decodeURIComponent(text),false,null,w.isStatic,w.tiddler);
+				e = createTiddlyLink(w.output,text,false,null,w.isStatic,w.tiddler);
 			}
 			createTiddlyText(e,text);
 			w.nextMatch = this.lookaheadRegExp.lastIndex;
@@ -3748,9 +2998,9 @@ config.macros.tiddler.handler = function(place,macroName,params,wikifier,paramSt
 	var tiddlerName = names[0];
 	var className = names[1] || null;
 	var args = params[0]["with"];
-	var wrapper = createTiddlyElement(place,"span",null,className);
-	wrapper.setAttribute("refresh","content");
-	wrapper.setAttribute("tiddler",tiddlerName);
+	var wrapper = createTiddlyElement(place,"span",null,className,null,{
+		refresh: "content", tiddler: tiddlerName
+	});
 	if(args!==undefined)
 		wrapper.setAttribute("args","[["+args.join("]] [[")+"]]");
 	this.transclude(wrapper,tiddlerName,args);
@@ -3803,16 +3053,19 @@ config.macros.tags.handler = function(place,macroName,params,wikifier,paramStrin
 		tiddler = store.getTiddler(title);
 	var sep = getParam(params,"sep"," ");
 	var lingo = config.views.wikified.tag;
-	var prompt = tiddler.tags.length == 0 ? lingo.labelNoTags : lingo.labelTags;
-	createTiddlyElement(ul,"li",null,"listTitle",prompt.format([tiddler.title]));
+	var label = null;
 	for(var t=0; t<tiddler.tags.length; t++) {
 		var tag = store.getTiddler(tiddler.tags[t]);
 		if(!tag || !tag.tags.contains("excludeLists")) {
+			if(!label)
+				label = createTiddlyElement(ul,"li",null,"listTitle",lingo.labelTags.format([tiddler.title]));
 			createTagButton(createTiddlyElement(ul,"li"),tiddler.tags[t],tiddler.title);
 			if(t<tiddler.tags.length-1)
 				createTiddlyText(ul,sep);
 		}
 	}
+	if(!label)
+		createTiddlyElement(ul,"li",null,"listTitle",lingo.labelNoTags.format([tiddler.title]));
 };
 
 config.macros.tagging.handler = function(place,macroName,params,wikifier,paramString,tiddler)
@@ -3996,12 +3249,10 @@ config.macros.edit.handler = function(place,macroName,params,wikifier,paramStrin
 		story.setDirty(tiddler.title,true);
 		var e,v;
 		if(field != "text" && !rows) {
-			e = createTiddlyElement(null,"input");
-			e.setAttribute("edit",field);
-			e.setAttribute("type","text");
+			e = createTiddlyElement(null,"input",null,null,null,{
+				type: "text", edit: field, size: "40", autocomplete: "off"
+			});
 			e.value = store.getValue(tiddler,field) || defVal;
-			e.setAttribute("size","40");
-			e.setAttribute("autocomplete","off");
 			place.appendChild(e);
 		} else {
 			var wrapper1 = createTiddlyElement(null,"fieldset",null,"fieldsetFix");
@@ -4033,7 +3284,7 @@ config.macros.tagChooser.onClick = function(ev)
 	var popup = Popup.create(this);
 	var tags = store.getTags(this.getAttribute("tags"));
 	if(tags.length == 0)
-		jQuery("<li/>").text(lingo.popupNone).appendTo(jQuery(popup));
+		jQuery("<li/>").text(lingo.popupNone).appendTo(popup);
 	for(var t=0; t<tags.length; t++) {
 		var tag = createTiddlyButton(createTiddlyElement(popup,"li"),tags[t][0],lingo.tagTooltip.format([tags[t][0]]),config.macros.tagChooser.onTagClick);
 		tag.setAttribute("tag",tags[t][0]);
@@ -4211,11 +3462,12 @@ config.macros.search.onClick = function(e)
 
 config.macros.search.onKeyPress = function(ev)
 {
+	var me = config.macros.search;
 	var e = ev || window.event;
 	switch(e.keyCode) {
 		case 13: // Ctrl-Enter
 		case 10: // Ctrl-Enter on IE PC
-			config.macros.search.doSearch(this);
+			me.doSearch(this);
 			break;
 		case 27: // Escape
 			this.value = "";
@@ -4225,14 +3477,14 @@ config.macros.search.onKeyPress = function(ev)
 	if(config.options.chkIncrementalSearch) {
 		if(this.value.length > 2) {
 			if(this.value != this.getAttribute("lastSearchText")) {
-				if(config.macros.search.timeout)
-					clearTimeout(config.macros.search.timeout);
+				if(me.timeout)
+					clearTimeout(me.timeout);
 				var txt = this;
-				config.macros.search.timeout = setTimeout(function() {config.macros.search.doSearch(txt);},500);
+				me.timeout = setTimeout(function() {me.doSearch(txt);},500);
 			}
 		} else {
-			if(config.macros.search.timeout)
-				clearTimeout(config.macros.search.timeout);
+			if(me.timeout)
+				clearTimeout(me.timeout);
 		}
 	}
 };
@@ -4453,12 +3705,20 @@ config.macros.toolbar.handler = function(place,macroName,params,wikifier,paramSt
 				c = c.substr(1);
 				break;
 			}
-			if(c in config.commands)
+			if(c in config.commands) {
 				this.createCommand(place,c,tiddler,className);
+			} else {
+				this.customCommand(place,c,wikifier,tiddler);
+			}
 			break;
 		}
 	}
 };
+
+// Overrideable function to extend toolbar handler
+config.macros.toolbar.customCommand = function(place,command,wikifier,tiddler)
+{
+}
 
 //--
 //-- Menu and toolbar commands
@@ -4554,6 +3814,7 @@ config.commands.jump.handlePopup = function(popup,title)
 
 config.commands.syncing.handlePopup = function(popup,title)
 {
+	var me = config.commands.syncing;
 	var tiddler = store.fetchTiddler(title);
 	if(!tiddler)
 		return;
@@ -4564,18 +3825,18 @@ config.commands.syncing.handlePopup = function(popup,title)
 		serverWorkspace = "";
 	if(serverType) {
 		var e = createTiddlyElement(popup,"li",null,"popupMessage");
-		e.innerHTML = config.commands.syncing.currentlySyncing.format([serverType,serverHost,serverWorkspace]);
+		e.innerHTML = me.currentlySyncing.format([serverType,serverHost,serverWorkspace]);
 	} else {
-		createTiddlyElement(popup,"li",null,"popupMessage",config.commands.syncing.notCurrentlySyncing);
+		createTiddlyElement(popup,"li",null,"popupMessage",me.notCurrentlySyncing);
 	}
 	if(serverType) {
 		createTiddlyElement(createTiddlyElement(popup,"li",null,"listBreak"),"div");
-		var btn = createTiddlyButton(createTiddlyElement(popup,"li"),this.captionUnSync,null,config.commands.syncing.onChooseServer);
+		var btn = createTiddlyButton(createTiddlyElement(popup,"li"),this.captionUnSync,null,me.onChooseServer);
 		btn.setAttribute("tiddler",title);
 		btn.setAttribute("server.type","");
 	}
 	createTiddlyElement(createTiddlyElement(popup,"li",null,"listBreak"),"div");
-	createTiddlyElement(popup,"li",null,"popupMessage",config.commands.syncing.chooseServer);
+	createTiddlyElement(popup,"li",null,"popupMessage",me.chooseServer);
 	var feeds = store.getTaggedTiddlers("systemServer","title");
 	for(var t=0; t<feeds.length; t++) {
 		var f = feeds[t];
@@ -4590,11 +3851,11 @@ config.commands.syncing.handlePopup = function(popup,title)
 			feedServerWorkspace = "";
 		var caption = f.title;
 		if(serverType == feedServerType && serverHost == feedServerHost && serverWorkspace == feedServerWorkspace) {
-			caption = config.commands.syncing.currServerMarker + caption;
+			caption = me.currServerMarker + caption;
 		} else {
-			caption = config.commands.syncing.notCurrServerMarker + caption;
+			caption = me.notCurrServerMarker + caption;
 		}
-		btn = createTiddlyButton(createTiddlyElement(popup,"li"),caption,null,config.commands.syncing.onChooseServer);
+		btn = createTiddlyButton(createTiddlyElement(popup,"li"),caption,null,me.onChooseServer);
 		btn.setAttribute("tiddler",title);
 		btn.setAttribute("server.type",feedServerType);
 		btn.setAttribute("server.host",feedServerHost);
@@ -5192,7 +4453,7 @@ TiddlyWiki.prototype.loadFromDiv = function(src,idPrefix,noUpdate)
 		for(var i = 0;i<tiddlers.length; i++)
 			tiddlers[i].changed();
 	}
-	jQuery().trigger("loadTiddlers");
+	jQuery(document).trigger("loadTiddlers");
 };
 
 // Load contents of a TiddlyWiki from a string
@@ -5668,10 +4929,12 @@ Story.prototype.displayTiddler = function(srcElement,tiddler,template,animate,un
 	var title = (tiddler instanceof Tiddler) ? tiddler.title : tiddler;
 	var tiddlerElem = this.getTiddler(title);
 	if(tiddlerElem) {
-		if(toggle)
-			this.closeTiddler(title,true);
-		else
+		if(toggle) {
+			if(tiddlerElem.getAttribute("dirty") != "true")
+				this.closeTiddler(title,true);
+		} else {
 			this.refreshTiddler(title,template,false,customFields);
+		}
 	} else {
 		var place = this.getContainer();
 		var before = this.positionTiddler(srcElement);
@@ -6046,8 +5309,9 @@ Story.prototype.search = function(text,useCaseSensitive,useRegExp)
 
 Story.prototype.findContainingTiddler = function(e)
 {
-	while(e && !hasClass(e,"tiddler"))
-		e = hasClass(e,"popup") ? Popup.stack[0].root : e.parentNode;
+	while(e && !hasClass(e,"tiddler")) {
+		e = hasClass(e,"popup") && Popup.stack[0] ? Popup.stack[0].root : e.parentNode;
+	}
 	return e;
 };
 
@@ -6233,8 +5497,8 @@ var backstage = {
 	init: function() {
 		var cmb = config.messages.backstage;
 		this.area = document.getElementById("backstageArea");
-		this.toolbar = document.getElementById("backstageToolbar");
-		this.button = document.getElementById("backstageButton");
+		this.toolbar = jQuery("#backstageToolbar").empty()[0];
+		this.button = jQuery("#backstageButton").empty()[0];
 		this.button.style.display = "block";
 		var t = cmb.open.text + " " + glyph("bentArrowLeft");
 		this.showButton = createTiddlyButton(this.button,t,cmb.open.tooltip,
@@ -6429,6 +5693,7 @@ config.macros.importTiddlers.onClose = function(e)
 
 config.macros.importTiddlers.restart = function(wizard)
 {
+	var me = config.macros.importTiddlers;
 	wizard.addStep(this.step1Title,this.step1Html);
 	var s = wizard.getElement("selTypes");
 	for(var t in config.adaptors) {
@@ -6444,11 +5709,11 @@ config.macros.importTiddlers.restart = function(wizard)
 		e.value = t;
 	}
 	wizard.setValue("feeds",feeds);
-	s.onchange = config.macros.importTiddlers.onFeedChange;
+	s.onchange = me.onFeedChange;
 	var fileInput = wizard.getElement("txtBrowse");
-	fileInput.onchange = config.macros.importTiddlers.onBrowseChange;
-	fileInput.onkeyup = config.macros.importTiddlers.onBrowseChange;
-	wizard.setButtons([{caption: this.openLabel, tooltip: this.openPrompt, onClick: config.macros.importTiddlers.onOpen}]);
+	fileInput.onchange = me.onBrowseChange;
+	fileInput.onkeyup = me.onBrowseChange;
+	wizard.setButtons([{caption: this.openLabel, tooltip: this.openPrompt, onClick: me.onOpen}]);
 	wizard.formElem.action = "javascript:;";
 	wizard.formElem.onsubmit = function() {
 		if(!this.txtPath || this.txtPath.value.length) //# check for manually entered path in first step
@@ -6498,6 +5763,13 @@ config.macros.importTiddlers.onFeedChange = function(e)
 config.macros.importTiddlers.onBrowseChange = function(e)
 {
 	var wizard = new Wizard(this);
+	if(this.files && this.files[0]) {
+		try {
+			netscape.security.PrivilegeManager.enablePrivilege("UniversalFileRead");
+		} catch (ex) {
+			showException(ex);
+		}
+	}
 	var fileInput = wizard.getElement("txtPath");
 	fileInput.value = config.macros.importTiddlers.getURLFromLocalPath(this.value);
 	var serverType = wizard.getElement("selTypes");
@@ -6507,20 +5779,20 @@ config.macros.importTiddlers.onBrowseChange = function(e)
 
 config.macros.importTiddlers.getURLFromLocalPath = function(v)
 {
-	if(!v||!v.length)
+	if(!v || !v.length)
 		return v;
 	v = v.replace(/\\/g,"/"); // use "/" for cross-platform consistency
 	var u;
 	var t = v.split(":");
-	var p = t[1]||t[0]; // remove drive letter (if any)
-	if (t[1] && (t[0]=="http"||t[0]=="https"||t[0]=="file")) {
+	var p = t[1] || t[0]; // remove drive letter (if any)
+	if(t[1] && (t[0] == "http" || t[0] == "https" || t[0] == "file")) {
 		u = v;
 	} else if(p.substr(0,1)=="/") {
 		u = document.location.protocol + "//" + document.location.hostname + (t[1] ? "/" : "") + v;
 	} else {
 		var c = document.location.href.replace(/\\/g,"/");
 		var pos = c.lastIndexOf("/");
-		if (pos!=-1)
+		if(pos!=-1)
 			c = c.substr(0,pos); // remove filename
 		u = c + "/" + p;
 	}
@@ -6529,6 +5801,7 @@ config.macros.importTiddlers.getURLFromLocalPath = function(v)
 
 config.macros.importTiddlers.onOpen = function(e)
 {
+	var me = config.macros.importTiddlers;
 	var wizard = new Wizard(this);
 	var fileInput = wizard.getElement("txtPath");
 	var url = fileInput.value;
@@ -6537,26 +5810,28 @@ config.macros.importTiddlers.onOpen = function(e)
 	wizard.setValue("adaptor",adaptor);
 	wizard.setValue("serverType",serverType);
 	wizard.setValue("host",url);
-	var ret = adaptor.openHost(url,null,wizard,config.macros.importTiddlers.onOpenHost);
+	var ret = adaptor.openHost(url,null,wizard,me.onOpenHost);
 	if(ret !== true)
 		displayMessage(ret);
-	wizard.setButtons([{caption: config.macros.importTiddlers.cancelLabel, tooltip: config.macros.importTiddlers.cancelPrompt, onClick: config.macros.importTiddlers.onCancel}],config.macros.importTiddlers.statusOpenHost);
+	wizard.setButtons([{caption: me.cancelLabel, tooltip: me.cancelPrompt, onClick: me.onCancel}],me.statusOpenHost);
 	return false;
 };
 
 config.macros.importTiddlers.onOpenHost = function(context,wizard)
 {
+	var me = config.macros.importTiddlers;
 	var adaptor = wizard.getValue("adaptor");
 	if(context.status !== true)
 		displayMessage("Error in importTiddlers.onOpenHost: " + context.statusText);
-	var ret = adaptor.getWorkspaceList(context,wizard,config.macros.importTiddlers.onGetWorkspaceList);
+	var ret = adaptor.getWorkspaceList(context,wizard,me.onGetWorkspaceList);
 	if(ret !== true)
 		displayMessage(ret);
-	wizard.setButtons([{caption: config.macros.importTiddlers.cancelLabel, tooltip: config.macros.importTiddlers.cancelPrompt, onClick: config.macros.importTiddlers.onCancel}],config.macros.importTiddlers.statusGetWorkspaceList);
+	wizard.setButtons([{caption: me.cancelLabel, tooltip: me.cancelPrompt, onClick: me.onCancel}],me.statusGetWorkspaceList);
 };
 
 config.macros.importTiddlers.onGetWorkspaceList = function(context,wizard)
 {
+	var me = config.macros.importTiddlers;
 	if(context.status !== true)
 		displayMessage("Error in importTiddlers.onGetWorkspaceList: " + context.statusText);
 	wizard.setValue("context",context);
@@ -6564,16 +5839,16 @@ config.macros.importTiddlers.onGetWorkspaceList = function(context,wizard)
 	if(!workspace && context.workspaces.length==1)
 		workspace = context.workspaces[0].title;
 	if(workspace) {
-		var ret = context.adaptor.openWorkspace(workspace,context,wizard,config.macros.importTiddlers.onOpenWorkspace);
+		var ret = context.adaptor.openWorkspace(workspace,context,wizard,me.onOpenWorkspace);
 		if(ret !== true)
 			displayMessage(ret);
 		wizard.setValue("workspace",workspace);
-		wizard.setButtons([{caption: config.macros.importTiddlers.cancelLabel, tooltip: config.macros.importTiddlers.cancelPrompt, onClick: config.macros.importTiddlers.onCancel}],config.macros.importTiddlers.statusOpenWorkspace);
+		wizard.setButtons([{caption: me.cancelLabel, tooltip: me.cancelPrompt, onClick: me.onCancel}],me.statusOpenWorkspace);
 		return;
 	}
-	wizard.addStep(config.macros.importTiddlers.step2Title,config.macros.importTiddlers.step2Html);
+	wizard.addStep(me.step2Title,me.step2Html);
 	var s = wizard.getElement("selWorkspace");
-	s.onchange = config.macros.importTiddlers.onWorkspaceChange;
+	s.onchange = me.onWorkspaceChange;
 	for(var t=0; t<context.workspaces.length; t++) {
 		var e = createTiddlyElement(s,"option",null,null,context.workspaces[t].title);
 		e.value = context.workspaces[t].title;
@@ -6592,7 +5867,7 @@ config.macros.importTiddlers.onGetWorkspaceList = function(context,wizard)
 		t = wizard.getElement("txtWorkspace");
 		t.value = workspace;
 	}
-	wizard.setButtons([{caption: config.macros.importTiddlers.openLabel, tooltip: config.macros.importTiddlers.openPrompt, onClick: config.macros.importTiddlers.onChooseWorkspace}]);
+	wizard.setButtons([{caption: me.openLabel, tooltip: me.openPrompt, onClick: me.onChooseWorkspace}]);
 };
 
 config.macros.importTiddlers.onWorkspaceChange = function(e)
@@ -6606,33 +5881,36 @@ config.macros.importTiddlers.onWorkspaceChange = function(e)
 
 config.macros.importTiddlers.onChooseWorkspace = function(e)
 {
+	var me = config.macros.importTiddlers;
 	var wizard = new Wizard(this);
 	var adaptor = wizard.getValue("adaptor");
 	var workspace = wizard.getElement("txtWorkspace").value;
 	wizard.setValue("workspace",workspace);
 	var context = wizard.getValue("context");
-	var ret = adaptor.openWorkspace(workspace,context,wizard,config.macros.importTiddlers.onOpenWorkspace);
+	var ret = adaptor.openWorkspace(workspace,context,wizard,me.onOpenWorkspace);
 	if(ret !== true)
 		displayMessage(ret);
-	wizard.setButtons([{caption: config.macros.importTiddlers.cancelLabel, tooltip: config.macros.importTiddlers.cancelPrompt, onClick: config.macros.importTiddlers.onCancel}],config.macros.importTiddlers.statusOpenWorkspace);
+	wizard.setButtons([{caption: me.cancelLabel, tooltip: me.cancelPrompt, onClick: me.onCancel}],me.statusOpenWorkspace);
 	return false;
 };
 
 config.macros.importTiddlers.onOpenWorkspace = function(context,wizard)
 {
+	var me = config.macros.importTiddlers;
 	if(context.status !== true)
 		displayMessage("Error in importTiddlers.onOpenWorkspace: " + context.statusText);
 	var adaptor = wizard.getValue("adaptor");
-	var ret = adaptor.getTiddlerList(context,wizard,config.macros.importTiddlers.onGetTiddlerList,wizard.getValue("feedTiddlerFilter"));
+	var ret = adaptor.getTiddlerList(context,wizard,me.onGetTiddlerList,wizard.getValue("feedTiddlerFilter"));
 	if(ret !== true)
 		displayMessage(ret);
-	wizard.setButtons([{caption: config.macros.importTiddlers.cancelLabel, tooltip: config.macros.importTiddlers.cancelPrompt, onClick: config.macros.importTiddlers.onCancel}],config.macros.importTiddlers.statusGetTiddlerList);
+	wizard.setButtons([{caption: me.cancelLabel, tooltip: me.cancelPrompt, onClick: me.onCancel}],me.statusGetTiddlerList);
 };
 
 config.macros.importTiddlers.onGetTiddlerList = function(context,wizard)
 {
+	var me = config.macros.importTiddlers;
 	if(context.status !== true) {
-		wizard.setButtons([{caption: config.macros.importTiddlers.cancelLabel, tooltip: config.macros.importTiddlers.cancelPrompt, onClick: config.macros.importTiddlers.onCancel}],config.macros.importTiddlers.errorGettingTiddlerList);
+		wizard.setButtons([{caption: me.cancelLabel, tooltip: me.cancelPrompt, onClick: me.onCancel}],me.errorGettingTiddlerList);
 		return;
 	}
 	// Extract data for the listview
@@ -6653,18 +5931,18 @@ config.macros.importTiddlers.onGetTiddlerList = function(context,wizard)
 	}
 	listedTiddlers.sort(function(a,b) {return a.title < b.title ? -1 : (a.title == b.title ? 0 : +1);});
 	// Display the listview
-	wizard.addStep(config.macros.importTiddlers.step3Title,config.macros.importTiddlers.step3Html);
+	wizard.addStep(me.step3Title,me.step3Html);
 	var markList = wizard.getElement("markList");
 	var listWrapper = document.createElement("div");
 	markList.parentNode.insertBefore(listWrapper,markList);
-	var listView = ListView.create(listWrapper,listedTiddlers,config.macros.importTiddlers.listViewTemplate);
+	var listView = ListView.create(listWrapper,listedTiddlers,me.listViewTemplate);
 	wizard.setValue("listView",listView);
 	wizard.setValue("context",context);
 	var txtSaveTiddler = wizard.getElement("txtSaveTiddler");
-	txtSaveTiddler.value = config.macros.importTiddlers.generateSystemServerName(wizard);
+	txtSaveTiddler.value = me.generateSystemServerName(wizard);
 	wizard.setButtons([
-			{caption: config.macros.importTiddlers.cancelLabel, tooltip: config.macros.importTiddlers.cancelPrompt, onClick: config.macros.importTiddlers.onCancel},
-			{caption: config.macros.importTiddlers.importLabel, tooltip: config.macros.importTiddlers.importPrompt, onClick: config.macros.importTiddlers.doImport}
+			{caption: me.cancelLabel, tooltip: me.cancelPrompt, onClick: me.onCancel},
+			{caption: me.importLabel, tooltip: me.importPrompt, onClick: me.doImport}
 		]);
 };
 
@@ -6679,9 +5957,10 @@ config.macros.importTiddlers.generateSystemServerName = function(wizard)
 
 config.macros.importTiddlers.saveServerTiddler = function(wizard)
 {
+	var me = config.macros.importTiddlers;
 	var txtSaveTiddler = wizard.getElement("txtSaveTiddler").value;
 	if(store.tiddlerExists(txtSaveTiddler)) {
-		if(!confirm(config.macros.importTiddlers.confirmOverwriteSaveTiddler.format([txtSaveTiddler])))
+		if(!confirm(me.confirmOverwriteSaveTiddler.format([txtSaveTiddler])))
 			return;
 		store.suspendNotifications();
 		store.removeTiddler(txtSaveTiddler);
@@ -6690,15 +5969,16 @@ config.macros.importTiddlers.saveServerTiddler = function(wizard)
 	var serverType = wizard.getValue("serverType");
 	var host = wizard.getValue("host");
 	var workspace = wizard.getValue("workspace");
-	var text = config.macros.importTiddlers.serverSaveTemplate.format([serverType,host,workspace]);
-	store.saveTiddler(txtSaveTiddler,txtSaveTiddler,text,config.macros.importTiddlers.serverSaveModifier,new Date(),["systemServer"]);
+	var text = me.serverSaveTemplate.format([serverType,host,workspace]);
+	store.saveTiddler(txtSaveTiddler,txtSaveTiddler,text,me.serverSaveModifier,new Date(),["systemServer"]);
 };
 
 config.macros.importTiddlers.doImport = function(e)
 {
+	var me = config.macros.importTiddlers;
 	var wizard = new Wizard(this);
 	if(wizard.getElement("chkSave").checked)
-		config.macros.importTiddlers.saveServerTiddler(wizard);
+		me.saveServerTiddler(wizard);
 	var chkSync = wizard.getElement("chkSync").checked;
 	wizard.setValue("sync",chkSync);
 	var listView = wizard.getValue("listView");
@@ -6711,10 +5991,10 @@ config.macros.importTiddlers.doImport = function(e)
 			overwrite.push(rowNames[t]);
 	}
 	if(overwrite.length > 0) {
-		if(!confirm(config.macros.importTiddlers.confirmOverwriteText.format([overwrite.join(", ")])))
+		if(!confirm(me.confirmOverwriteText.format([overwrite.join(", ")])))
 			return false;
 	}
-	wizard.addStep(config.macros.importTiddlers.step4Title.format([rowNames.length]),config.macros.importTiddlers.step4Html);
+	wizard.addStep(me.step4Title.format([rowNames.length]),me.step4Html);
 	for(t=0; t<rowNames.length; t++) {
 		var link = document.createElement("div");
 		createTiddlyLink(link,rowNames[t],true);
@@ -6723,8 +6003,8 @@ config.macros.importTiddlers.doImport = function(e)
 	}
 	wizard.setValue("remainingImports",rowNames.length);
 	wizard.setButtons([
-			{caption: config.macros.importTiddlers.cancelLabel, tooltip: config.macros.importTiddlers.cancelPrompt, onClick: config.macros.importTiddlers.onCancel}
-		],config.macros.importTiddlers.statusDoingImport);
+			{caption: me.cancelLabel, tooltip: me.cancelPrompt, onClick: me.onCancel}
+		],me.statusDoingImport);
 	var wizardContext = wizard.getValue("context");
 	var tiddlers = wizardContext ? wizardContext.tiddlers : [];
 	for(t=0; t<rowNames.length; t++) {
@@ -6732,13 +6012,14 @@ config.macros.importTiddlers.doImport = function(e)
 			allowSynchronous:true,
 			tiddler:tiddlers[tiddlers.findByField("title",rowNames[t])]
 		};
-		adaptor.getTiddler(rowNames[t],context,wizard,config.macros.importTiddlers.onGetTiddler);
+		adaptor.getTiddler(rowNames[t],context,wizard,me.onGetTiddler);
 	}
 	return false;
 };
 
 config.macros.importTiddlers.onGetTiddler = function(context,wizard)
 {
+	var me = config.macros.importTiddlers;
 	if(!context.status)
 		displayMessage("Error in importTiddlers.onGetTiddler: " + context.statusText);
 	var tiddler = context.tiddler;
@@ -6758,8 +6039,8 @@ config.macros.importTiddlers.onGetTiddler = function(context,wizard)
 			refreshDisplay();
 		}
 		wizard.setButtons([
-				{caption: config.macros.importTiddlers.doneLabel, tooltip: config.macros.importTiddlers.donePrompt, onClick: config.macros.importTiddlers.onClose}
-			],config.macros.importTiddlers.statusDoneImport);
+				{caption: me.doneLabel, tooltip: me.donePrompt, onClick: me.onClose}
+			],me.statusDoneImport);
 		autoSaveChanges();
 	}
 };
@@ -6926,6 +6207,7 @@ config.macros.sync.getSyncableTiddlers = function()
 		syncItem.serverHost = tiddler.fields['server.host'];
 		if(syncItem.serverType && syncItem.serverHost) {
 			syncItem.adaptor = new config.adaptors[syncItem.serverType];
+			syncItem.serverHost = syncItem.adaptor.fullHostName(syncItem.serverHost);
 			syncItem.serverWorkspace = tiddler.fields['server.workspace'];
 			syncItem.tiddler = tiddler;
 			syncItem.title = tiddler.title;
@@ -6999,6 +6281,7 @@ config.macros.sync.createSyncTask = function(syncItem)
 	};
 
 	var getTiddlerListCallback = function(context,sycnItems) {
+		var me = config.macros.sync;
 		if(!context.status) {
 			displayMessage(context.statusText);
 			return false;
@@ -7010,12 +6293,12 @@ config.macros.sync.createSyncTask = function(syncItem)
 			var f = tiddlers.findByField("title",si.title);
 			if(f !== null) {
 				if(tiddlers[f].fields['server.page.revision'] > si.tiddler.fields['server.page.revision']) {
-					si.syncStatus = config.macros.sync.syncStatusList[si.isTouched ? 'changedBoth' : 'changedServer'];
+					si.syncStatus = me.syncStatusList[si.isTouched ? 'changedBoth' : 'changedServer'];
 				}
 			} else {
-				si.syncStatus = config.macros.sync.syncStatusList.notFound;
+				si.syncStatus = me.syncStatusList.notFound;
 			}
-			config.macros.sync.updateSyncStatus(si);
+			me.updateSyncStatus(si);
 		}
 		return true;
 	};
@@ -7038,24 +6321,25 @@ config.macros.sync.updateSyncStatus = function(syncItem)
 
 config.macros.sync.doSync = function(e)
 {
+	var me = config.macros.sync;
 	var getTiddlerCallback = function(context,syncItem) {
 		if(syncItem) {
 			var tiddler = context.tiddler;
 			store.saveTiddler(tiddler.title,tiddler.title,tiddler.text,tiddler.modifier,tiddler.modified,tiddler.tags,tiddler.fields,true,tiddler.created);
-			syncItem.syncStatus = config.macros.sync.syncStatusList.gotFromServer;
-			config.macros.sync.updateSyncStatus(syncItem);
+			syncItem.syncStatus = me.syncStatusList.gotFromServer;
+			me.updateSyncStatus(syncItem);
 		}
 	};
 	var putTiddlerCallback = function(context,syncItem) {
 		if(syncItem) {
 			store.resetTiddler(context.title);
-			syncItem.syncStatus = config.macros.sync.syncStatusList.putToServer;
-			config.macros.sync.updateSyncStatus(syncItem);
+			syncItem.syncStatus = me.syncStatusList.putToServer;
+			me.updateSyncStatus(syncItem);
 		}
 	};
 
 	var rowNames = ListView.getSelectedRows(currSync.listView);
-	var sl = config.macros.sync.syncStatusList;
+	var sl = me.syncStatusList;
 	for(var i=0; i<currSync.syncList.length; i++) {
 		var si = currSync.syncList[i];
 		if(rowNames.indexOf(si.title) != -1) {
@@ -7107,6 +6391,7 @@ config.macros.plugins.handler = function(place,macroName,params,wikifier,paramSt
 
 config.macros.plugins.refresh = function(listWrapper,params)
 {
+	var me = config.macros.plugins;
 	var wizard = new Wizard(listWrapper);
 	var selectedRows = [];
 	ListView.forEachSelector(listWrapper,function(e,rowName) {
@@ -7141,8 +6426,8 @@ config.macros.plugins.refresh = function(listWrapper,params)
 		var listView = ListView.create(listWrapper,plugins,this.listViewTemplate,this.onSelectCommand);
 		wizard.setValue("listView",listView);
 		wizard.setButtons([
-				{caption: config.macros.plugins.removeLabel, tooltip: config.macros.plugins.removePrompt, onClick: config.macros.plugins.doRemoveTag},
-				{caption: config.macros.plugins.deleteLabel, tooltip: config.macros.plugins.deletePrompt, onClick: config.macros.plugins.doDelete}
+				{caption: me.removeLabel, tooltip: me.removePrompt, onClick: me.doRemoveTag},
+				{caption: me.deleteLabel, tooltip: me.deletePrompt, onClick: me.doDelete}
 			]);
 	}
 };
@@ -7435,8 +6720,9 @@ function loadOptionsCookie()
 			var name = cookies[c].substr(0,p).trim();
 			var value = cookies[c].substr(p+1).trim();
 			var optType = name.substr(0,3);
-			if(config.optionHandlers[optType] && config.optionHandlers[optType].set)
-				config.optionHandlers[optType].set(name,value);
+			var handlers = config.optionHandlers;
+			if(handlers[optType] && handlers[optType].set)
+				handlers[optType].set(name,value);
 		}
 	}
 }
@@ -7445,10 +6731,15 @@ function saveOptionCookie(name)
 {
 	if(safeMode)
 		return;
+	if(name.match(/[()\s]/g, "_")) {
+		alert(config.messages.invalidCookie.format([name]));
+		return;
+	}
 	var c = name + "=";
 	var optType = name.substr(0,3);
-	if(config.optionHandlers[optType] && config.optionHandlers[optType].get)
-		c += config.optionHandlers[optType].get(name);
+	var handlers = config.optionHandlers;
+	if(handlers[optType] && handlers[optType].get)
+		c += handlers[optType].get(name);
 	c += "; expires=Fri, 1 Jan 2038 12:00:00 UTC; path=/";
 	document.cookie = c;
 }
@@ -7696,24 +6987,25 @@ function saveChanges(onlyIfDirty,tiddlers)
 		return;
 	clearMessage();
 	var t0 = new Date();
+	var msg = config.messages;
 	var originalPath = document.location.toString();
 	if(originalPath.substr(0,5) != "file:") {
-		alert(config.messages.notFileUrlError);
-		if(store.tiddlerExists(config.messages.saveInstructions))
-			story.displayTiddler(null,config.messages.saveInstructions);
+		alert(msg.notFileUrlError);
+		if(store.tiddlerExists(msg.saveInstructions))
+			story.displayTiddler(null,msg.saveInstructions);
 		return;
 	}
 	var localPath = getLocalPath(originalPath);
 	var original = loadOriginal(localPath);
 	if(original == null) {
-		alert(config.messages.cantSaveError);
-		if(store.tiddlerExists(config.messages.saveInstructions))
-			story.displayTiddler(null,config.messages.saveInstructions);
+		alert(msg.cantSaveError);
+		if(store.tiddlerExists(msg.saveInstructions))
+			story.displayTiddler(null,msg.saveInstructions);
 		return;
 	}
 	var posDiv = locateStoreArea(original);
 	if(!posDiv) {
-		alert(config.messages.invalidFileError.format([localPath]));
+		alert(msg.invalidFileError.format([localPath]));
 		return;
 	}
 	saveMain(localPath,original,posDiv);
@@ -7927,7 +7219,7 @@ function mozConvertUTF8ToUnicode(u)
 
 function convertUnicodeToFileFormat(s)
 {
-	return config.browser.isOpera || !window.netscape ? convertUnicodeToHtmlEntities(s) : mozConvertUnicodeToUTF8(s);
+	return config.browser.isOpera || !window.netscape ? (config.browser.isIE ? convertUnicodeToHtmlEntities(s) : s) : mozConvertUnicodeToUTF8(s);
 }
 
 function convertUnicodeToHtmlEntities(s)
@@ -9190,12 +8482,13 @@ ListView.columnTypes.Size = {
 	createHeader: ListView.columnTypes.String.createHeader,
 	createItem: function(place,listObject,field,columnTemplate,col,row)
 		{
+			var msg = config.messages.sizeTemplates;
 			var v = listObject[field];
 			if(v != undefined) {
 				var t = 0;
-				while(t<config.messages.sizeTemplates.length-1 && v<config.messages.sizeTemplates[t].unit)
+				while(t<msg.length-1 && v<msg[t].unit)
 					t++;
-				createTiddlyText(place,config.messages.sizeTemplates[t].template.format([Math.round(v/config.messages.sizeTemplates[t].unit)]));
+				createTiddlyText(place,msg[t].template.format([Math.round(v/msg[t].unit)]));
 			}
 		}
 };
@@ -9439,8 +8732,9 @@ String.prototype.unDash = function()
 };
 
 // Substitute substrings from an array into a format string that includes '%1'-type specifiers
-String.prototype.format = function(substrings)
+String.prototype.format = function(s)
 {
+	var substrings = s && s.constructor == Array ? s : arguments;
 	var subRegExp = /(?:%(\d+))/mg;
 	var currPos = 0;
 	var r = [];
@@ -9775,6 +9069,13 @@ Date.convertFromYYYYMMDDHHMM = function(d)
 {
 	d = d?d.replace(/[^0-9]/g, ""):""; 
 	return Date.convertFromYYYYMMDDHHMMSSMMM(d.substr(0,12));
+};
+
+// Static method to create a date from a UTC YYYYMMDDHHMMSS format string
+Date.convertFromYYYYMMDDHHMMSS = function(d)
+{
+	d = d?d.replace(/[^0-9]/g, ""):""; 
+	return Date.convertFromYYYYMMDDHHMMSSMMM(d.substr(0,14));
 };
 
 // Static method to create a date from a UTC YYYYMMDDHHMMSSMMM format string
@@ -10252,8 +9553,8 @@ TW21Loader.prototype.internalizeTiddler = function(store,tiddler,title,node)
 	var modifier = node.getAttribute("modifier");
 	var c = node.getAttribute("created");
 	var m = node.getAttribute("modified");
-	var created = c ? Date.convertFromYYYYMMDDHHMM(c) : version.date;
-	var modified = m ? Date.convertFromYYYYMMDDHHMM(m) : created;
+	var created = c ? Date.convertFromYYYYMMDDHHMMSS(c) : version.date;
+	var modified = m ? Date.convertFromYYYYMMDDHHMMSS(m) : created;
 	var tags = node.getAttribute("tags");
 	var fields = {};
 	var attrs = node.attributes;
@@ -10821,10 +10122,11 @@ $.twStylesheet = function(css, options) {
 	var el = doc.getElementById(id);
 	if(doc.createStyleSheet) { // IE-specific handling
 		if(el) {
-			el.parentNode.removeChild(el);
+			el.cssText = css;
+		} else {
+			doc.getElementsByTagName("head")[0].insertAdjacentHTML("beforeEnd",
+				'&nbsp;<style id="' + id + '" type="text/css">' + css + '</style>'); // fails without &nbsp;
 		}
-		doc.getElementsByTagName("head")[0].insertAdjacentHTML("beforeEnd",
-			"&nbsp;<style id='" + id + "'>" + css + "</style>"); // fails without &nbsp;
 	} else { // modern browsers
 		if(el) {
 			el.replaceChild(doc.createTextNode(css), el.firstChild);
