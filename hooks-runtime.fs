@@ -37,8 +37,8 @@
 : ADD-TO-HOOK ( xt h -- )
     HOOK>LINK
     HERE SWAP A!  \ link previous link to HERE
-    0 A,          \ store link
-      A, ;        \ store xt of hooked word
+    0 ,           \ store link
+      XT, ;       \ store xt of hooked word
 
 
 \ ---------- User-facing words ----------
