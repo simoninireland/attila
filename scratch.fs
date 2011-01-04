@@ -42,8 +42,9 @@ VARIABLE SCRATCH-POINTER
 : #SCRATCH \ ( -- n )
     SCRATCH-POINTER A@ SCRATCH - ;
 
-\ Move a string into the scratch area
+\ Move a string into the scratch area, over-writing anything there
 : >SCRATCH \ ( addr n -- )
+    CLEAR-SCRATCH
     DUP #SCRATCH + SCRATCH-SIZE >= IF
 	S" Scratch area overflow" ABORT
     THEN
