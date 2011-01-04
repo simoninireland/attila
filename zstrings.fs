@@ -19,19 +19,20 @@
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 \ Null-terminated strings
+\
 \ Routines to convert to and from the usual counted string format
 \ and the C style of null-terminated string (zstrings). Useful for
 \ accessing  low-level routines, but also for storing strings longer
 \ than the single-byte count of "normal" strings
 
 \ The NULL character
-0 CONSTANT NULL
+0 CONSTANT NULLCHAR
 
 \ Find the end address of a zstring -- the address of the terminating
 \ null
 : Z> \ ( zaddr -- zaddr1 )
     BEGIN
-	DUP C@ NULL <>
+	DUP C@ NULLCHAR <>
     WHILE
 	    1+
     REPEAT ;
@@ -58,13 +59,13 @@
     >R >R ZCOUNT R> R>        \ zaddr zn addr n
     DUP ROT                   \ zaddr zn n addr n
     4 PICK Z> SWAP CMOVE      \ zaddr zn n
-    + + NULL SWAP C! ;
+    + + NULLCHAR SWAP C! ;
 
 \ Convert a string to a zstring at zaddr, assuming there's enough memory
 : S>Z \ ( addr n zaddr -- )
     DUP >R
     SWAP DUP >R CMOVE
-    NULL R> R> + C! ;
+    NULLCHAR R> R> + C! ;
 
 \ Compile a zstring into data memory
 : Z, \ ( zaddr -- )
