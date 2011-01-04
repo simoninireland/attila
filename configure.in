@@ -32,7 +32,7 @@ AM_INIT_AUTOMAKE
 
 # compilation and installation
 AC_PROG_CC
-CFLAGS='-g -DATTILA_STANDARD_INCLUDE_DIR=\"${pkgdatadir}\"'
+CFLAGS='-g'
 AC_PROG_INSTALL
 AC_C_INLINE
 
@@ -96,8 +96,9 @@ AC_CONFIG_FILES([
 Makefile
 vm.fs
 bootstrap-vm.fs
-x-host.fs
 tools/crosscompile.fs
 ])
 AC_OUTPUT
+
+# expansion of x-host.fs.in now done in Makefile.am
 
