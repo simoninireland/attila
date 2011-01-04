@@ -77,9 +77,10 @@ include createdoes.fs
 include words-itil-named.fs
 include hooks-runtime.fs
 cross>
-
-\ hooks front-line words
 include hooks.fs
+
+\ include paths support
+include include-paths.fs
 cross-compiler>
 
 
@@ -137,6 +138,9 @@ target>
 \ Hooks
 ' ANNOUNCE     ' STARTUP-HOOK >BODY ADD-TO-HOOK
 ' LOAD-PRELUDE ' STARTUP-HOOK >BODY ADD-TO-HOOK
+
+\ Include paths
+S" @datadir@" ADD-INCLUDE-PATH
 TARGET>
 
 .( Finalising target image...)
