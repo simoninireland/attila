@@ -38,7 +38,7 @@
 \ Load a file
 : LOAD \ ( addr len -- )
     2DUP R/O OPEN-FILE IF
-	DROP TYPE 32 EMIT S" can't be loaded" ABORT
+	DROP TYPE 32 EMIT ( SPACE ) S" can't be loaded" ABORT
     ELSE
 	ROT 2DROP
 	(LOAD)
