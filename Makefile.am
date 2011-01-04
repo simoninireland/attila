@@ -20,11 +20,13 @@
 
 # ----- Main programs -----
 
+# toplevel programs
 bin_PROGRAMS = bootattila attila
 
 
 # ----- Supporting programs and scripts -----
 
+# tools used to bootstrap system
 EXTRA_DIST = tools/primgen \
 	tools/crosscompile.fs \
 	tools/test.fs
@@ -32,7 +34,7 @@ EXTRA_DIST = tools/primgen \
 
 # ----- Sources -----
 
-# The bootstrapping sources
+# bootstrapping sources
 bootattila_SOURCES = vm.h \
 	primgen.h \
 	bootstrap.fs \
@@ -42,30 +44,43 @@ bootattila_SOURCES = vm.h \
 	bootstrap-prelude.fs \
 	bootstrap-vm.fs
 
-# The generated primitives file
+# generated primitives file
 nodist_bootattila_SOURCES = primitives.c
 
-# The cross-compiler sources and generated VM
+# cross-compiler sources and generated VM
 attila_SOURCES = x-host.h
-nodist_attila_SOURCES = attila.c
+nodist_attila_SOURCES = attila.c x-host.fs
 
 
 # ----- The bootstrapped interpreter primitives file -----
 
+# primitives generated from C/Forth code
 primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
 	$(PERL) $(srcdir)/tools/primgen -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/c-core.fs $(srcdir)/c-fileio.fs $(srcdir)/c-io.fs
 
 
 # ----- The cross-compiled interpreter VM -----
 
-attila.c: bootattila
+# substitutions for directories in host cross-compiler driver
+dirs = sed \
+	-e 's,@datadir\@,$(pkgdatadir),g' \
+	-e 's,@abs_builddir\@,$(abs_builddir),g'
+
+# cross-compiler driver
+x-host.fs: x-host.fs.in
+	$(dirs) $(srcdir)/x-host.fs.in >x-host.fs
+
+# cross-compiled system image
+attila.c: bootattila $(regular) x-host.fs
 	cd $(srcdir) && $(abs_builddir)/bootattila <$(abs_builddir)/tools/crosscompile.fs
 
 
 # ----- Self-testing -----
 
+# self-tests run on installation
 check: test
 
+# test suite
 test: attila
 	cd $(srcdir) && $(abs_builddir)/attila <$(srcdir)/tools/test.fs
 
@@ -74,7 +89,7 @@ test: attila
 
 # ----- The system sources -----
 
-# All the Forth code intended for normal use
+# all the Forth code intended for normal use
 forth = prelude.fs \
 	comments.fs \
 	conditionals.fs \
@@ -88,7 +103,6 @@ forth = prelude.fs \
 	values.fs \
 	defer.fs \
 	vm.fs \
-	ascii.fs \
 	bootstrap-loops.fs \
 	stacks.fs \
 	cs-stack.fs \
@@ -114,8 +128,8 @@ forth = prelude.fs \
 	decompiler.fs \
 	funit.fs
 
-# The cross-compiler
-crosscompiler = x-host.h \
+# cross-compiler
+crosscompiler = \
 	cross-compiler/cross-compiler.fs \
 	cross-compiler/cross-locator.fs \
 	cross-compiler/cross-flat-memory-model.fs \
@@ -126,13 +140,17 @@ crosscompiler = x-host.h \
 	cross-compiler/cross-c-generate.fs \
 	cross-compiler/cross-environments.fs
 
-# The system sources, used to cross-compile a basic virtual machine
-regular = c-core.fs \
+# system sources, used to cross-compile a basic virtual machine
+regular = \
+	x-host.h \
+	x-host.fs.in \
+	c-core.fs \
 	c-flat-memory-model-runtime.fs \
 	c-itil.fs \
 	itil.fs \
 	c-fileio.fs \
 	c-io.fs \
+	ascii.fs \
 	system-hooks.fs \
 	flat-memory-model.fs \
 	itil-compilation.fs \
@@ -144,11 +162,12 @@ regular = c-core.fs \
 	file.fs \
 	load.fs \
 	include.fs \
+	include-paths.fs \
 	executive.fs \
 	startup.fs
 
-# Tests
-test = test/core-system-tests.fs \
+# test suite
+test = 	test/core-system-tests.fs \
 	test/stack.fs \
 	test/arithmetic.fs \
 	test/words.fs \
@@ -161,8 +180,10 @@ test = test/core-system-tests.fs \
 	test/hooks.fs \
 	test/parser.fs
 
+
 # ----- Distribution -----
 
 nobase_dist_pkgdata_DATA = $(forth) $(crosscompiler) $(regular) $(test)
 DISTCLEANFILES = primitives.c attila.c
+CLEANFILES = primitives.c attila.c x-host.fs
 
