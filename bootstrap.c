@@ -245,6 +245,11 @@ init_dictionary() {
 
   // ---------- Memory access ----------
 
+  // null address
+  DEFINE("NULL");
+  LITERAL(0);
+  NEXT();
+
   // all stores and fetches are the same in the bootstrap model
   DEFINE("XT!");
   COMPILE("!");
