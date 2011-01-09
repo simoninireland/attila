@@ -110,6 +110,7 @@ forth = prelude.fs \
 	loops.fs \
 	counted-loops-runtime.fs \
 	counted-loops.fs \
+	continuations.fs \
 	case.fs \
 	hooks-runtime.fs \
 	hooks.fs \
@@ -148,6 +149,7 @@ regular = \
 	c-flat-memory-model-runtime.fs \
 	c-itil.fs \
 	itil.fs \
+	c-continuations-runtime.fs \
 	c-fileio.fs \
 	c-io.fs \
 	ascii.fs \
