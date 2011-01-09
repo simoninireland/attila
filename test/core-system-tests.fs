@@ -31,6 +31,7 @@ testcases test/ascii.fs     \ assuming system uses an ASCII encoding
 testcases test/strings.fs
 testcases test/formatting.fs
 testcases test/loops.fs
+testcases test/continuations.fs
 testcases test/conditional-compilation.fs
 testcases test/hooks.fs
 testcases test/parser.fs
