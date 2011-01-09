@@ -70,6 +70,7 @@ include counted-loops.fs
 include case.fs                      \ CASE ... OF ... ENDOF ... ENDCASE
 include hooks.fs                     \ Dynamic behaviour at strategic points
 include conditional-compilation.fs   \ [IF] ... [ELSE] ... [THEN]
+include continuations.fs             \ Continuations
 
 \ Data types
 include chars.fs                     \ Character operations
