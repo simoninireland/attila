@@ -51,8 +51,8 @@ TESTING" Formatting numbers"
 { 12 <# #S [CHAR] . HOLD #> S" .12" S= -> TRUE }
 
 \ Sign handling
-{ 12        NUMBER> S" 12"  S= -> TRUE }
-{ 12 NEGATE NUMBER> S" -12" S= -> TRUE }
+{ 12        NUMBER>S S" 12"  S= -> TRUE }
+{ 12 NEGATE NUMBER>S S" -12" S= -> TRUE }
 
 \ Base handling
-{ 10 HEX NUMBER> DECIMAL S" A" S= -> TRUE }
+{ 10 HEX NUMBER>S DECIMAL S" A" S= -> TRUE }
