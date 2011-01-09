@@ -108,9 +108,12 @@ include system-hooks.fs
 \ terminal and file i/o
 include c-fileio.fs
 include c-io.fs
-include type.fs
+
+\ warm-starting
+include warm.fs
 
 \ parsing and colon-compilation
+include type.fs
 include parser.fs
 include compilation.fs
 include colon.fs
@@ -139,8 +142,8 @@ target>
 ' OUTER EXECUTIVE XT!   \ executive (outer interpreter)
 
 \ Hooks
-' ANNOUNCE     ' STARTUP-HOOK >BODY ADD-TO-HOOK
-' LOAD-PRELUDE ' STARTUP-HOOK >BODY ADD-TO-HOOK
+' ANNOUNCE     HANG-ON STARTUP-HOOK
+' LOAD-PRELUDE HANG-ON STARTUP-HOOK
 
 \ Include paths
 S" @datadir@" ADD-INCLUDE-PATH
