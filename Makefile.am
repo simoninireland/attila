@@ -157,6 +157,7 @@ regular = \
 	flat-memory-model.fs \
 	itil-compilation.fs \
 	words-itil-named.fs \
+	warm.fs \
 	type.fs \
 	parser.fs \
 	colon.fs \
