@@ -44,14 +44,26 @@
     SCRATCH>
     2DUP REVERSE ;
 
+\ Return the number of digits required to represent the given number
+\ in the current number base, suppressing unnecessary leading zeros
+\ but accounting for any negative sign
+: #DIGITS ( n -- nd )
+    DUP 0< IF 2 ELSE 1 THEN 
+    SWAP BEGIN
+	BASE @ /
+	?DUP 0<>
+    WHILE
+	    SWAP 1+ SWAP
+    REPEAT ;
+	
 \ Convert a number to a digit character.
-: DIGIT> \ ( n -- c )
+: DIGIT>S \ ( n -- c )
     DIGITS COUNT DROP SWAP CHARS + C@ ;
 
 \ Add the least significant digit of a number to the scratch area,
 \ leaving a quotient
 : # \ ( n -- q )
-    BASE @ /MOD SWAP DIGIT> HOLD ;
+    BASE @ /MOD SWAP DIGIT>S HOLD ;
 
 \ Convert the rest of the number
 : #S \ ( n -- n' )
@@ -65,7 +77,7 @@
     0 < IF [CHAR] - HOLD THEN ;
 
 \ Convert a number to a string using the normal formatting conventions
-: NUMBER> \ ( n -- addr n )
+: NUMBER>S \ ( n -- addr n )
     <# DUP ABS #S SWAP SIGN #> ;
 
 
@@ -73,7 +85,7 @@
 
 \ Print a number
 : . \ ( n -- )
-    NUMBER> TYPE ;
+    NUMBER>S TYPE ;
 
 \ Print the contents of the cell at the given address
 : ? \ ( addr -- )
