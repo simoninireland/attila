@@ -512,7 +512,14 @@ Also see [[AdvancedOptions]]</pre>
 </div>
 <!--POST-SHADOWAREA-->
 <div id="storeArea">
-<div title="(default) on http://www.tiddlytools.com/#SinglePageModePlugin" modifier="simoninireland" created="201101041607" modified="201101041608" tags="systemServer" changecount="2">
+<div title="(default) on http://tiddlywiki.abego-software.de/" modifier="(System)" created="201101042135" tags="systemServer" changecount="1">
+<pre>|''Type:''|file|
+|''URL:''|http://tiddlywiki.abego-software.de/|
+|''Workspace:''|(default)|
+
+This tiddler was automatically created to record the details of this server</pre>
+</div>
+<div title="(default) on http://www.tiddlytools.com/" modifier="simoninireland" created="201101041607" modified="201101042145" tags="systemServer" changecount="3">
 <pre>|''Type:''|file|
 |''URL:''|http://www.tiddlytools.com/|
 |''Workspace:''|(default)|
@@ -549,11 +556,14 @@ Ensure that addr is code-aligned.
 Ensure that {{{TOP}}} is code-aligned.
 </pre>
 </div>
-<div title="Arithmetic" creator="simoninireland" modifier="simoninireland" created="201101041536" modified="201101041536" tags="arithmetic" changecount="3">
+<div title="Arithmetic" creator="simoninireland" modifier="simoninireland" created="201101041536" modified="201101092047" tags="arithmetic" changecount="5">
 <pre>!Arithmetic
+
+The default arithmetic mode for Attila is single-precision integer arithmetic. Each single-precision number is the size of a cell, as defined by the [[virtual machine|VirtualMachine]]: typically 8 bytes for a modern workstation, 2 or 4 bytes for an embedded processor or microcontroller. 
 
 
 !!Arithmetic words
+
 &lt;&lt;tiddler ArithmeticWords&gt;&gt;
 
 </pre>
@@ -575,6 +585,16 @@ Single-precision addition, subtraction and multiplication.
 
 Return the quotient and remainder of ((a * b) / c, computing the multiplication in double-precision.
 
+
+</pre>
+</div>
+<div title="Bibliography" creator="simoninireland" modifier="simoninireland" created="201101042147" tags="reference bibliography" changecount="1">
+<pre>!Bibliography
+
+!!Web sites
+
+
+!!Books
 
 </pre>
 </div>
@@ -606,7 +626,64 @@ Compile the compilation token associated with the given xt into code memory.
 
 </pre>
 </div>
-<div title="Copyright" creator="YourName" modifier="YourName" created="201101041521" changecount="1">
+<div title="ContinuationWords" creator="simoninireland" modifier="simoninireland" created="201101051220" modified="201101092040" tags="words continuations CONTINUATION-CAPTURE-HOOK CONTINUATION-RESTORE-HOOK (CAPTURE-STACKS) (RESTORE-STACKS) CALL-CC CALL-CONTINUATION" changecount="5">
+<pre>{{{CALL-CC}}} ( cont xt -- )
+
+Call with current continuation. This captures the continuation at the current point into cont and then executes xt, which is passed cont on its data stack. That is to say, xt should have a stack picture of the form ( cont -- ...).
+
+{{{RUN-CONTINUATION}}} ( cont -- )
+
+Run the continuation represented by cont.
+
+
+!!Hooks
+
+{{{CAPTURE-CONTINUATION-HOOK}}}
+{{{RESTORE-CONTINUATION-HOOK}}}
+
+When run, capture (restore) continuation information to (from) cont respectively. It is important that the capture and restore words pertaining to each piece of information exists on both hooks in the same order.
+
+Words hung on these hooks should have stack picture ( cont -- acont ) where cont is the start of the data they capture (restore) and acont is the next available address after the new (retrieved) data.
+
+
+!!Primitive words
+
+{{{(CAPTURE-STACKS)}}} ( xt cont -- xt cont acont ) &quot;bracket capture stacks&quot;
+
+Capture the data and return stacks into cont, returning the pointer to the next free memory address after the captured stacks. The xt is ignored but returned, as is the initial continuation. This word is used to implement {{{CALL-CC}}} by means of the underlying stack primitives.
+
+{{{(RESTORE-STACKS)}}} ( cont -- acont ) &quot;bracket restore stacks&quot;
+
+Restore the data and return stacks from cont, returning the pointer to the next free memory address after the captured stacks. This is used to implement the behaviour for {{{RUN-CONTINUATION}}} with regard to the data and return stacks.
+
+</pre>
+</div>
+<div title="Continuations" creator="simoninireland" modifier="simoninireland" created="201101051213" modified="201101092046" tags="compiler continuations" changecount="6">
+<pre>!Continuations
+
+A ''continuation'' is an abstraction of the rest of a computation. Essentially, the continuation at a point is a word that, when executed, does what the program will do from the point at which the continuation is captured: how the program &quot;continues to behave&quot;. The power of continuations is that they let a program capture and store its future behaviour, which can then be replayed or repeated multiple times. Continuations are the basis of a lot of powerful structures.
+
+
+!!Representing continuations
+
+Continuations capture the information needed to re-start a computation. In a threaded interpreter this mainly consists of the [[data|DataStack]] and [[return|ReturnStack]] stacks, which hold the data and control information for the system. Capturing these stacks and holding them in memory allows them to be restored later.
+
+Continuations are represented as memory buffers. To create a continuation we create a buffer with sufficient space to represent the continuation, and then use the capture words to populate it. When we later want to execute the continuation, we have words that, given a continuation, will restore the state it captured. A single continuation can be run zero, one or many times.
+
+
+!!Extensible continuations
+
+Things aren't quite that simple, however. Attila is extensible, and extensions may introduce future information that needs to be captured to build a full continuation. Attila therefore provides words to perform basic continuation representation and two [[hooks|Hooks]] on which to hang words to capture and restore state needed in a continuation. The first hook, {{{CAPTURE-CONTINUATION-HOOK}}}, contains words that are run to populate a continuation ''after'' the main stacks have been captured. A good example is the [[floating-point stack|FloatingPoint]] in systems that have it. Dually, the words on {{{RESTORE-CONTINUATION-HOOK}}} restore state ''after'' the main stacks.
+
+Clearly this is quite delicate, and a lot of care is in order. Each hook word should have a [[stack picture|StackComments]] of the form ( cont -- acont ) where cont is the address of their data in the continuation and acont is the next address after they've restored their state. Typically this means that a continuation-capture word will write a length followed by a block of memory, so the corresponding continuation-restoration word knows what to restore. It's clearly also vital that capture and restore words appear on the hooks in the same order. 
+
+
+!!Continuation words
+
+&lt;&lt;tiddler ContinuationWords&gt;&gt;
+</pre>
+</div>
+<div title="Copyright" creator="YourName" modifier="simoninireland" created="201101041521" modified="201101042130" changecount="2">
 <pre>! Copyright
 
 Copyright (c) 2007 -- 2011, Simon Dobson &lt;[[simon.dobson@computer.org|mailto:simon.dobson@computer.org]]&gt;. All rights reserved.
@@ -683,27 +760,1019 @@ You're looking at it! More precisely, Attila is documented using [[Tiddlywiki|ht
 
 To save this page, use ''File &gt;&gt; Save as...'' in your browser. In Firefox you need to choose &quot;Web page, HTML only&quot; from the drop-down list at the bottom of the dialogue box.</pre>
 </div>
-<div title="Download" creator="simoninireland" modifier="simoninireland" created="201101041639" modified="201101041639" tags="download install" changecount="2">
+<div title="DocumentationConventions" creator="simoninireland" modifier="simoninireland" created="201101051417" modified="201101092106" tags="conventions" changecount="5">
+<pre>!Documentation conventions
+
+If you'd like to contribute to Attila's documentation, please do! This web site adopts the following conventions.
+ 
+!!Section tiddlers
+
+* Level-one title
+* Include the appropriate word reference tiddler at the bottom
+
+
+!!Word reference tiddlers
+
+* No title
+* Tagged with ''words'' (will be automatically added to the WordReference tiddler)
+* Level-two sub-titles to separate word categories (user, internal, ...) if required
+
+  
+!!Nitty-gritty
+
+* Level-one title
+* Relegate all non-essential, awkward, little-used nastiness to these tiddlers
+* Tagged with ''nitty gritty'' (in double square brackets) so they can be identified and hidden if required
+</pre>
+</div>
+<div title="Download" creator="simoninireland" modifier="simoninireland" created="201101041639" modified="201101042129" tags="download install" changecount="3">
 <pre>!Downloading and installation
 
 Attila is a development tool intended for use by developers. These instructions therefore assume you're happy with basic notions of downloading, compilation and installation on Unix-like systems.
 
 !!Basic instructions
 
-&gt; wget http://www.attila-language.org/latest.tar.gz
-&gt; tar xfz latest.tar.gz
-&gt; cd att*
+&gt; wget http://www.attila-language.org/attila-x.y.tar.gz
+&gt; tar xfz attila-x.y.tar.gz
+&gt; cd attila-x.y
 &gt; ./configure
 &gt; make
 &gt; sudo make install
+
+(Where the x and y in attila-x.y will be the major and minor version numbers of the version you download.)
 
 !!The nitty-gritty
 
 Attila uses GNU autoconf to provide its initial compilation environment. When you run configure, autoconf will examine your system and generate the files needed to compile Attila on it. We refer to this as the host system. When you type make, a bootstrap version of Attila will be compiled. This is a basic Forth system that uses a lot of hand-crafting to get an initial image up and running. Attila will then load its cross-compiler and cross-compile a version of itself for the host system. This version is written almost entirely in Forth, and so can be used as a basis for building new, customised Attila variations. The cross-compiled version then runs the Attila test suite to make sure it's running correctly. make install will then install the cross-compiled system and all its associated source code to the appropriate place for your system. You can then delete the installation directory and the tarball.
  </pre>
 </div>
-<div title="MainMenu" creator="simoninireland" modifier="simoninireland" created="201101041522" modified="201101041532" changecount="4">
-<pre>!!Getting started
+<div title="ForEachTiddlerMacro" modifier="YourName" created="200512081501" modified="200707300922" tags="Documentation ForEachTiddlerMacro Macro" server.type="file" server.host="tiddlywiki.abego-software.de" server.page.revision="200707300922">
+<pre>//~~(Part of the [[ForEachTiddlerPlugin]])~~//
+
+Create customizable lists, tables etc. for your selections of tiddlers. Specify the tiddlers to include and their order through a powerful language.
+
+''Syntax:'' 
+|&gt;|{{{&lt;&lt;}}}''forEachTiddler'' [''in'' //tiddlyWikiPath//] [''where'' //whereCondition//] [''sortBy'' //sortExpression// [''ascending'' //or// ''descending'']] [''script'' //scriptText//] [//action// [//actionParameters//]]{{{&gt;&gt;}}}|
+|//tiddlyWikiPath//|The filepath to the TiddlyWiki the macro should work on. When missing the current TiddlyWiki is used.|
+|//whereCondition//|(quoted) JavaScript boolean expression. May refer to the build-in variables {{{tiddler}}} and {{{context}}}.|
+|//sortExpression//|(quoted) JavaScript expression returning &quot;comparable&quot; objects (using '{{{&lt;}}}','{{{&gt;}}}','{{{==}}}'. May refer to the build-in variables {{{tiddler}}} and {{{context}}}.|
+|//scriptText//|(quoted) JavaScript text. Typically defines JavaScript functions that are called by the various JavaScript expressions (whereClause, sortClause, action arguments,...)|
+|//action//|The action that should be performed on every selected tiddler, in the given order. By default the actions [[addToList|AddToListAction]] and [[write|WriteAction]] are supported. When no action is specified [[addToList|AddToListAction]] is used.|
+|//actionParameters//|(action specific) parameters the action may refer while processing the tiddlers (see action descriptions for details). &lt;&lt;tiddler [[JavaScript in actionParameters]]&gt;&gt;|
+|&gt;|~~Syntax formatting: Keywords in ''bold'', optional parts in [...]. 'or' means that exactly one of the two alternatives must exist.~~|
+
+
+''Using JavaScript''
+
+To give you a lot of flexibility the [[ForEachTiddlerMacro]] uses JavaScript in its arguments. Even if you are not that familiar with JavaScript you may find forEachTiddler useful. Just have a look at the various ready-to-use [[ForEachTiddlerExamples]] and adapt them to your needs.
+
+''The Elements of the Macro''
+
+The arguments of the ForEachTiddlerMacro consist of multiple parts, each of them being optional.
+
+&lt;&lt;slider chkFETInClause [[inClause]] &quot;inClause&quot; &quot;inClause&quot;&gt;&gt;
+&lt;&lt;slider chkFETWhereClause [[whereClause]] &quot;whereClause&quot; &quot;whereClause&quot;&gt;&gt;
+&lt;&lt;slider chkFETSortClause [[sortClause]] &quot;sortClause&quot; &quot;sortClause&quot;&gt;&gt;
+&lt;&lt;slider chkFETScriptClause [[scriptClause]] &quot;scriptClause&quot; &quot;scriptClause&quot;&gt;&gt;
+&lt;&lt;slider chkFETActions [[Action Specification]] &quot;Action Specification&quot; &quot;Action Specification&quot;&gt;&gt;
+
+''Using Macros and &quot;&gt;&quot; inside the forEachTiddler Macro''
+
+You may use other macro calls into the expression, especially in the actionParameters. To avoid that the {{{&gt;&gt;}}} of such a macro call is misinterpreted as the end of the {{{&lt;&lt;forEachTiddler...&gt;&gt;}}} macro you must escape the {{{&gt;&gt;}}} of the inner macro with {{{$))}}} E.g. if you want to use {{{&lt;&lt;tiddler ...&gt;&gt;}}} inside the {{{forEachTiddler}}} macro you have to write {{{&lt;&lt;tiddler ...$))}}}.
+
+In addition it is necessary to escape single {{{&gt;}}} with the text {{{$)}}}.
+
+''Using {{{&lt;&lt;tiddler ... with: ...&gt;&gt;}}} to re-use ForEachTiddler definitions''
+
+Sometimes you may want to use a certain ForEachTiddler definition in slight variations. E.g. you may want to list either the tiddlers tagged with &quot;ToDo&quot; and in the other case with &quot;Done&quot;. To do so you may use &quot;Tiddler parameters&quot;. Here an example:
+
+Replace the variable part of the ForEachTiddler definition with $1 ($2,... $9 are supported). E.g. you may create the tiddler &quot;ListTaggedTiddlers&quot; like this
+{{{
+&lt;&lt;forEachTiddler 
+ where 
+ 'tiddler.tags.contains(&quot;$1&quot;)'
+&gt;&gt;
+}}}
+
+Now you can use the ListTaggedTiddlers for various specific tags, using the {{{&lt;&lt;tiddler ...&gt;&gt;}}} macro:
+{{{
+&lt;&lt;tiddler ListTaggedTiddlers with: &quot;systemConfig&quot;&gt;&gt;
+}}}
+{{{
+&lt;&lt;tiddler ListTaggedTiddlers with: &quot;Plugin&quot;&gt;&gt;
+}}}
+
+
+See also [[ForEachTiddlerExamples]].</pre>
+</div>
+<div title="ForEachTiddlerPlugin" modifier="UdoBorkowski" created="200512281150" modified="200704122022" tags="ForEachTiddlerMacro ForEachTiddlerProject Plugin UdoBorkowski systemConfig" server.type="file" server.host="tiddlywiki.abego-software.de" server.page.revision="200704122022">
+<pre>/***
+|''Name:''|ForEachTiddlerPlugin|
+|''Version:''|1.0.8 (2007-04-12)|
+|''Source:''|http://tiddlywiki.abego-software.de/#ForEachTiddlerPlugin|
+|''Author:''|UdoBorkowski (ub [at] abego-software [dot] de)|
+|''Licence:''|[[BSD open source license (abego Software)|http://www.abego-software.de/legal/apl-v10.html]]|
+|''Copyright:''|&amp;copy; 2005-2007 [[abego Software|http://www.abego-software.de]]|
+|''TiddlyWiki:''|1.2.38+, 2.0|
+|''Browser:''|Firefox 1.0.4+; Firefox 1.5; InternetExplorer 6.0|
+!Description
+
+Create customizable lists, tables etc. for your selections of tiddlers. Specify the tiddlers to include and their order through a powerful language.
+
+''Syntax:'' 
+|&gt;|{{{&lt;&lt;}}}''forEachTiddler'' [''in'' //tiddlyWikiPath//] [''where'' //whereCondition//] [''sortBy'' //sortExpression// [''ascending'' //or// ''descending'']] [''script'' //scriptText//] [//action// [//actionParameters//]]{{{&gt;&gt;}}}|
+|//tiddlyWikiPath//|The filepath to the TiddlyWiki the macro should work on. When missing the current TiddlyWiki is used.|
+|//whereCondition//|(quoted) JavaScript boolean expression. May refer to the build-in variables {{{tiddler}}} and  {{{context}}}.|
+|//sortExpression//|(quoted) JavaScript expression returning &quot;comparable&quot; objects (using '{{{&lt;}}}','{{{&gt;}}}','{{{==}}}'. May refer to the build-in variables {{{tiddler}}} and  {{{context}}}.|
+|//scriptText//|(quoted) JavaScript text. Typically defines JavaScript functions that are called by the various JavaScript expressions (whereClause, sortClause, action arguments,...)|
+|//action//|The action that should be performed on every selected tiddler, in the given order. By default the actions [[addToList|AddToListAction]] and [[write|WriteAction]] are supported. When no action is specified [[addToList|AddToListAction]]  is used.|
+|//actionParameters//|(action specific) parameters the action may refer while processing the tiddlers (see action descriptions for details). &lt;&lt;tiddler [[JavaScript in actionParameters]]&gt;&gt;|
+|&gt;|~~Syntax formatting: Keywords in ''bold'', optional parts in [...]. 'or' means that exactly one of the two alternatives must exist.~~|
+
+See details see [[ForEachTiddlerMacro]] and [[ForEachTiddlerExamples]].
+
+!Revision history
+* v1.0.8 (2007-04-12)
+** Adapted to latest TiddlyWiki 2.2 Beta importTiddlyWiki API (introduced with changeset 2004). TiddlyWiki 2.2 Beta builds prior to changeset 2004 are no longer supported (but TiddlyWiki 2.1 and earlier, of cause)
+* v1.0.7 (2007-03-28)
+** Also support &quot;pre&quot; formatted TiddlyWikis (introduced with TW 2.2) (when using &quot;in&quot; clause to work on external tiddlers)
+* v1.0.6 (2006-09-16)
+** Context provides &quot;viewerTiddler&quot;, i.e. the tiddler used to view the macro. Most times this is equal to the &quot;inTiddler&quot;, but when using the &quot;tiddler&quot; macro both may be different.
+** Support &quot;begin&quot;, &quot;end&quot; and &quot;none&quot; expressions in &quot;write&quot; action
+* v1.0.5 (2006-02-05)
+** Pass tiddler containing the macro with wikify, context object also holds reference to tiddler containing the macro (&quot;inTiddler&quot;). Thanks to SimonBaird.
+** Support Firefox 1.5.0.1
+** Internal
+*** Make &quot;JSLint&quot; conform
+*** &quot;Only install once&quot;
+* v1.0.4 (2006-01-06)
+** Support TiddlyWiki 2.0
+* v1.0.3 (2005-12-22)
+** Features: 
+*** Write output to a file supports multi-byte environments (Thanks to Bram Chen) 
+*** Provide API to access the forEachTiddler functionality directly through JavaScript (see getTiddlers and performMacro)
+** Enhancements:
+*** Improved error messages on InternetExplorer.
+* v1.0.2 (2005-12-10)
+** Features: 
+*** context object also holds reference to store (TiddlyWiki)
+** Fixed Bugs: 
+*** ForEachTiddler 1.0.1 has broken support on win32 Opera 8.51 (Thanks to BrunoSabin for reporting)
+* v1.0.1 (2005-12-08)
+** Features: 
+*** Access tiddlers stored in separated TiddlyWikis through the &quot;in&quot; option. I.e. you are no longer limited to only work on the &quot;current TiddlyWiki&quot;.
+*** Write output to an external file using the &quot;toFile&quot; option of the &quot;write&quot; action. With this option you may write your customized tiddler exports.
+*** Use the &quot;script&quot; section to define &quot;helper&quot; JavaScript functions etc. to be used in the various JavaScript expressions (whereClause, sortClause, action arguments,...).
+*** Access and store context information for the current forEachTiddler invocation (through the build-in &quot;context&quot; object) .
+*** Improved script evaluation (for where/sort clause and write scripts).
+* v1.0.0 (2005-11-20)
+** initial version
+
+!Code
+***/
+//{{{
+
+	
+//============================================================================
+//============================================================================
+//		   ForEachTiddlerPlugin
+//============================================================================
+//============================================================================
+
+// Only install once
+if (!version.extensions.ForEachTiddlerPlugin) {
+
+if (!window.abego) window.abego = {};
+
+version.extensions.ForEachTiddlerPlugin = {
+	major: 1, minor: 0, revision: 8, 
+	date: new Date(2007,3,12), 
+	source: &quot;http://tiddlywiki.abego-software.de/#ForEachTiddlerPlugin&quot;,
+	licence: &quot;[[BSD open source license (abego Software)|http://www.abego-software.de/legal/apl-v10.html]]&quot;,
+	copyright: &quot;Copyright (c) abego Software GmbH, 2005-2007 (www.abego-software.de)&quot;
+};
+
+// For backward compatibility with TW 1.2.x
+//
+if (!TiddlyWiki.prototype.forEachTiddler) {
+	TiddlyWiki.prototype.forEachTiddler = function(callback) {
+		for(var t in this.tiddlers) {
+			callback.call(this,t,this.tiddlers[t]);
+		}
+	};
+}
+
+//============================================================================
+// forEachTiddler Macro
+//============================================================================
+
+version.extensions.forEachTiddler = {
+	major: 1, minor: 0, revision: 8, date: new Date(2007,3,12), provider: &quot;http://tiddlywiki.abego-software.de&quot;};
+
+// ---------------------------------------------------------------------------
+// Configurations and constants 
+// ---------------------------------------------------------------------------
+
+config.macros.forEachTiddler = {
+	 // Standard Properties
+	 label: &quot;forEachTiddler&quot;,
+	 prompt: &quot;Perform actions on a (sorted) selection of tiddlers&quot;,
+
+	 // actions
+	 actions: {
+		 addToList: {},
+		 write: {}
+	 }
+};
+
+// ---------------------------------------------------------------------------
+//  The forEachTiddler Macro Handler 
+// ---------------------------------------------------------------------------
+
+config.macros.forEachTiddler.getContainingTiddler = function(e) {
+	while(e &amp;&amp; !hasClass(e,&quot;tiddler&quot;))
+		e = e.parentNode;
+	var title = e ? e.getAttribute(&quot;tiddler&quot;) : null; 
+	return title ? store.getTiddler(title) : null;
+};
+
+config.macros.forEachTiddler.handler = function(place,macroName,params,wikifier,paramString,tiddler) {
+	// config.macros.forEachTiddler.traceMacroCall(place,macroName,params,wikifier,paramString,tiddler);
+
+	if (!tiddler) tiddler = config.macros.forEachTiddler.getContainingTiddler(place);
+	// --- Parsing ------------------------------------------
+
+	var i = 0; // index running over the params
+	// Parse the &quot;in&quot; clause
+	var tiddlyWikiPath = undefined;
+	if ((i &lt; params.length) &amp;&amp; params[i] == &quot;in&quot;) {
+		i++;
+		if (i &gt;= params.length) {
+			this.handleError(place, &quot;TiddlyWiki path expected behind 'in'.&quot;);
+			return;
+		}
+		tiddlyWikiPath = this.paramEncode((i &lt; params.length) ? params[i] : &quot;&quot;);
+		i++;
+	}
+
+	// Parse the where clause
+	var whereClause =&quot;true&quot;;
+	if ((i &lt; params.length) &amp;&amp; params[i] == &quot;where&quot;) {
+		i++;
+		whereClause = this.paramEncode((i &lt; params.length) ? params[i] : &quot;&quot;);
+		i++;
+	}
+
+	// Parse the sort stuff
+	var sortClause = null;
+	var sortAscending = true; 
+	if ((i &lt; params.length) &amp;&amp; params[i] == &quot;sortBy&quot;) {
+		i++;
+		if (i &gt;= params.length) {
+			this.handleError(place, &quot;sortClause missing behind 'sortBy'.&quot;);
+			return;
+		}
+		sortClause = this.paramEncode(params[i]);
+		i++;
+
+		if ((i &lt; params.length) &amp;&amp; (params[i] == &quot;ascending&quot; || params[i] == &quot;descending&quot;)) {
+			 sortAscending = params[i] == &quot;ascending&quot;;
+			 i++;
+		}
+	}
+
+	// Parse the script
+	var scriptText = null;
+	if ((i &lt; params.length) &amp;&amp; params[i] == &quot;script&quot;) {
+		i++;
+		scriptText = this.paramEncode((i &lt; params.length) ? params[i] : &quot;&quot;);
+		i++;
+	}
+
+	// Parse the action. 
+	// When we are already at the end use the default action
+	var actionName = &quot;addToList&quot;;
+	if (i &lt; params.length) {
+	   if (!config.macros.forEachTiddler.actions[params[i]]) {
+			this.handleError(place, &quot;Unknown action '&quot;+params[i]+&quot;'.&quot;);
+			return;
+		} else {
+			actionName = params[i]; 
+			i++;
+		}
+	} 
+	
+	// Get the action parameter
+	// (the parsing is done inside the individual action implementation.)
+	var actionParameter = params.slice(i);
+
+
+	// --- Processing ------------------------------------------
+	try {
+		this.performMacro({
+				place: place, 
+				inTiddler: tiddler,
+				whereClause: whereClause, 
+				sortClause: sortClause, 
+				sortAscending: sortAscending, 
+				actionName: actionName, 
+				actionParameter: actionParameter, 
+				scriptText: scriptText, 
+				tiddlyWikiPath: tiddlyWikiPath});
+
+	} catch (e) {
+		this.handleError(place, e);
+	}
+};
+
+// Returns an object with properties &quot;tiddlers&quot; and &quot;context&quot;.
+// tiddlers holds the (sorted) tiddlers selected by the parameter,
+// context the context of the execution of the macro.
+//
+// The action is not yet performed.
+//
+// @parameter see performMacro
+//
+config.macros.forEachTiddler.getTiddlersAndContext = function(parameter) {
+
+	var context = config.macros.forEachTiddler.createContext(parameter.place, parameter.whereClause, parameter.sortClause, parameter.sortAscending, parameter.actionName, parameter.actionParameter, parameter.scriptText, parameter.tiddlyWikiPath, parameter.inTiddler);
+
+	var tiddlyWiki = parameter.tiddlyWikiPath ? this.loadTiddlyWiki(parameter.tiddlyWikiPath) : store;
+	context[&quot;tiddlyWiki&quot;] = tiddlyWiki;
+	
+	// Get the tiddlers, as defined by the whereClause
+	var tiddlers = this.findTiddlers(parameter.whereClause, context, tiddlyWiki);
+	context[&quot;tiddlers&quot;] = tiddlers;
+
+	// Sort the tiddlers, when sorting is required.
+	if (parameter.sortClause) {
+		this.sortTiddlers(tiddlers, parameter.sortClause, parameter.sortAscending, context);
+	}
+
+	return {tiddlers: tiddlers, context: context};
+};
+
+// Returns the (sorted) tiddlers selected by the parameter.
+//
+// The action is not yet performed.
+//
+// @parameter see performMacro
+//
+config.macros.forEachTiddler.getTiddlers = function(parameter) {
+	return this.getTiddlersAndContext(parameter).tiddlers;
+};
+
+// Performs the macros with the given parameter.
+//
+// @param parameter holds the parameter of the macro as separate properties.
+//				  The following properties are supported:
+//
+//						place
+//						whereClause
+//						sortClause
+//						sortAscending
+//						actionName
+//						actionParameter
+//						scriptText
+//						tiddlyWikiPath
+//
+//					All properties are optional. 
+//					For most actions the place property must be defined.
+//
+config.macros.forEachTiddler.performMacro = function(parameter) {
+	var tiddlersAndContext = this.getTiddlersAndContext(parameter);
+
+	// Perform the action
+	var actionName = parameter.actionName ? parameter.actionName : &quot;addToList&quot;;
+	var action = config.macros.forEachTiddler.actions[actionName];
+	if (!action) {
+		this.handleError(parameter.place, &quot;Unknown action '&quot;+actionName+&quot;'.&quot;);
+		return;
+	}
+
+	var actionHandler = action.handler;
+	actionHandler(parameter.place, tiddlersAndContext.tiddlers, parameter.actionParameter, tiddlersAndContext.context);
+};
+
+// ---------------------------------------------------------------------------
+//  The actions 
+// ---------------------------------------------------------------------------
+
+// Internal.
+//
+// --- The addToList Action -----------------------------------------------
+//
+config.macros.forEachTiddler.actions.addToList.handler = function(place, tiddlers, parameter, context) {
+	// Parse the parameter
+	var p = 0;
+
+	// Check for extra parameters
+	if (parameter.length &gt; p) {
+		config.macros.forEachTiddler.createExtraParameterErrorElement(place, &quot;addToList&quot;, parameter, p);
+		return;
+	}
+
+	// Perform the action.
+	var list = document.createElement(&quot;ul&quot;);
+	place.appendChild(list);
+	for (var i = 0; i &lt; tiddlers.length; i++) {
+		var tiddler = tiddlers[i];
+		var listItem = document.createElement(&quot;li&quot;);
+		list.appendChild(listItem);
+		createTiddlyLink(listItem, tiddler.title, true);
+	}
+};
+
+abego.parseNamedParameter = function(name, parameter, i) {
+	var beginExpression = null;
+	if ((i &lt; parameter.length) &amp;&amp; parameter[i] == name) {
+		i++;
+		if (i &gt;= parameter.length) {
+			throw &quot;Missing text behind '%0'&quot;.format([name]);
+		}
+		
+		return config.macros.forEachTiddler.paramEncode(parameter[i]);
+	}
+	return null;
+}
+
+// Internal.
+//
+// --- The write Action ---------------------------------------------------
+//
+config.macros.forEachTiddler.actions.write.handler = function(place, tiddlers, parameter, context) {
+	// Parse the parameter
+	var p = 0;
+	if (p &gt;= parameter.length) {
+		this.handleError(place, &quot;Missing expression behind 'write'.&quot;);
+		return;
+	}
+
+	var textExpression = config.macros.forEachTiddler.paramEncode(parameter[p]);
+	p++;
+
+	// Parse the &quot;begin&quot; option
+	var beginExpression = abego.parseNamedParameter(&quot;begin&quot;, parameter, p);
+	if (beginExpression !== null) 
+		p += 2;
+	var endExpression = abego.parseNamedParameter(&quot;end&quot;, parameter, p);
+	if (endExpression !== null) 
+		p += 2;
+	var noneExpression = abego.parseNamedParameter(&quot;none&quot;, parameter, p);
+	if (noneExpression !== null) 
+		p += 2;
+
+	// Parse the &quot;toFile&quot; option
+	var filename = null;
+	var lineSeparator = undefined;
+	if ((p &lt; parameter.length) &amp;&amp; parameter[p] == &quot;toFile&quot;) {
+		p++;
+		if (p &gt;= parameter.length) {
+			this.handleError(place, &quot;Filename expected behind 'toFile' of 'write' action.&quot;);
+			return;
+		}
+		
+		filename = config.macros.forEachTiddler.getLocalPath(config.macros.forEachTiddler.paramEncode(parameter[p]));
+		p++;
+		if ((p &lt; parameter.length) &amp;&amp; parameter[p] == &quot;withLineSeparator&quot;) {
+			p++;
+			if (p &gt;= parameter.length) {
+				this.handleError(place, &quot;Line separator text expected behind 'withLineSeparator' of 'write' action.&quot;);
+				return;
+			}
+			lineSeparator = config.macros.forEachTiddler.paramEncode(parameter[p]);
+			p++;
+		}
+	}
+	
+	// Check for extra parameters
+	if (parameter.length &gt; p) {
+		config.macros.forEachTiddler.createExtraParameterErrorElement(place, &quot;write&quot;, parameter, p);
+		return;
+	}
+
+	// Perform the action.
+	var func = config.macros.forEachTiddler.getEvalTiddlerFunction(textExpression, context);
+	var count = tiddlers.length;
+	var text = &quot;&quot;;
+	if (count &gt; 0 &amp;&amp; beginExpression)
+		text += config.macros.forEachTiddler.getEvalTiddlerFunction(beginExpression, context)(undefined, context, count, undefined);
+	
+	for (var i = 0; i &lt; count; i++) {
+		var tiddler = tiddlers[i];
+		text += func(tiddler, context, count, i);
+	}
+	
+	if (count &gt; 0 &amp;&amp; endExpression)
+		text += config.macros.forEachTiddler.getEvalTiddlerFunction(endExpression, context)(undefined, context, count, undefined);
+
+	if (count == 0 &amp;&amp; noneExpression) 
+		text += config.macros.forEachTiddler.getEvalTiddlerFunction(noneExpression, context)(undefined, context, count, undefined);
+		
+
+	if (filename) {
+		if (lineSeparator !== undefined) {
+			lineSeparator = lineSeparator.replace(/\\n/mg, &quot;\n&quot;).replace(/\\r/mg, &quot;\r&quot;);
+			text = text.replace(/\n/mg,lineSeparator);
+		}
+		saveFile(filename, convertUnicodeToUTF8(text));
+	} else {
+		var wrapper = createTiddlyElement(place, &quot;span&quot;);
+		wikify(text, wrapper, null/* highlightRegExp */, context.inTiddler);
+	}
+};
+
+
+// ---------------------------------------------------------------------------
+//  Helpers
+// ---------------------------------------------------------------------------
+
+// Internal.
+//
+config.macros.forEachTiddler.createContext = function(placeParam, whereClauseParam, sortClauseParam, sortAscendingParam, actionNameParam, actionParameterParam, scriptText, tiddlyWikiPathParam, inTiddlerParam) {
+	return {
+		place : placeParam, 
+		whereClause : whereClauseParam, 
+		sortClause : sortClauseParam, 
+		sortAscending : sortAscendingParam, 
+		script : scriptText,
+		actionName : actionNameParam, 
+		actionParameter : actionParameterParam,
+		tiddlyWikiPath : tiddlyWikiPathParam,
+		inTiddler : inTiddlerParam, // the tiddler containing the &lt;&lt;forEachTiddler ...&gt;&gt; macro call.
+		viewerTiddler : config.macros.forEachTiddler.getContainingTiddler(placeParam) // the tiddler showing the forEachTiddler result
+	};
+};
+
+// Internal.
+//
+// Returns a TiddlyWiki with the tiddlers loaded from the TiddlyWiki of 
+// the given path.
+//
+config.macros.forEachTiddler.loadTiddlyWiki = function(path, idPrefix) {
+	if (!idPrefix) {
+		idPrefix = &quot;store&quot;;
+	}
+	var lenPrefix = idPrefix.length;
+	
+	// Read the content of the given file
+	var content = loadFile(this.getLocalPath(path));
+	if(content === null) {
+		throw &quot;TiddlyWiki '&quot;+path+&quot;' not found.&quot;;
+	}
+	
+	var tiddlyWiki = new TiddlyWiki();
+
+	// Starting with TW 2.2 there is a helper function to import the tiddlers
+	if (tiddlyWiki.importTiddlyWiki) {
+		if (!tiddlyWiki.importTiddlyWiki(content))
+			throw &quot;File '&quot;+path+&quot;' is not a TiddlyWiki.&quot;;
+		tiddlyWiki.dirty = false;
+		return tiddlyWiki;
+	}
+	
+	// The legacy code, for TW &lt; 2.2
+	
+	// Locate the storeArea div's
+	var posOpeningDiv = content.indexOf(startSaveArea);
+	var posClosingDiv = content.lastIndexOf(endSaveArea);
+	if((posOpeningDiv == -1) || (posClosingDiv == -1)) {
+		throw &quot;File '&quot;+path+&quot;' is not a TiddlyWiki.&quot;;
+	}
+	var storageText = content.substr(posOpeningDiv + startSaveArea.length, posClosingDiv);
+	
+	// Create a &quot;div&quot; element that contains the storage text
+	var myStorageDiv = document.createElement(&quot;div&quot;);
+	myStorageDiv.innerHTML = storageText;
+	myStorageDiv.normalize();
+	
+	// Create all tiddlers in a new TiddlyWiki
+	// (following code is modified copy of TiddlyWiki.prototype.loadFromDiv)
+	var store = myStorageDiv.childNodes;
+	for(var t = 0; t &lt; store.length; t++) {
+		var e = store[t];
+		var title = null;
+		if(e.getAttribute)
+			title = e.getAttribute(&quot;tiddler&quot;);
+		if(!title &amp;&amp; e.id &amp;&amp; e.id.substr(0,lenPrefix) == idPrefix)
+			title = e.id.substr(lenPrefix);
+		if(title &amp;&amp; title !== &quot;&quot;) {
+			var tiddler = tiddlyWiki.createTiddler(title);
+			tiddler.loadFromDiv(e,title);
+		}
+	}
+	tiddlyWiki.dirty = false;
+
+	return tiddlyWiki;
+};
+
+
+	
+// Internal.
+//
+// Returns a function that has a function body returning the given javaScriptExpression.
+// The function has the parameters:
+// 
+//	 (tiddler, context, count, index)
+//
+config.macros.forEachTiddler.getEvalTiddlerFunction = function (javaScriptExpression, context) {
+	var script = context[&quot;script&quot;];
+	var functionText = &quot;var theFunction = function(tiddler, context, count, index) { return &quot;+javaScriptExpression+&quot;}&quot;;
+	var fullText = (script ? script+&quot;;&quot; : &quot;&quot;)+functionText+&quot;;theFunction;&quot;;
+	return eval(fullText);
+};
+
+// Internal.
+//
+config.macros.forEachTiddler.findTiddlers = function(whereClause, context, tiddlyWiki) {
+	var result = [];
+	var func = config.macros.forEachTiddler.getEvalTiddlerFunction(whereClause, context);
+	tiddlyWiki.forEachTiddler(function(title,tiddler) {
+		if (func(tiddler, context, undefined, undefined)) {
+			result.push(tiddler);
+		}
+	});
+	return result;
+};
+
+// Internal.
+//
+config.macros.forEachTiddler.createExtraParameterErrorElement = function(place, actionName, parameter, firstUnusedIndex) {
+	var message = &quot;Extra parameter behind '&quot;+actionName+&quot;':&quot;;
+	for (var i = firstUnusedIndex; i &lt; parameter.length; i++) {
+		message += &quot; &quot;+parameter[i];
+	}
+	this.handleError(place, message);
+};
+
+// Internal.
+//
+config.macros.forEachTiddler.sortAscending = function(tiddlerA, tiddlerB) {
+	var result = 
+		(tiddlerA.forEachTiddlerSortValue == tiddlerB.forEachTiddlerSortValue) 
+			? 0
+			: (tiddlerA.forEachTiddlerSortValue &lt; tiddlerB.forEachTiddlerSortValue)
+			   ? -1 
+			   : +1; 
+	return result;
+};
+
+// Internal.
+//
+config.macros.forEachTiddler.sortDescending = function(tiddlerA, tiddlerB) {
+	var result = 
+		(tiddlerA.forEachTiddlerSortValue == tiddlerB.forEachTiddlerSortValue) 
+			? 0
+			: (tiddlerA.forEachTiddlerSortValue &lt; tiddlerB.forEachTiddlerSortValue)
+			   ? +1 
+			   : -1; 
+	return result;
+};
+
+// Internal.
+//
+config.macros.forEachTiddler.sortTiddlers = function(tiddlers, sortClause, ascending, context) {
+	// To avoid evaluating the sortClause whenever two items are compared 
+	// we pre-calculate the sortValue for every item in the array and store it in a 
+	// temporary property (&quot;forEachTiddlerSortValue&quot;) of the tiddlers.
+	var func = config.macros.forEachTiddler.getEvalTiddlerFunction(sortClause, context);
+	var count = tiddlers.length;
+	var i;
+	for (i = 0; i &lt; count; i++) {
+		var tiddler = tiddlers[i];
+		tiddler.forEachTiddlerSortValue = func(tiddler,context, undefined, undefined);
+	}
+
+	// Do the sorting
+	tiddlers.sort(ascending ? this.sortAscending : this.sortDescending);
+
+	// Delete the temporary property that holds the sortValue.	
+	for (i = 0; i &lt; tiddlers.length; i++) {
+		delete tiddlers[i].forEachTiddlerSortValue;
+	}
+};
+
+
+// Internal.
+//
+config.macros.forEachTiddler.trace = function(message) {
+	displayMessage(message);
+};
+
+// Internal.
+//
+config.macros.forEachTiddler.traceMacroCall = function(place,macroName,params) {
+	var message =&quot;&lt;&lt;&quot;+macroName;
+	for (var i = 0; i &lt; params.length; i++) {
+		message += &quot; &quot;+params[i];
+	}
+	message += &quot;&gt;&gt;&quot;;
+	displayMessage(message);
+};
+
+
+// Internal.
+//
+// Creates an element that holds an error message
+// 
+config.macros.forEachTiddler.createErrorElement = function(place, exception) {
+	var message = (exception.description) ? exception.description : exception.toString();
+	return createTiddlyElement(place,&quot;span&quot;,null,&quot;forEachTiddlerError&quot;,&quot;&lt;&lt;forEachTiddler ...&gt;&gt;: &quot;+message);
+};
+
+// Internal.
+//
+// @param place [may be null]
+//
+config.macros.forEachTiddler.handleError = function(place, exception) {
+	if (place) {
+		this.createErrorElement(place, exception);
+	} else {
+		throw exception;
+	}
+};
+
+// Internal.
+//
+// Encodes the given string.
+//
+// Replaces 
+//	 &quot;$))&quot; to &quot;&gt;&gt;&quot;
+//	 &quot;$)&quot; to &quot;&gt;&quot;
+//
+config.macros.forEachTiddler.paramEncode = function(s) {
+	var reGTGT = new RegExp(&quot;\\$\\)\\)&quot;,&quot;mg&quot;);
+	var reGT = new RegExp(&quot;\\$\\)&quot;,&quot;mg&quot;);
+	return s.replace(reGTGT, &quot;&gt;&gt;&quot;).replace(reGT, &quot;&gt;&quot;);
+};
+
+// Internal.
+//
+// Returns the given original path (that is a file path, starting with &quot;file:&quot;)
+// as a path to a local file, in the systems native file format.
+//
+// Location information in the originalPath (i.e. the &quot;#&quot; and stuff following)
+// is stripped.
+// 
+config.macros.forEachTiddler.getLocalPath = function(originalPath) {
+	// Remove any location part of the URL
+	var hashPos = originalPath.indexOf(&quot;#&quot;);
+	if(hashPos != -1)
+		originalPath = originalPath.substr(0,hashPos);
+	// Convert to a native file format assuming
+	// &quot;file:///x:/path/path/path...&quot; - pc local file --&gt; &quot;x:\path\path\path...&quot;
+	// &quot;file://///server/share/path/path/path...&quot; - FireFox pc network file --&gt; &quot;\\server\share\path\path\path...&quot;
+	// &quot;file:///path/path/path...&quot; - mac/unix local file --&gt; &quot;/path/path/path...&quot;
+	// &quot;file://server/share/path/path/path...&quot; - pc network file --&gt; &quot;\\server\share\path\path\path...&quot;
+	var localPath;
+	if(originalPath.charAt(9) == &quot;:&quot;) // pc local file
+		localPath = unescape(originalPath.substr(8)).replace(new RegExp(&quot;/&quot;,&quot;g&quot;),&quot;\\&quot;);
+	else if(originalPath.indexOf(&quot;file://///&quot;) === 0) // FireFox pc network file
+		localPath = &quot;\\\\&quot; + unescape(originalPath.substr(10)).replace(new RegExp(&quot;/&quot;,&quot;g&quot;),&quot;\\&quot;);
+	else if(originalPath.indexOf(&quot;file:///&quot;) === 0) // mac/unix local file
+		localPath = unescape(originalPath.substr(7));
+	else if(originalPath.indexOf(&quot;file:/&quot;) === 0) // mac/unix local file
+		localPath = unescape(originalPath.substr(5));
+	else // pc network file
+		localPath = &quot;\\\\&quot; + unescape(originalPath.substr(7)).replace(new RegExp(&quot;/&quot;,&quot;g&quot;),&quot;\\&quot;);	
+	return localPath;
+};
+
+// ---------------------------------------------------------------------------
+// Stylesheet Extensions (may be overridden by local StyleSheet)
+// ---------------------------------------------------------------------------
+//
+setStylesheet(
+	&quot;.forEachTiddlerError{color: #ffffff;background-color: #880000;}&quot;,
+	&quot;forEachTiddler&quot;);
+
+//============================================================================
+// End of forEachTiddler Macro
+//============================================================================
+
+
+//============================================================================
+// String.startsWith Function
+//============================================================================
+//
+// Returns true if the string starts with the given prefix, false otherwise.
+//
+version.extensions[&quot;String.startsWith&quot;] = {major: 1, minor: 0, revision: 0, date: new Date(2005,11,20), provider: &quot;http://tiddlywiki.abego-software.de&quot;};
+//
+String.prototype.startsWith = function(prefix) {
+	var n =  prefix.length;
+	return (this.length &gt;= n) &amp;&amp; (this.slice(0, n) == prefix);
+};
+
+
+
+//============================================================================
+// String.endsWith Function
+//============================================================================
+//
+// Returns true if the string ends with the given suffix, false otherwise.
+//
+version.extensions[&quot;String.endsWith&quot;] = {major: 1, minor: 0, revision: 0, date: new Date(2005,11,20), provider: &quot;http://tiddlywiki.abego-software.de&quot;};
+//
+String.prototype.endsWith = function(suffix) {
+	var n = suffix.length;
+	return (this.length &gt;= n) &amp;&amp; (this.right(n) == suffix);
+};
+
+
+//============================================================================
+// String.contains Function
+//============================================================================
+//
+// Returns true when the string contains the given substring, false otherwise.
+//
+version.extensions[&quot;String.contains&quot;] = {major: 1, minor: 0, revision: 0, date: new Date(2005,11,20), provider: &quot;http://tiddlywiki.abego-software.de&quot;};
+//
+String.prototype.contains = function(substring) {
+	return this.indexOf(substring) &gt;= 0;
+};
+
+//============================================================================
+// Array.indexOf Function
+//============================================================================
+//
+// Returns the index of the first occurance of the given item in the array or 
+// -1 when no such item exists.
+//
+// @param item [may be null]
+//
+version.extensions[&quot;Array.indexOf&quot;] = {major: 1, minor: 0, revision: 0, date: new Date(2005,11,20), provider: &quot;http://tiddlywiki.abego-software.de&quot;};
+//
+Array.prototype.indexOf = function(item) {
+	for (var i = 0; i &lt; this.length; i++) {
+		if (this[i] == item) {
+			return i;
+		}
+	}
+	return -1;
+};
+
+//============================================================================
+// Array.contains Function
+//============================================================================
+//
+// Returns true when the array contains the given item, otherwise false. 
+//
+// @param item [may be null]
+//
+version.extensions[&quot;Array.contains&quot;] = {major: 1, minor: 0, revision: 0, date: new Date(2005,11,20), provider: &quot;http://tiddlywiki.abego-software.de&quot;};
+//
+Array.prototype.contains = function(item) {
+	return (this.indexOf(item) &gt;= 0);
+};
+
+//============================================================================
+// Array.containsAny Function
+//============================================================================
+//
+// Returns true when the array contains at least one of the elements 
+// of the item. Otherwise (or when items contains no elements) false is returned.
+//
+version.extensions[&quot;Array.containsAny&quot;] = {major: 1, minor: 0, revision: 0, date: new Date(2005,11,20), provider: &quot;http://tiddlywiki.abego-software.de&quot;};
+//
+Array.prototype.containsAny = function(items) {
+	for(var i = 0; i &lt; items.length; i++) {
+		if (this.contains(items[i])) {
+			return true;
+		}
+	}
+	return false;
+};
+
+
+//============================================================================
+// Array.containsAll Function
+//============================================================================
+//
+// Returns true when the array contains all the items, otherwise false.
+// 
+// When items is null false is returned (even if the array contains a null).
+//
+// @param items [may be null] 
+//
+version.extensions[&quot;Array.containsAll&quot;] = {major: 1, minor: 0, revision: 0, date: new Date(2005,11,20), provider: &quot;http://tiddlywiki.abego-software.de&quot;};
+//
+Array.prototype.containsAll = function(items) {
+	for(var i = 0; i &lt; items.length; i++) {
+		if (!this.contains(items[i])) {
+			return false;
+		}
+	}
+	return true;
+};
+
+
+} // of &quot;install only once&quot;
+
+// Used Globals (for JSLint) ==============
+// ... DOM
+/*global 	document */
+// ... TiddlyWiki Core
+/*global 	convertUnicodeToUTF8, createTiddlyElement, createTiddlyLink, 
+			displayMessage, endSaveArea, hasClass, loadFile, saveFile, 
+			startSaveArea, store, wikify */
+//}}}
+
+
+/***
+!Licence and Copyright
+Copyright (c) abego Software ~GmbH, 2005 ([[www.abego-software.de|http://www.abego-software.de]])
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Neither the name of abego Software nor the names of its contributors may be
+used to endorse or promote products derived from this software without specific
+prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+***/
+
+</pre>
+</div>
+<div title="HowToContribute" creator="simoninireland" modifier="simoninireland" created="201101051420" changecount="1">
+<pre>!How to contribute
+
+You can contribute to Attila in a number of ways.
+
+''If you're a systems programmer'', please feel free to add libraries, words and other code, or to refine and simplify what's there already. You can get access to our Subversion repository to update the code base. Please only submit code if it's fully commented, comes with [[unit tests|TestSuite]] integrated into the test suite, and has appropriate documentation tiddlers.
+
+''If you're an application programmer'' we'd love to see applications and war stories on Attila &quot;in the wild&quot; for our blog.
+
+''If you're a writer'' you can improve the documentation, web site and other documents associated with Attila.
+ </pre>
+</div>
+<div title="Language" creator="simoninireland" modifier="simoninireland" created="201101042145" modified="201101092108" tags="reference" changecount="3">
+<pre>!Language reference
+
+This page contains contains pointers to all of Attila's language features, as provided in the core system You can also browse the [[list of all words|WordReference]].
+
+!!Basic features
+
+* Stack manipulation
+
+
+!!Data
+
+* Data blocks
+* Data compilation
+* Dynamic memory
+
+
+!!Compilation
+
+* Colon-definitions
+* CREATE...DOES&gt;
+
+
+!!Control structures
+
+* Conditionals
+* Loops
+
+
+!!Standard data types
+
+* [[Arithmetic]]
+* Strings
+* Long strings (ZStrings)
+* Floating-point arithmetic
+
+
+!!Advanced features
+
+* The return stack
+* Conditional compilation
+* [[Continuations]]
+* Word lists and vocabularies
+* Unit testing framework (FUnit)
+</pre>
+</div>
+<div title="MainMenu" creator="simoninireland" modifier="simoninireland" created="201101041522" modified="201101051221" changecount="5">
+<pre>[[Home|About]]
+
+!!Getting started
 * [[Downloading and installation|Download]]
 * [[Quick-start|Quickstart]]
 
@@ -948,6 +2017,69 @@ if we add an address to the return stack, or
 
 if use two floating-point values to produce a third. 
  
+</pre>
+</div>
+<div title="UserVariables" creator="simoninireland" modifier="simoninireland" created="201101092102" tags="[[user variables]]" changecount="1">
+<pre>!User variables
+
+User variables are a system construction that are used to hold system variables. They differ from [[ordinary variables|Variables]] in that they shouldn't generally be created under normal conditions&quot; they exist to hold system parameters, not normal user data. In that sense they're very badly mis-named, but the name is conventional in all Forth systems and has been retained in Attila for that reason.
+
+Some user variables are encountered in &quot;normal&quot; code, such as {{{BASE}}} (the input number base). Mostly, though, user variables can be safely ignored by most code, or accessed indirectly through other words (like using {{{INTERPRETING?}}} to access {{{STATE}}}). (There is also some [[nitty-gritty about user variables|UserVariablesNittyGritty]] for if you need it.)
+
+
+
+!!List of user variables
+
+&lt;&lt;tiddler UserVariablesList&gt;&gt;
+
+
+
+</pre>
+</div>
+<div title="UserVariablesList" creator="simoninireland" modifier="simoninireland" created="201101092050" modified="201101092058" tags="words [[user variables]] (START) EXECUTIVE (DATA-STACK) (RETURN-STACK) (TOP) (CEILING) (HERE) (THERE) STATE BASE INPUTSOURCE OUTPUTSINK TIB &gt;IN LAST TRACE CURRENT" changecount="5">
+<pre>| ''Variable'' | ''Description'' | ''Systems where you find it'' |
+| {{{(START)}}} | The start vector containing the word executed when the system cold-starts | All |
+| {{{EXECUTIVE}}} | The outer interpreter | Interactive only |
+| {{{(DATA-STACK}}} | The base of the data stack | All |
+| {{{(RETURN-STACK)}}} | The base of the return stack | All |
+| {{{(TOP)}}} | The first free code address | All |
+| {{{(CEILING)}}} | The highest currently-available code address | All |
+| {{{(HERE)}}} | The first free data address | All |
+| {{{(THERE)}}} | The highest currently-available data address | All |
+| {{{STATE}}} | The current compilation state | Interactive only |
+| {{{BASE}}} | The current number base | Interactive only |
+| {{{INPUTSOURCE}}} | The current input file descriptor | Interactive and/or mass storage or network |
+| {{{OUTPUTSINK}}} | The current output file descriptor | Interactive and/or mass storage or network |
+| {{{TIB}}} | Terminal input buffer | Interactive only |
+| {{{&gt;IN}}} | Offset within TIB | Interactive only |
+| {{{LAST}}} | xt of last-defined word | All |
+| {{{TRACE}}} | Debugging flag | Interactive and development |
+| {{{CURRENT}}} | Word list currently accepting words | Wordlist-based systems only |
+</pre>
+</div>
+<div title="UserVariablesNittyGritty" creator="simoninireland" modifier="simoninireland" created="201101092105" tags="[[user variables]] nitty-gritty" changecount="1">
+<pre>!The nitty-gritty on user variables
+
+User variables are held per-engine, so different engines (threads) can have a different set of user variables. This is used to support the multiple stacks needed by such systems. When a new engine is created, its data block includes a user variable area which is copied from that of its parent but can then diverge.
+
+This implies that any parts of the system that need to be cloned per-engine need to be based on user variables, for example the floating point stack.</pre>
+</div>
+<div title="VirtualMachine" creator="simoninireland" modifier="simoninireland" created="201101092048" tags="[[virtual machine]]" changecount="1">
+<pre>!The virtual machine definition
+
+!!Elements of the VM
+
+</pre>
+</div>
+<div title="WordReference" creator="simoninireland" modifier="simoninireland" created="201101042137" modified="201101042144" tags="reference" changecount="12">
+<pre>!Word reference
+
+&lt;&lt;forEachTiddler
+where
+'tiddler.tags.contains(&quot;words&quot;)'
+write
+'&quot;[[&quot; + tiddler.title + &quot;]]\n&lt;hr&gt;\n&quot; + tiddler.text +&quot;\n&quot;'
+&gt;&gt;
 </pre>
 </div>
 </div>
