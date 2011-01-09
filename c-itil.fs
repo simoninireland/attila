@@ -272,7 +272,7 @@ C: (RESET) bracket_reset ( -- )
 
 
 \ Warm-start the interpreter
-C: WARM warm_start ( -- )
+C: (WARM) ( -- )
     setjmp(env);
 
     // reset the interpreter
