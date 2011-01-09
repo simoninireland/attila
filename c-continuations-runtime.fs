@@ -45,7 +45,6 @@ C: (CAPTURE-STACKS) cc ( xt cont -- xt cont acont )
 
   // capture data stack
   size = DATA_STACK_DEPTH();
-printf("%d items on data stack\n", size);
   *(cp++) = (CELL) size;
   ptr = DATA_STACK_ITEM(0);
   for(i = size - 1; i >= 0; i--)
@@ -53,7 +52,6 @@ printf("%d items on data stack\n", size);
 
   // capture return stack
   size = RETURN_STACK_DEPTH();
-printf("%d items on return stack\n", size);
   *(cp++) = (CELL) size;
   ptr = RETURN_STACK_ITEM(0);
   for(i = size - 1; i >= 0; i--)
