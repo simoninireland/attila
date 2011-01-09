@@ -44,4 +44,8 @@
 \ Create a hook
 : HOOK ( "name" -- )
     PARSE-WORD (HOOK) ;
-    
+
+\ Hang the given xt on the named hook. This is the preferred way to
+\ hang words, and works with the cross-compiler
+: HANG-ON ( xt "name" -- )
+    ' >BODY ADD-TO-HOOK ;
