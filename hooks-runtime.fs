@@ -21,6 +21,8 @@
 \ Hooks run-time support
 \
 \ The words needed to run hooks. This allows hooks to be cross-compiled.
+\ Changing this code will have a knock-on effect in hooks.fs, especially
+\ on HANG-ON
 
 \ ---------- Hook construction ----------
 
@@ -56,3 +58,7 @@
 		DROP
 	    THEN
     REPEAT ;
+
+\ Un-hang all the words off a hook
+: RESET-HOOK ( h -- )
+    0 SWAP ! ;
