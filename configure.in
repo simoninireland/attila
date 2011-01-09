@@ -49,7 +49,7 @@ test -z $UNAME && AC_MSG_ERROR([attila needs a version of uname to bootstrap the
 AC_HEADER_STDC
 AC_TYPE_SIZE_T
 
-# sd: we need to expose these at autoconf level to expand x-host.fs.in so we
+# sd: we need to expose these at autoconf level to expand vm.fs.in so we
 # can't use AC_CHECK_SIZEOF
 AC_TRY_RUN([#include <stdio.h>
 main() {
@@ -98,7 +98,7 @@ vm.fs
 bootstrap-vm.fs
 tools/crosscompile.fs
 ])
-AC_OUTPUT
-
 # expansion of x-host.fs.in now done in Makefile.am
+
+AC_OUTPUT
 
