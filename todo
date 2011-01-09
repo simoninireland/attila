@@ -1,0 +1,15 @@
+Immediate list of to-dos
+------------------------
+
+String constants, including for cross-compilation
+
+Allow constant creation on target during cross-compilation (refactor CROSS-COMPILING? etc)
+
+Better character parsing, for control characters and backslash-escapes
+
+Modular number/word parsing, using hooks again?
+
+Simplify cross-compiler structure (again)
+
+
+$Date: 2011-01-09 22:18:06 +0000 (Sun, 09 Jan 2011) $
