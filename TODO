@@ -1,11 +1,7 @@
 Immediate list of to-dos
 ------------------------
 
-Include paths
-
 String constants, including for cross-compilation
-
-Refactor flat-memory-model.fs, itil.fs and c-itil.fs to minimise duplication
 
 Allow constant creation on target during cross-compilation (refactor CROSS-COMPILING? etc)
 
