@@ -98,6 +98,9 @@ include flat-memory-model.fs
 include itil-compilation.fs
 include words-itil-named.fs
 
+\ continuations
+include c-continuations-runtime.fs
+
 \ hooks
 include hooks-runtime.fs
 include system-hooks.fs
