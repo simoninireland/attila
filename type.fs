@@ -20,8 +20,7 @@
 
 \ Simple unformatted string output
 \
-\ These words are the basis for most string output. ABORT is simply
-\ a TYPE folowed by a warm reset of the interpreter
+\ These words are the basis for most string output
 
 
 \ Display the given string
@@ -35,11 +34,6 @@
     ELSE
 	DROP
     THEN ;
-
-\ Abort to a warm-start with an error message
-: ABORT \ ( addr n -- )
-    TYPE WARM ;
-
 
 
 
