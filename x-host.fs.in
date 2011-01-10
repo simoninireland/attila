@@ -108,12 +108,13 @@ include system-hooks.fs
 \ terminal and file i/o
 include c-fileio.fs
 include c-io.fs
+include type.fs
 
-\ warm-starting
+\ starting and re-starting
 include warm.fs
+include abort.fs
 
 \ parsing and colon-compilation
-include type.fs
 include parser.fs
 include compilation.fs
 include colon.fs
@@ -125,8 +126,6 @@ include include.fs
 
 \ interactive executive
 include executive.fs
-
-\ start-up behaviour
 include startup.fs
 target>
 
