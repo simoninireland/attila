@@ -112,8 +112,6 @@ forth = prelude.fs \
 	counted-loops.fs \
 	continuations.fs \
 	case.fs \
-	chain.fs \
-	hooks-runtime.fs \
 	hooks.fs \
 	conditional-compilation.fs \
 	chars.fs \
@@ -154,10 +152,14 @@ regular = \
 	c-fileio.fs \
 	c-io.fs \
 	ascii.fs \
+	chain.fs \
+	hooks-runtime.fs \
 	system-hooks.fs \
 	flat-memory-model.fs \
 	itil-compilation.fs \
+	words-itil-common.fs \
 	words-itil-named.fs \
+	words-itil-unnamed.fs \
 	warm.fs \
 	abort.fs \
 	type.fs \
