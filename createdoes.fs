@@ -29,7 +29,7 @@
     START-DEFINITION
     ['] (VAR) CFA@ (WORD)
     END-DEFINITION
-    DROP ;
+    DROP ALIGNED ;
     
 \ Create a data block from the next word in the input
 : DATA \ ( "name" -- )
