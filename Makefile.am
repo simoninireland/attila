@@ -159,6 +159,7 @@ regular = \
 	itil-compilation.fs \
 	words-itil-named.fs \
 	warm.fs \
+	abort.fs \
 	type.fs \
 	parser.fs \
 	colon.fs \
