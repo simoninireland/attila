@@ -98,7 +98,7 @@
 \ Strings need to be copied from host memory, hence the explicit use of host C@ and CHARS
 : CSEQCOMPILE, \ ( addr n -- )
     ?DUP 0> IF
-	0 DO
+	1+ 0 DO
 	    DUP [FORTH] C@ CCOMPILE,
 	    [FORTH] /CHAR +
 	LOOP
@@ -109,14 +109,22 @@
 : S, \ ( addr n -- )
     ALIGNED
     DUP C,
-    0 DO
+    1+ 0 DO
 	DUP [FORTH] C@ C,
-	1 [FORTH] CHARS +
-    LOOP DROP ALIGNED ;
+	[FORTH] /CHAR +
+    LOOP DROP ;
+
+\ Similarly for memory movements -- from host addr to target taddr
+: CMOVE ( addr taddr n -- )
+    1+ 0 DO
+	OVER [FORTH] C@ OVER C!
+	/CHAR + SWAP [FORTH] /CHAR + SWAP
+    LOOP 2DROP ;
+: CMOVE> CMOVE ;
 
 \ ALLOTting data space simply data-compiles zeros
 : ALLOT ( n -- )
-    0 DO
+    1+ 0 DO
 	0 C,
     LOOP ;
 
