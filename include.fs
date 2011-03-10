@@ -27,32 +27,15 @@
 \ ---------- Paths ----------
 
 \ The base of the include paths chain
-DATA INCLUDE-PATH /CELL ALLOT
+DATA INCLUDE-PATH 0 ,
 
 \ The buffer for the full file path
 DATA INCLUDE-FILENAME 256 ALLOT
 
-\ Add a path to the include paths chain
-: ADD-INCLUDE-PATH ( addr n -- )
-    \ find latest link in chain
-    INCLUDE-PATH
-    BEGIN
-	DUP @ DUP 0<>
-    WHILE
-	    NIP
-    REPEAT
-    DROP
-
-    \ add the new path to the chain
-    HERE SWAP A!  \ link previous link to HERE
-    0 ,           \ store link
-      S, ;        \ store string
-
 \ Construct a file path from a chain component and a file stem
 \ sd: this includes some pretty heroic stack manipulations it'd be
 \ good to do without...
-: MAKE-INCLUDE-FILENAME ( addr n caddr -- addr' n' )
-    DUP C@ SWAP 1+ SWAP                  ( addr n paddr pn )
+: MAKE-INCLUDE-FILENAME ( addr n addr' n' -- pathaddr pathn )
     2DUP INCLUDE-FILENAME                ( addr n paddr pn paddr pn fn )
     SWAP CMOVE                           ( addr n paddr pn )
     NIP                                  ( addr n pn )
@@ -70,9 +53,11 @@ DATA INCLUDE-FILENAME 256 ALLOT
 : FIND-INCLUDE-FILE ( addr n -- addr' n' -1 | 0 )
     INCLUDE-PATH
     BEGIN
-	@ DUP 0<>
+	NEXT-LINK-IN-CHAIN DUP 0<>
     WHILE
-	    DUP /CELL + 2OVER -ROT MAKE-INCLUDE-FILENAME
+	    DUP >R
+	    DATA-LINK-IN-CHAIN 2OVER MAKE-INCLUDE-FILENAME
+	    R> ROT
 	    2DUP READABLE? IF
 		-ROT DROP 2SWAP 2DROP TRUE EXIT
 	    ELSE
@@ -83,7 +68,6 @@ DATA INCLUDE-FILENAME 256 ALLOT
  
 
 \ ---------- Inclusion ----------
-
 
 \ Find the given file either absolutely or via the include path chain
 \ and load it if found

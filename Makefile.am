@@ -112,6 +112,7 @@ forth = prelude.fs \
 	counted-loops.fs \
 	continuations.fs \
 	case.fs \
+	chain.fs \
 	hooks-runtime.fs \
 	hooks.fs \
 	conditional-compilation.fs \
@@ -181,6 +182,7 @@ test = 	test/core-system-tests.fs \
 	test/loops.fs \
 	test/conditional-compilation.fs \
 	test/hooks.fs \
+	test/chains.fs \
 	test/parser.fs
 
 

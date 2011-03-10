@@ -1,7 +1,7 @@
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -34,6 +34,7 @@ testcases test/loops.fs
 testcases test/continuations.fs
 testcases test/conditional-compilation.fs
 testcases test/hooks.fs
+testcases test/chains.fs
 testcases test/parser.fs
 
 TEST-CAMPAIGN-REPORT

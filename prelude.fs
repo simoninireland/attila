@@ -29,6 +29,9 @@ include comments.fs
 \ dependencies that exist between some of the source files (clearly
 \ indicated in the comments for the files in the distribution).
 
+\ Include file paths
+include include-paths.fs             \ Adding addition include paths
+
 \ Simple control structures
 include conditionals.fs              \ IF ... ELSE ... THEN
 include bootstrap-loops.fs           \ Simple loops, without proper control

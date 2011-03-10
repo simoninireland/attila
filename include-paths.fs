@@ -25,16 +25,4 @@
 
 \ Add a path to the include paths chain
 : ADD-INCLUDE-PATH ( addr n -- )
-    \ find latest link in chain
-    ['] INCLUDE-PATH >BODY
-    BEGIN
-	DUP @ DUP 0<>
-    WHILE
-	    NIP
-    REPEAT
-    DROP
-
-    \ add the new path to the chain
-    HERE SWAP A!  \ link previous link to HERE
-    0 ,           \ store link
-      S, ;        \ store string
+    ['] INCLUDE-PATH >BODY ADD-LINK-TO-CHAIN ;
