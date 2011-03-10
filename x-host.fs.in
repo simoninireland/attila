@@ -74,6 +74,7 @@ include createdoes.fs
 
 \ hooks support
 <cross
+include words-itil-common.fs
 include words-itil-named.fs
 include chain.fs
 include hooks-runtime.fs
@@ -97,6 +98,7 @@ include counted-loops-runtime.fs
 include ascii.fs
 include flat-memory-model.fs
 include itil-compilation.fs
+include words-itil-common.fs
 include words-itil-named.fs
 
 \ continuations
