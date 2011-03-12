@@ -152,6 +152,8 @@ crosscompiler = \
 # host development system additional sources
 host = \
 	target/host/x-host.fs
+	/target/host/vm.fs
+	/target/host/c-main-interactive.h
  
 # system sources, used to cross-compile a basic virtual machine
 regular = \
