@@ -35,15 +35,17 @@
 : NEXT-LINK-IN-CHAIN ( link -- link | 0 )
     @ ;
 
-\ Create a link at the end of a chain, ready to data-compile the data block
-: (NEW-LINK-IN-CHAIN) ( link -- )
+\ Return the address of the last link in a chain
+: (LAST-LINK-IN-CHAIN) ( link -- link' )
     BEGIN
 	DUP NEXT-LINK-IN-CHAIN ?DUP 0<>
     WHILE
 	    NIP
-    REPEAT
+    REPEAT ;
 
-    \ add the new link to the chain
+\ Create a link at the end of a chain, ready to data-compile the data block
+: (NEW-LINK-IN-CHAIN) ( link -- )
+    (LAST-LINK-IN-CHAIN)
     ALIGNED HERE SWAP A!     \ link previous link to HERE
     0 , ;                    \ store blank link
 
