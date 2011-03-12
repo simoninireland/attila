@@ -138,8 +138,7 @@ VARIABLE (SCOMPARER)
 \ Find the first index of the given character in a string, returning
 \ its index or -1 if not found
 : INDEX \ ( addr n c -- i )
-    1 NEGATE
-    3 ROLL 3 ROLL                         \ c -1 addr n 
+    1 NEGATE 2SWAP                        \ c -1 addr n 
     0 DO                                  \ c -1 addr
 	DUP C@ 3 PICK C= IF
 	    SWAP DROP I SWAP
@@ -150,6 +149,40 @@ VARIABLE (SCOMPARER)
     LOOP
     DROP NIP ;
 
+\ Find the last index of the given character in a string, returning
+\ its index or -1 if not found
+: RINDEX \ ( addr n c -- i )
+    ROT                                  \ c addr n
+    1- DUP ROT + SWAP                    \ c addr' n
+    BEGIN
+	DUP 0>=
+    WHILE ( c addr' n )
+	    OVER C@ 3 PICK C= IF
+		>R 2DROP R>
+		EXIT
+	    ELSE
+		1- SWAP /CHAR - SWAP
+	    THEN
+    REPEAT
+    ROT 2DROP ;
+
+\ Split a string at each delimiter character, leaving a list of
+\ addr n pairs and a count on the stack
+: SPLIT ( addr n c -- addrm nm ... addr1 n1 m )
+    1 2SWAP
+    BEGIN                   ( c m addr n )
+	2DUP 5 PICK         ( c m addr n addr n c )
+	RINDEX DUP 0>=  
+    WHILE                   ( c m addr n i )
+	    2DUP - 1- NIP   ( c m addr n sl ) 
+	    >R 2DUP         ( c m addr n addr n )
+	    + R@ - R@       ( c m addr n addr' sl )
+	    5 ROLL 5 ROLL   ( addr' sl c m addr n )
+	    R> - 1-         ( addr' sl c m addr n' )
+	    >R >R 1+ R> R>
+    REPEAT
+    DROP 2SWAP NIP ;
+	    
 \ Translate the characters in addr n1 using the pair of strings
 \ addr2 n2 and addr3 n3, with any character appearing in the second
 \ being replace by the corresponding character in the third, which
