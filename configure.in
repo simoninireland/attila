@@ -94,7 +94,8 @@ AC_CHECK_FUNCS(fgets printf sprintf sscanf)
 
 AC_CONFIG_FILES([
 Makefile
-vm.fs
+target/host/c-main-interactive.h
+target/host/vm.fs
 bootstrap-vm.fs
 tools/crosscompile.fs
 ])
