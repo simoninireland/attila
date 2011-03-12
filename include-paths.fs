@@ -22,7 +22,33 @@
 \
 \ This file allows new paths to be added, which might not be desirable
 \ for run-time use in some cases
+\
+\ Each path is a string, and so can't be longer than 256 characters; the
+\ complete set of paths can be any length.
 
 \ Add a path to the include paths chain
 : ADD-INCLUDE-PATH ( addr n -- )
-    ['] INCLUDE-PATH >BODY ADD-LINK-TO-CHAIN ;
+    INCLUDE-PATH ADD-LINK-TO-CHAIN ;
+
+\ Add a colon-separated list of paths to the include path chain
+: ADD-INCLUDE-PATHS ( addr n -- )
+    [CHAR] : SPLIT
+    BEGIN
+	?DUP 0>
+    WHILE
+	    ROT ADD-INCLUDE-PATH
+	    1-
+    REPEAT ;
+
+\ Display the curent include path as a :-separated string
+: .INCLUDE-PATH ( -- )
+    S" ." TYPE
+    INCLUDE-PATH NEXT-LINK-IN-CHAIN
+    BEGIN
+	?DUP 0<>
+    WHILE
+	    S" :" TYPE
+	    DUP DATA-LINK-IN-CHAIN TYPE
+	    NEXT-LINK-IN-CHAIN
+    REPEAT
+    SPACE ;
