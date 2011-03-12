@@ -21,44 +21,28 @@
 \ Hooks run-time support
 \
 \ The words needed to run hooks. This allows hooks to be cross-compiled.
-\ Changing this code will have a knock-on effect in hooks.fs, especially
-\ on HANG-ON
+\ Hooks use chains to create the linked list of words.
+
 
 \ ---------- Hook construction ----------
 
-\ Traverse a hook to the final link
-: HOOK>LINK ( h -- addr )
-    BEGIN
-	DUP @ DUP 0<>
-    WHILE
-	    NIP
-    REPEAT
-    DROP ;  
-    
 \ Add a word to a hook
 : ADD-TO-HOOK ( xt h -- )
-    HOOK>LINK
-    HERE SWAP A!  \ link previous link to HERE
-    0 ,           \ store link
-      XT, ;       \ store xt of hooked word
-
+    ADD-XT-LINK-TO-CHAIN ;
+    
 
 \ ---------- User-facing words ----------
   
 \ Run the words hung on a hook
 : RUN-HOOK ( h -- f )
     BEGIN
-	@ DUP 0<>
+	NEXT-LINK-IN-CHAIN DUP 0<>
     WHILE
 	    DUP >R
-	    /CELL + @ EXECUTE
+	    DATA-LINK-IN-CHAIN DROP @ EXECUTE
 	    R> SWAP DUP 0<> IF
 		NIP EXIT
 	    ELSE
 		DROP
 	    THEN
     REPEAT ;
-
-\ Un-hang all the words off a hook
-: RESET-HOOK ( h -- )
-    0 SWAP ! ;
