@@ -1,7 +1,7 @@
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -138,10 +138,41 @@ TESTING" String reversing"
 TESTING" Indexing"
 
 S" abhdefghij" STRING1 SMOVE
-{ STRING1 COUNT 97 INDEX -> 0 }
-{ STRING1 COUNT 104 INDEX -> 2 }
-{ STRING1 COUNT 106 INDEX -> 9 }
-{ STRING1 COUNT 4 INDEX -> -1 }
+
+\ forward
+{ STRING1 COUNT [CHAR] a INDEX -> 0 }
+{ STRING1 COUNT [CHAR] b INDEX -> 1 }
+{ STRING1 COUNT [CHAR] h INDEX -> 2 }
+{ STRING1 COUNT [CHAR] j INDEX -> 9 }
+{ STRING1 COUNT [CHAR] k INDEX -> -1 }
+
+\ reverse
+{ STRING1 COUNT [CHAR] a RINDEX -> 0 }
+{ STRING1 COUNT [CHAR] b RINDEX -> 1 }
+{ STRING1 COUNT [CHAR] h RINDEX -> 7 }
+{ STRING1 COUNT [CHAR] j RINDEX -> 9 }
+{ STRING1 COUNT [CHAR] k RINDEX -> -1 }
+
+\ off-end checks
+{ STRING1 COUNT 1-              [CHAR] j INDEX  -> -1 }
+{ STRING1 COUNT 1- SWAP 1+ SWAP [CHAR] a INDEX  -> -1 }
+{ STRING1 COUNT 1-              [CHAR] j RINDEX -> -1 }
+{ STRING1 COUNT 1- SWAP 1+ SWAP [CHAR] a RINDEX -> -1 }
+
+
+TESTING" Splitting"
+
+\ lengths
+{ S" ab:bc" [CHAR] : SPLIT >R 2DROP 2DROP R> -> 2 }
+{ S" ab:bc:" [CHAR] : SPLIT >R 2DROP 2DROP 2DROP R> -> 3 }
+{ S" ab:" [CHAR] : SPLIT >R 2DROP 2DROP R> -> 2 }
+{ S" ab" [CHAR] : SPLIT >R 2DROP R> -> 1 }
+
+\ extraction
+{ S" ab" [CHAR] : SPLIT DROP S" ab" S= -> TRUE }
+{ S" ab:" [CHAR] : SPLIT DROP S" ab" S= ROT 2DROP -> TRUE }
+{ S" ab:" [CHAR] : SPLIT DROP S" ab" S= ROT NIP 0= -> TRUE TRUE }
+{ S" ab:bc" [CHAR] : SPLIT DROP S" ab" S= ROT S" bc" S= -> TRUE TRUE }
 
 
 TESTING" Translating"
