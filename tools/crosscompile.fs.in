@@ -1,5 +1,5 @@
 include bootstrap-prelude.fs
-include @abs_top_builddir@/x-host.fs
+include @abs_top_builddir@/target/host/x-host-initial.fs
 bye
 
 \ $Id$
