@@ -297,7 +297,7 @@ C: 0< ( a -- f )
 ;C
 
 \ Test whether a is less than or equal to zero
-C: 0< ( a -- f )
+C: 0<= ( a -- f )
     f = (a <= 0) ? TRUE : FALSE;
 ;C
 
@@ -307,7 +307,7 @@ C: 0> ( a -- f )
 ;C
 
 \ Test whether a is greater than or equal to zero
-C: 0< ( a -- f )
+C: 0>= ( a -- f )
     f = (a >= 0) ? TRUE : FALSE;
 ;C
 
