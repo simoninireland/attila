@@ -1,0 +1,86 @@
+\ $Id$
+
+\ This file is part of Attila, a retargetable threaded interpreter
+\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ All rights reserved.
+\
+\ Attila is free software; you can redistribute it and/or
+\ modify it under the terms of the GNU General Public License
+\ as published by the Free Software Foundation; either version 2
+\ of the License, or (at your option) any later version.
+\
+\ Attila is distributed in the hope that it will be useful,
+\ but WITHOUT ANY WARRANTY; without even the implied warranty of
+\ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\ GNU General Public License for more details.
+\
+\ You should have received a copy of the GNU General Public License
+\ along with this program; if not, write to the Free Software
+\ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+\ Virtual machine description, host system
+\
+\ This file is pre-processed to generate the necessary
+\ definitions, typically in C. It should contain only
+\ simple code such as CONSTANT and USER declarations.
+\
+\ To cross-compile to other targets, use this file as a model
+\ and define the various elements. You *must* make sure that the
+\ cell size and character size are right (long ints for C-based
+\ compilations), and that the endianness of the process is correct.
+\ You can reduce the stack sizes, but development systems will require
+\ a data stack of around 50 to accommodate some of the compiler
+\ structures.
+
+\ Core sizes
+@CELL_SIZE@ CONSTANT /CELL
+@CHARACTER_SIZE@ CONSTANT /CHAR
+
+\ Endianness of the processor:
+\   0 = little-endian
+\   1 = big-endian
+@BIGENDIAN@ CONSTANT BIGENDIAN?
+
+\ Sizes
+64 1024 * CONSTANT IMAGE-SIZE           \ initial image size in cells
+50        CONSTANT DATA-STACK-SIZE      \ data stack size in cells
+50        CONSTANT RETURN-STACK-SIZE    \ return stack size in cells
+25        CONSTANT USER-SIZE            \ number of user variables allowed
+256       CONSTANT TIB-SIZE             \ terminal input buffer size
+
+\ Status masks
+1 CONSTANT IMMEDIATE-MASK          \ IMMEDIATE words, executed even when compiling
+2 CONSTANT REDIRECTABLE-MASK       \ REDIRECTABLE words, amenable to DOES>
+4 CONSTANT HIDDEN-MASK             \ hidden words that FIND won't find
+
+\ States
+0 CONSTANT INTERPRETATION-STATE    \ interpretation state
+1 CONSTANT COMPILATION-STATE       \ (standard) compilation state
+
+\ User variables
+ 0 USER (START)               \ xt of the word that restarts the system
+ 1 USER EXECUTIVE             \ xt of outer executive
+ 2 USER (DATA-STACK)          \ address of the base of the data stack
+ 3 USER (RETURN-STACK)        \ address of the base of the return stack
+ 4 USER (TOP)                 \ first free code address
+ 5 USER (CEILING)             \ highest code address currently available
+ 6 USER (HERE)                \ first free data address
+ 7 USER (THERE)               \ highest data address currently available
+ 8 USER STATE                 \ compiler state
+ 9 USER BASE                  \ number base
+10 USER INPUTSOURCE           \ pointer to internal structure for input
+11 USER OUTPUTSINK            \ pointer to internal structure for output
+12 USER TIB                   \ address of the base of the terminal input buffer
+13 USER >IN                   \ current input offset within the TIB
+14 USER LAST                  \ xt of the most-recently-defined word
+15 USER TRACE                 \ trace (debugging) flag
+16 USER CURRENT               \ the current wordlist receiving definitions
+17 USER (IMAGE-NAME)          \ pointer to counted string holding image name
+
+\ Truth values
+0        CONSTANT FALSE
+0 INVERT CONSTANT TRUE
+
+\ Null pointers
+0 CONSTANT NULL
+
