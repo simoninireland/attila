@@ -101,10 +101,10 @@
     ." // " TIMESTAMP CR CR
 
     ." // VM definition" CR
-    S" vm.fs" GENERATE-VM CR CR
+    CROSS-COMPILER-TARGET-VM-FILE GENERATE-VM CR CR
 
     ." // Architecture definition" CR
-    ." #include " QUOTES ." x-host.h" QUOTES CR CR
+    ." #include " QUOTES CROSS-COMPILER-TARGET-MAIN-FILE TYPE QUOTES CR CR
 
     ." // Primitives table" CR
     GENERATE-PRIMITIVE-DECLARATIONS CR CR
@@ -120,8 +120,8 @@
 
 
 \ Save the image to the given file
-: SAVE-IMAGE-AS \ ( "name" -- )
-    PARSE-WORD 2DUP W/O CREATE-FILE IF
+: SAVE-IMAGE ( addr n -- )
+    2DUP W/O CREATE-FILE IF
 	DROP
 	TYPE SPACE S" cannot be opened" ABORT
     ELSE
