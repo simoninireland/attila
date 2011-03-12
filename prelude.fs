@@ -29,9 +29,6 @@ include comments.fs
 \ dependencies that exist between some of the source files (clearly
 \ indicated in the comments for the files in the distribution).
 
-\ Include file paths
-include include-paths.fs             \ Adding addition include paths
-
 \ Simple control structures
 include conditionals.fs              \ IF ... ELSE ... THEN
 include bootstrap-loops.fs           \ Simple loops, without proper control
@@ -88,6 +85,9 @@ include records.fs                   \ Record types with named fields
 include file.fs                      \ I/O re-direction
 include evaluate.fs                  \ Execute code from strings
 \ include file-templates.fs        \ File templates
+
+\ Include file path manipulation
+include include-paths.fs             \ Adding addition include paths
 
 \ Foreign language support
 include c.fs                         \ C definitions (check for definitions)
