@@ -22,11 +22,11 @@
 
 \ Set up host description
 include cross-compiler/cross-target.fs
-S" host"                                         SET-CROSS-COMPILER-TARGET-NAME
-S" @abs_builddir@/target/host/vm.fs"             SET-CROSS-COMPILER-TARGET-VM-FILE
-S" @abs_builddir@/target/host/x-host.h"          SET-CROSS-COMPILER-TARGET-MAIN-FILE
-S" target/host:@datadir@:@datadir@/target/host"  SET-CROSS-COMPILER-TARGET-INCLUDE-PATH
-S" @abs_builddir@/attila.c"                      SET-CROSS-COMPILER-OUTPUT-FILE
+S" host"                                            SET-CROSS-COMPILER-TARGET-NAME
+S" @abs_builddir@/target/host/vm.fs"                SET-CROSS-COMPILER-TARGET-VM-FILE
+S" @abs_builddir@/target/host/c-main-interactive.h" SET-CROSS-COMPILER-TARGET-MAIN-FILE
+S" target/host:@datadir@:@datadir@/target/host"     SET-CROSS-COMPILER-TARGET-INCLUDE-PATH
+S" $abs_builddir@/attila.c"                         SET-CROSS-COMPILER-OUTPUT-FILE
 
 \ Run the standard image builder
 include cross-compiler/x-standard.fs
