@@ -3,11 +3,10 @@ Immediate things to do
 
 - Fix duplications in c-itil.fs and other itil-* files
 
-- Change hooks to use chains
-
 - Confirm ability to cross-compile without names in headers
 
-- Re-structure files to separate-out differet targets 
+- Refactor memory models to allow bounded and unbounded
 
+- Add Forth "environment" feature checks
 
 $Date$
