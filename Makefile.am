@@ -1,7 +1,7 @@
 # $Id$
 
 # This file is part of Attila, a retargetable threaded interpreter
-# Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+# Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 # All rights reserved.
 #
 # Attila is free software; you can redistribute it and/or
@@ -27,7 +27,10 @@ bin_PROGRAMS = bootattila attila
 # ----- Supporting programs and scripts -----
 
 # tools used to bootstrap system
-EXTRA_DIST = tools/primgen \
+EXTRA_DIST = \
+	target/host/x-host-initial.fs.in\
+	target/host/x-host.fs.in\
+	tools/primgen \
 	tools/crosscompile.fs \
 	tools/test.fs
 
@@ -48,8 +51,8 @@ bootattila_SOURCES = vm.h \
 nodist_bootattila_SOURCES = primitives.c
 
 # cross-compiler sources and generated VM
-attila_SOURCES = x-host.h
-nodist_attila_SOURCES = attila.c x-host.fs
+attila_SOURCES = 
+nodist_attila_SOURCES = attila.c
 
 
 # ----- The bootstrapped interpreter primitives file -----
@@ -64,14 +67,19 @@ primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
 # substitutions for directories in host cross-compiler driver
 dirs = sed \
 	-e 's,@datadir\@,$(pkgdatadir),g' \
+	-e 's,@abs_srcdir\@,$(abs_srcdir),g' \
 	-e 's,@abs_builddir\@,$(abs_builddir),g'
 
-# cross-compiler driver
-x-host.fs: x-host.fs.in
-	$(dirs) $(srcdir)/x-host.fs.in >x-host.fs
+# host development system initial cross-compiler driver
+target/host/x-host-initial.fs: target/host/x-host-initial.fs.in
+	$(dirs) $(srcdir)/target/host/x-host-initial.fs.in >$(abs_builddir)/target/host/x-host-initial.fs
+
+# host development system general cross-compiler driver
+target/host/x-host.fs: target/host/x-host.fs.in
+	$(dirs) $(srcdir)/target/host/x-host.fs.in >$(abs_builddir)/target/host/x-host.fs
 
 # cross-compiled system image
-attila.c: bootattila $(regular) x-host.fs
+attila.c: bootattila $(regular) target/host/x-host-initial.fs
 	cd $(srcdir) && $(abs_builddir)/bootattila <$(abs_builddir)/tools/crosscompile.fs
 
 
@@ -102,7 +110,6 @@ forth = prelude.fs \
 	stringconstants.fs \
 	values.fs \
 	defer.fs \
-	vm.fs \
 	bootstrap-loops.fs \
 	stacks.fs \
 	cs-stack.fs \
@@ -130,6 +137,7 @@ forth = prelude.fs \
 
 # cross-compiler
 crosscompiler = \
+	cross-compiler/cross-target.fs \
 	cross-compiler/cross-compiler.fs \
 	cross-compiler/cross-locator.fs \
 	cross-compiler/cross-flat-memory-model.fs \
@@ -138,12 +146,15 @@ crosscompiler = \
 	cross-compiler/cross-colon.fs \
 	cross-compiler/cross-c-vm.fs \
 	cross-compiler/cross-c-generate.fs \
-	cross-compiler/cross-environments.fs
+	cross-compiler/cross-environments.fs \
+	cross-compiler/x-standard.fs
 
+# host development system additional sources
+host = \
+	target/host/x-host.fs
+ 
 # system sources, used to cross-compile a basic virtual machine
 regular = \
-	x-host.h \
-	x-host.fs.in \
 	c-core.fs \
 	c-flat-memory-model-runtime.fs \
 	c-itil.fs \
@@ -184,6 +195,7 @@ test = 	test/core-system-tests.fs \
 	test/formatting.fs \
 	test/loops.fs \
 	test/conditional-compilation.fs \
+	test/continuations.fs \
 	test/hooks.fs \
 	test/chains.fs \
 	test/parser.fs
@@ -191,8 +203,10 @@ test = 	test/core-system-tests.fs \
 
 # ----- Distribution -----
 
-nobase_dist_pkgdata_DATA = $(forth) $(crosscompiler) $(regular) $(test)
+nobase_dist_pkgdata_DATA = $(forth) $(crosscompiler) $(host) $(regular) $(test)
 nobase_dist_doc_DATA = attila.html
 DISTCLEANFILES = primitives.c attila.c
-CLEANFILES = primitives.c attila.c x-host.fs
+CLEANFILES = \
+	primitives.c attila.c \
+	target/host/c-main-interactive.h target/host/x-host-initial.fs target/host/vm.fs
 
