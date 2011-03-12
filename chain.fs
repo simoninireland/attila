@@ -35,10 +35,8 @@
 : NEXT-LINK-IN-CHAIN ( link -- link | 0 )
     @ ;
 
-\ Add a link to a chain. The data added to the link is given by the
-\ address and count pair
-: ADD-LINK-TO-CHAIN ( addr n link -- )
-    \ find latest link in chain
+\ Create a link at the end of a chain, ready to data-compile the data block
+: (NEW-LINK-IN-CHAIN) ( link -- )
     BEGIN
 	DUP NEXT-LINK-IN-CHAIN ?DUP 0<>
     WHILE
@@ -47,10 +45,20 @@
 
     \ add the new link to the chain
     ALIGNED HERE SWAP A!     \ link previous link to HERE
-    0 ,                      \ store blank link
+    0 , ;                    \ store blank link
+
+\ Add a link to a chain. The data added to the link is given by the
+\ address and count pair
+: ADD-LINK-TO-CHAIN ( addr n link -- )
+    (NEW-LINK-IN-CHAIN)
     DUP ,                    \ store the size
     HERE OVER ALLOT          \ allot space for data block
     SWAP CMOVE ;             \ store the data block
+
+\ Common typed links
+: ADD-CELL-LINK-TO-CHAIN ( v link -- ) (NEW-LINK-IN-CHAIN) /CELL , , ;
+: ADD-XT-LINK-TO-CHAIN ( xt link -- )  (NEW-LINK-IN-CHAIN) /CELL , XT, ;
+: ADD-A-LINK-TO-CHAIN ( addr link -- ) (NEW-LINK-IN-CHAIN) /CELL , A, ;
 
 \ Return the size and address of a link data block
 : DATA-LINK-IN-CHAIN ( link -- addr n )
