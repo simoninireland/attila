@@ -108,7 +108,7 @@ DEFER (WORD)
 DEFER CTCOMPILE,
 DEFER NEXT,
 
-.( Loading target vm description...)
+.( Loading target VM description...)
 : CONSTANT
     CREATE [FORTH] ,
   DOES> [FORTH] @ ;
@@ -119,7 +119,7 @@ DEFER NEXT,
     CREATE [FORTH] ,
   DOES> [FORTH] @ [CROSS] USERVAR ;
 
-include vm.fs
+CROSS-COMPILER-TARGET-VM-FILE INCLUDED
 WORDLISTS>
 
 .( Loading image manager...)
