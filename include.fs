@@ -32,21 +32,22 @@ DATA INCLUDE-PATH 0 ,
 \ The buffer for the full file path
 DATA INCLUDE-FILENAME 256 ALLOT
 
-\ Construct a file path from a chain component and a file stem
-\ sd: this includes some pretty heroic stack manipulations it'd be
-\ good to do without...
-: MAKE-INCLUDE-FILENAME ( addr n addr' n' -- pathaddr pathn )
-    2DUP INCLUDE-FILENAME                ( addr n paddr pn paddr pn fn )
-    SWAP CMOVE                           ( addr n paddr pn )
-    NIP                                  ( addr n pn )
-    S" /"                 \ sd: should reflect system separator
-    2DUP                                 ( addr n pn saddr sn saddr sn )
-    4 PICK INCLUDE-FILENAME + SWAP CMOVE ( addr n pn saddr sn )
-    NIP +                                ( addr n tn )
-    ROT 2DUP                             ( tn addr n addr n )
-    4 PICK INCLUDE-FILENAME + SWAP CMOVE ( tn addr n )
-    NIP + INCLUDE-FILENAME SWAP ;
+\ Add a path component
+: (ADD-INCLUDE-FILE-COMPONENT) ( addr n -- )
+    INCLUDE-FILENAME /CHAR + DUP /CHAR - C@ 2SWAP 
+    2OVER /CHAR * +
+    SWAP DUP >R
+    CMOVE
+    R> + SWAP /CHAR - C! ;
 
+\ Construct a file path from a chain component and a file stem
+: (MAKE-INCLUDE-FILENAME) ( addr n addr' n' -- pathaddr pathn )
+    0 INCLUDE-FILENAME C!
+    2SWAP (ADD-INCLUDE-FILE-COMPONENT)   \ the path
+    S" /" (ADD-INCLUDE-FILE-COMPONENT)   \ separator -- sd: should reflect system path separator
+          (ADD-INCLUDE-FILE-COMPONENT)   \ the file stem
+    INCLUDE-FILENAME /CHAR + DUP /CHAR - C@ ; 
+    
 \ Traverse the chain concatenating the given file name with
 \ the include path until we find one that exists, returning its
 \ full path
@@ -56,7 +57,7 @@ DATA INCLUDE-FILENAME 256 ALLOT
 	NEXT-LINK-IN-CHAIN DUP 0<>
     WHILE
 	    DUP >R
-	    DATA-LINK-IN-CHAIN 2OVER MAKE-INCLUDE-FILENAME
+	    DATA-LINK-IN-CHAIN 2OVER (MAKE-INCLUDE-FILENAME)
 	    R> ROT
 	    2DUP READABLE? IF
 		-ROT DROP 2SWAP 2DROP TRUE EXIT
