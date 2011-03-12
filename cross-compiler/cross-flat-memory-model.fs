@@ -131,8 +131,8 @@
 
 \ ---------- High-level image initialisation and finalisation ----------
 
-\ Initialise the image
-: INITIALISE-IMAGE
+\ Initialise the image, recording its name
+: INITIALISE-IMAGE ( addr n -- )
     (INITIALISE-IMAGE)
 
     \ allocate user variables
@@ -144,14 +144,19 @@
     USER-SIZE  /CELL * (TOP)     A!
     IMAGE-SIZE /CELL * (CEILING) A!
     0 LAST A!
+
+    \ store the image name
+    ALIGNED HERE (IMAGE-NAME) A!
+    S,
     
     \ initialise stacks and TIB
-    HERE (DATA-STACK) A!           \ data stack 
+    ALIGNED HERE (DATA-STACK) A!           \ data stack 
     DATA-STACK-SIZE CELLS   ALLOT
-    HERE (RETURN-STACK) A!         \ return stack 
+    ALIGNED HERE (RETURN-STACK) A!         \ return stack 
     RETURN-STACK-SIZE CELLS ALLOT
-    HERE TIB A!                    \ terminal input buffer
-    TIB-SIZE                ALLOT ;
+    ALIGNED HERE TIB A!                    \ terminal input buffer
+    TIB-SIZE                ALLOT
+    ALIGNED ;
 
 \ Finalise the image prior to being output
 : FINALISE-IMAGE
