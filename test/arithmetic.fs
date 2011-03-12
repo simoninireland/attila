@@ -140,6 +140,13 @@ TESTING" Arithmetic comparisons"
 { 1 0<       -> FALSE }
 { MAX-INT 0< -> FALSE }
 
+{ 0 0<=  -> TRUE }
+{ 1 0<=  -> FALSE }
+{ -1 0<= -> TRUE }
+{ 0 0>=  -> TRUE }
+{ 1 0>=  -> TRUE }
+{ -1 0>= -> FALSE }
+
 { 0 1 <             -> TRUE }
 { 1 2 <             -> TRUE }
 { -1 0 <            -> TRUE }
