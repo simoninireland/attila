@@ -64,18 +64,23 @@
 	READ-CHAR DROP
     AGAIN ;
 
-\ Consume all leading whitespace in the TIB
-: CONSUME-WS ( -- )
+\ Consume all leading characters in a given character class in the TIB. The
+\ character class is given by a classifying word that returns a flag given
+\ a character
+: CONSUME-CLASS ( xt -- )
     BEGIN
 	PEEK-CHAR ?DUP 0= IF
-	    LEAVE
+	    DROP LEAVE
 	ELSE
-	    WS? NOT IF
-		LEAVE
+	    OVER EXECUTE NOT IF
+		DROP LEAVE
 	    THEN
 	THEN
 	READ-CHAR DROP
     AGAIN ;
+
+\ Consume all leading whitespace in the TIB
+: CONSUME-WS ( -- ) ['] WS? CONSUME-CLASS ;
 
 
 \ ---------- Words ----------
