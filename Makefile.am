@@ -151,9 +151,9 @@ crosscompiler = \
 
 # host development system additional sources
 host = \
-	target/host/x-host.fs
-	/target/host/vm.fs
-	/target/host/c-main-interactive.h
+	target/host/x-host.fs \
+	target/host/vm.fs \
+	target/host/c-main-interactive.h
  
 # system sources, used to cross-compile a basic virtual machine
 regular = \
@@ -207,8 +207,7 @@ test = 	test/core-system-tests.fs \
 
 nobase_dist_pkgdata_DATA = $(forth) $(crosscompiler) $(host) $(regular) $(test)
 nobase_dist_doc_DATA = attila.html
-DISTCLEANFILES = primitives.c attila.c
-CLEANFILES = \
-	primitives.c attila.c \
-	target/host/c-main-interactive.h target/host/x-host-initial.fs target/host/vm.fs
+DISTCLEANFILES = primitives.c attila.c target/host/x-host-initial.fs
+CLEANFILES = primitives.c attila.c
+
 
