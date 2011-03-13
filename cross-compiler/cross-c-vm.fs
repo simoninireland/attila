@@ -1,7 +1,7 @@
 \ $Id: cross-vm.fs 548 2010-09-01 09:15:49Z sd $
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -23,8 +23,8 @@
 \ Translate characters unsafe for C
 : SAFE-IDENTIFIER \ ( addr n -- )
     2DUP
-    S" -><+@;:[]{}()!?/"
-    S" ________________" TRANSLATE ;
+    S" -><+@;:[]{}()!?/*^.,"
+    S" ____________________" TRANSLATE ;
 
 \ Parse a word and make it a safe C identifier
 : PARSE-IDENTIFIER \ ( "name" -- addr n )
