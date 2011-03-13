@@ -1,7 +1,7 @@
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -19,16 +19,52 @@
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 \ The standard outer executive
-\ sd: this could be modularised to allow easier modification and hooking
+\
+\ Unlike the traditional outer executive, Attila's version is modularised
+\ to allow code to try to parse the input stream. The default version
+\ tests for words (executed or compiled depending on the interpretation state
+\ and the word's immediacy) and numbers (stacked or compiled as literals).
+\ Adding a new type such as floats requires defining a hook word and hanging
+\ it on the PARSE-WORD-HOOK. Such parsers need to be written carefully with
+\ respect to their stack effects, as they're running within a larger loop.
+\ If running the hook gets to the end without an early exit, the element
+\ is considered unparsed.
+\
+\ sd: handling strings here would be good.....
 
-\ ---------- Parsing words ----------
 
 \ Hook for word parsers
 HOOK PARSE-WORD-HOOK
 
+\ ---------- Parsing components----------
 
-\ ---------- Parsing numbers ----------
+\ Words, compile or execute depending on mode and immediacy
+:NONAME ( addr n -- -1 | addr n 0 )
+    2DUP FIND ?DUP IF
+	2SWAP 2DROP
+	0< INTERPRETING? OR IF
+	    EXECUTE
+	ELSE
+	    CTCOMPILE,
+	THEN
+	TRUE
+    ELSE
+	FALSE
+    THEN ;
+HANG-ON PARSE-WORD-HOOK
 
+\ Numbers, left on stack or compiled as literals
+:NONAME ( addr n -- -1 | addr n 0 )
+    2DUP NUMBER? IF
+	ROT 2DROP
+	INTERPRETING? NOT IF
+	    POSTPONE LITERAL
+	THEN
+	TRUE
+    ELSE
+	FALSE
+    THEN ;
+HANG-ON PARSE-WORD-HOOK
 
 
 \ ---------- The executive ----------
@@ -37,22 +73,8 @@ HOOK PARSE-WORD-HOOK
 : OUTER \ ( -- )
     BEGIN
 	PARSE-WORD ?DUP IF
-	    2DUP FIND ?DUP IF
-		2SWAP 2DROP
-		0< INTERPRETING? OR IF
-		    EXECUTE
-		ELSE
-		    CTCOMPILE,
-		THEN
-	    ELSE
-		2DUP NUMBER? IF
-		    ROT 2DROP
-		    INTERPRETING? NOT IF
-			POSTPONE LITERAL
-		    THEN
-		ELSE
-		    TYPE S" ?" ABORT
-		THEN
+	    PARSE-WORD-HOOK RUN-HOOK NOT IF
+		TYPE S" ?" ABORT
 	    THEN
 	THEN
     EXHAUSTED? UNTIL ;
