@@ -1,7 +1,7 @@
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -118,7 +118,15 @@
     ." // Initial image" CR
     EMIT-IMAGE CR CR ;
 
-
+\ Summarise the image
+: B>KB ( nb -- nkb )
+    1024 /MOD SWAP IF 1+ THEN ;
+: SUMMARISE-IMAGE ( -- )
+    ." Image: " CROSS-COMPILER-TARGET-NAME TYPE SPACE ." (" CROSS-COMPILER-OUTPUT-FILE TYPE ." )" CR
+    ." Image size: " IMAGE-SIZE . SPACE ." cells, " IMAGE-SIZE [CROSS] /CELL * B>KB . ." Kb" CR  
+    ." Dictionary size: " IMAGECELLS . SPACE ." cells, " IMAGECELLS [CROSS] /CELL * B>KB . SPACE ." Kb" CR
+    ." Primitives: " PRIMITIVES LIST-LENGTH . CR ;
+    
 \ Save the image to the given file
 : SAVE-IMAGE ( addr n -- )
     2DUP W/O CREATE-FILE IF
@@ -129,4 +137,5 @@
 	(<TO)
 	GENERATE-IMAGE
 	TO>
-    THEN ;
+    THEN
+    CR SUMMARISE-IMAGE ;
