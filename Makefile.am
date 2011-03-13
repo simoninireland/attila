@@ -208,6 +208,8 @@ test = 	test/core-system-tests.fs \
 nobase_dist_pkgdata_DATA = $(forth) $(crosscompiler) $(host) $(regular) $(test)
 nobase_dist_doc_DATA = attila.html
 DISTCLEANFILES = primitives.c attila.c target/host/x-host-initial.fs
-CLEANFILES = primitives.c attila.c
+CLEANFILES = \
+	primitives.c attila.c \
+	target/host/x-host-initial.fs target/host/x-host.fs target/host/c-main-interactive.h	
 
 
