@@ -163,12 +163,12 @@ S" abhdefghij" STRING1 SMOVE
 TESTING" Splitting"
 
 \ lengths
-{ S" ab:bc" [CHAR] : SPLIT >R 2DROP 2DROP R> -> 2 }
-{ S" ab:bc:" [CHAR] : SPLIT >R 2DROP 2DROP 2DROP R> -> 3 }
-{ S" ab:" [CHAR] : SPLIT >R 2DROP 2DROP R> -> 2 }
-{ S" ab" [CHAR] : SPLIT >R 2DROP R> -> 1 }
+{ S" ab:bc" [CHAR] : SPLIT ROT 2DROP ROT 2DROP -> 2 }
+{ S" ab:bc:" [CHAR] : SPLIT ROT 2DROP ROT 2DROP ROT 2DROP -> 3 }
+{ S" ab:" [CHAR] : SPLIT ROT 2DROP ROT 2DROP -> 2 }
+{ S" ab" [CHAR] : SPLIT ROT 2DROP -> 1 }
 
-\ extraction
+\ \ extraction
 { S" ab" [CHAR] : SPLIT DROP S" ab" S= -> TRUE }
 { S" ab:" [CHAR] : SPLIT DROP S" ab" S= ROT 2DROP -> TRUE }
 { S" ab:" [CHAR] : SPLIT DROP S" ab" S= ROT NIP 0= -> TRUE TRUE }
