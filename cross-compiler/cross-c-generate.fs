@@ -122,9 +122,15 @@
 : B>KB ( nb -- nkb )
     1024 /MOD SWAP IF 1+ THEN ;
 : SUMMARISE-IMAGE ( -- )
-    ." Image: " CROSS-COMPILER-TARGET-NAME TYPE SPACE ." (" CROSS-COMPILER-OUTPUT-FILE TYPE ." )" CR
+    ." Image name: " CROSS-COMPILER-TARGET-NAME TYPE SPACE ." (" CROSS-COMPILER-OUTPUT-FILE TYPE ." )" CR
+    ." VM characteristics: " [CROSS] /CELL . SPACE ." bytes/cell, "
+                             [CROSS] BIGENDIAN? IF ." big-endian" ELSE ." little-endian" THEN CR
+    20 SPACES                [CROSS] /CHAR . SPACE ." bytes/char" CR
+    20 SPACES                [CROSS] DATA-STACK-SIZE . SPACE ." cell data stack" CR
+    20 SPACES                [CROSS] RETURN-STACK-SIZE . SPACE ." data data stack" CR
+    20 SPACES                [CROSS] TIB-SIZE . SPACE ." byte terminal input buffer" CR
     ." Image size: " IMAGE-SIZE . SPACE ." cells, " IMAGE-SIZE [CROSS] /CELL * B>KB . ." Kb" CR  
-    ." Dictionary size: " IMAGECELLS . SPACE ." cells, " IMAGECELLS [CROSS] /CELL * B>KB . SPACE ." Kb" CR
+    ." Initial dictionary size: " IMAGECELLS . SPACE ." cells, " IMAGECELLS [CROSS] /CELL * B>KB . SPACE ." Kb" CR
     ." Primitives: " PRIMITIVES LIST-LENGTH . CR ;
     
 \ Save the image to the given file
