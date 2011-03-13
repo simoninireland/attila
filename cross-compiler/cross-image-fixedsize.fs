@@ -48,9 +48,11 @@ VARIABLE HIGHEST-MODIFIED-IMAGE-ADDRESS
 	DUP HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] !
     THEN ;
 
-\ Return the number of cells the image actually contains
+\ Return the number of cells and bytes the image actually contains
+: IMAGEBYTES \ ( -- n )
+    HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] @ ;
 : IMAGECELLS \ ( -- n )
-    HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] @ /CELL /MOD SWAP IF 1+ THEN ;
+    IMAGEBYTES /CELL /MOD SWAP IF 1+ THEN ;
 
 \ Return the host address of the given target image address
 : T> \ ( taddr -- addr )
