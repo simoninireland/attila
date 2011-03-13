@@ -9,4 +9,8 @@ Immediate things to do
 
 - Add Forth "environment" feature checks
 
+- Skip noname words in .WORDS, don't introduce extra spaces
+
+- Image summary from cross-compiler to main code?
+
 $Date$
