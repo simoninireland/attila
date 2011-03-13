@@ -128,6 +128,7 @@
     20 SPACES                [CROSS] /CHAR . SPACE ." bytes/char" CR
     20 SPACES                [CROSS] DATA-STACK-SIZE . SPACE ." cell data stack" CR
     20 SPACES                [CROSS] RETURN-STACK-SIZE . SPACE ." data data stack" CR
+    20 SPACES                [CROSS] USER-SIZE . SPACE ." user variables" CR
     20 SPACES                [CROSS] TIB-SIZE . SPACE ." byte terminal input buffer" CR
     ." Image size: " IMAGE-SIZE . SPACE ." cells, " IMAGE-SIZE [CROSS] /CELL * B>KB . ." Kb" CR  
     ." Initial dictionary size: " IMAGECELLS . SPACE ." cells, " IMAGECELLS [CROSS] /CELL * B>KB . SPACE ." Kb" CR
