@@ -73,7 +73,7 @@ C: -ROT ( a b c -- b c a )
 \ Roll the stack clockwise. 0 ROLL is a no-op; 1 ROLL is SWAP;
 \ 2 ROLL is ROT
 C: ROLL ( n -- )
-  int t;
+  CELL t;
   int i;
 
   t = *(DATA_STACK_ITEM(0));
@@ -85,7 +85,7 @@ C: ROLL ( n -- )
 \ Roll the stack counter-clockwise. 0 ROLL is a no-op; 1 ROLL is SWAP;
 \ 2 ROLL is -ROT
 C: -ROLL ( n -- )
-  int b;
+  CELL b;
   int i;
 
   b = *(DATA_STACK_ITEM(n));
