@@ -1,7 +1,7 @@
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -28,10 +28,12 @@
 \
 \ Each word hung on a hook should have stack comment ( ... -- ... f ),
 \ leaving a flag on the stack indicating whether the hook should keep
-\ running words. A flag of TRUE stops execution. The flag returned by the
+\ running words. A flag of TRUE stops execution: this should be read as
+\ "this hook call has now been fully dealt with". The flag returned by the
 \ last word run is left on the stack after running the hook. This means
 \ that hooks can be used to "try" operations, with the hook succeeding
-\ as soon as a word returns TRUE. Hooked words are run oldest-to-youngest.
+\ as soon as a word returns TRUE, and a flag of FALSE meas that there
+\ is still "work to do" in some sense. Hooked words are run oldest-to-youngest.
 \
 \ Hooks are dynamic, so the structure is maintained in data memory.
 \ The run-time component is in hooks-runtime.fs
