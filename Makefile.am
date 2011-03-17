@@ -221,5 +221,6 @@ install-data-hook:
 	chmod a+x $(pkgdatadir)/target
 	chmod a+x $(pkgdatadir)/target/host
 	chmod a+x $(pkgdatadir)/cross-compiler
+	chmod a+x $(pkgdatadir)/test
 
 
