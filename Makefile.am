@@ -205,11 +205,21 @@ test = 	test/core-system-tests.fs \
 
 # ----- Distribution -----
 
+# Distributed files
 nobase_dist_pkgdata_DATA = $(forth) $(crosscompiler) $(host) $(regular) $(test)
 nobase_dist_doc_DATA = attila.html
+
+# Files to be cleaned
 DISTCLEANFILES = primitives.c attila.c target/host/x-host-initial.fs
 CLEANFILES = \
 	primitives.c attila.c \
 	target/host/x-host-initial.fs target/host/x-host.fs target/host/c-main-interactive.h	
+
+# Make sure the data directories are readable by everyone
+install-data-hook:
+	chmod a+x $(pkgdatadir)
+	chmod a+x $(pkgdatadir)/target
+	chmod a+x $(pkgdatadir)/target/host
+	chmod a+x $(pkgdatadir)/cross-compiler
 
 
