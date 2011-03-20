@@ -211,9 +211,7 @@ nobase_dist_doc_DATA = attila.html
 
 # Files to be cleaned
 DISTCLEANFILES = primitives.c attila.c target/host/x-host-initial.fs
-CLEANFILES = \
-	primitives.c attila.c \
-	target/host/x-host-initial.fs target/host/x-host.fs target/host/c-main-interactive.h	
+CLEANFILES = primitives.c attila.c
 
 # Make sure the data directories are readable by everyone
 install-data-hook:
