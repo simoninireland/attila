@@ -284,13 +284,24 @@ ROOT-WORDLIST  PARSE-WORD ROOT  (VOCABULARY)
 FORTH-WORDLIST PARSE-WORD FORTH (VOCABULARY)
 
 
-\ ---------- Set-up ----------
+\ ---------- Hooks ----------
 
-\ Update current wordlist with each new word defined by chaining
-\ the appropriate behaviour onto the (END-DEFINITION) hook
-: (END-DEFINITION-WORDLISTS) \ ( xt -- xt 0 )
-    DUP GET-CURRENT >WID FALSE ;
-' (END-DEFINITION-WORDLISTS) (END-DEFINITION) ADD-TO-HOOK
+\ At warm-start, make sure we have a known wordlist configuration
+:NONAME ( -- 0 )
+    ONLY FORTH ALSO DEFINITIONS
+    FALSE ;
+HANG-ON WARMSTART-HOOK
+
+\ At the end of a definition, update the current wordlist's last xt
+\ reference
+:NONAME ( xt -- xt 0 )
+    DUP GET-CURRENT >WID
+    FALSE ;
+HANG-ON (END-DEFINITION)
+\ No :-definitions after this point until we've set up the  wordlists
+
+
+\ ---------- Set-up ----------
 
 \ Patch the Forth wordlist to include everything defined up to this point,
 \ which includes the root wordlist
