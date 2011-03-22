@@ -126,7 +126,7 @@
 \ The cross-executive.
 : CROSS-OUTER ( -- )
     BEGIN
-	PARSE-WORD ?DUP IF
+	PARSE-WORD DUP IF
 	    INTERPRETING? IF
 		2DUP FIND IF
 		    \ found, execute
@@ -218,8 +218,9 @@
 		    ENDCASE
 		THEN
 	    THEN
+	    TRUE
 	THEN
-    EXHAUSTED? UNTIL ;
+    NOT UNTIL ;
 
 \ Compile a "-delimited string from the input source as a literal
 : S" \ ( "string" -- )
