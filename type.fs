@@ -21,7 +21,10 @@
 \ Simple unformatted string output
 \
 \ These words are the basis for most string output
-
+    
+\ Emit a character to the output stream
+: EMIT ( c -- )
+    OUTPUTSINK @ (EMIT) DROP ;
 
 \ Display the given string
 : TYPE ( addr n -- )
