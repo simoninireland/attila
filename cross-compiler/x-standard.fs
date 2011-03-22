@@ -132,8 +132,8 @@ include system-hooks.fs
 
 \ terminal and file i/o
 include c-fileio.fs
-include c-io.fs
 include type.fs
+include io.fs
 
 \ starting and re-starting
 include warm.fs
@@ -165,9 +165,15 @@ target>
 ' START (START)   XT!   \ cold start vector (first word executed)
 ' OUTER EXECUTIVE XT!   \ executive (outer interpreter)
 
-\ Hooks
-' ANNOUNCE     HANG-ON STARTUP-HOOK
-' LOAD-PRELUDE HANG-ON STARTUP-HOOK
+\ Start-up behaviour
+' INIT-I/O     HANG-ON STARTUP-HOOK   \ initialise I/O sub-system
+' INTERACTIVE  HANG-ON STARTUP-HOOK   \ re-set interactive defaults
+' ANNOUNCE     HANG-ON STARTUP-HOOK   \ announce the system's identity
+' LOAD-PRELUDE HANG-ON STARTUP-HOOK   \ load the standard prelude
+
+\ Warm-start behaviour
+' RESET-I/O    HANG-ON WARMSTART-HOOK \ re-set I/O sub-system
+' INTERACTIVE  HANG-ON WARMSTART-HOOK \ re-set interactive defaults
 
 \ Include paths
 [FORTH] CROSS-COMPILER-TARGET-INCLUDE-PATH ADD-INCLUDE-PATHS
