@@ -415,7 +415,7 @@ init_dictionary() {
   DEFINE("OUTER"); // ( -- )
   COMPILE_BEGIN(be0,un0);
     COMPILE("PARSE-WORD");        // addr n
-    COMPILE("?DUP");              // addr n n
+    COMPILE("DUP");               // addr n n
     COMPILE("0<>");               // addr n f
     COMPILE_IF(if6,th6,el6);
       COMPILE("2DUP");            // addr n addr n
@@ -449,8 +449,9 @@ init_dictionary() {
           COMPILE("ABORT");
 	COMPILE_ELSETHEN(if3,th3,el3);
       COMPILE_ELSETHEN(if1,th1,el1);
+      LITERAL(1);
     COMPILE_THEN(if6,th6,el6);
-    COMPILE("EXHAUSTED?");
+    COMPILE("NOT");
   COMPILE_UNTIL(be0,un0);
   NEXT();
 
