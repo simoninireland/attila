@@ -58,8 +58,8 @@ nodist_attila_SOURCES = attila.c
 # ----- The bootstrapped interpreter primitives file -----
 
 # primitives generated from C/Forth code
-primitives.c: bootstrap.fs c-core.fs c-fileio.fs c-io.fs
-	$(PERL) $(srcdir)/tools/primgen -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/c-core.fs $(srcdir)/c-fileio.fs $(srcdir)/c-io.fs
+primitives.c: bootstrap.fs c-core.fs c-fileio.fs
+	$(PERL) $(srcdir)/tools/primgen -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/c-core.fs $(srcdir)/c-fileio.fs
 
 
 # ----- The cross-compiled interpreter VM -----
@@ -163,7 +163,6 @@ regular = \
 	itil.fs \
 	c-continuations-runtime.fs \
 	c-fileio.fs \
-	c-io.fs \
 	ascii.fs \
 	chain.fs \
 	hooks-runtime.fs \
@@ -175,6 +174,7 @@ regular = \
 	words-itil-unnamed.fs \
 	warm.fs \
 	abort.fs \
+	io.fs \
 	type.fs \
 	parser.fs \
 	colon.fs \
