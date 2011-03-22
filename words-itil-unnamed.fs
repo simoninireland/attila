@@ -18,7 +18,8 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Word headers, for indirected threading, with no names stored
+\ Word headers, for indirected threading, with no names stored. Intended
+\ for embedded and turnkey systems that won't interact
 
 
 \ ---------- Header creation ----------
@@ -31,6 +32,12 @@
     0 CCOMPILE,              \ status byte
     CALIGNED
     LASTXT ACOMPILE,         \ compile the link pointer
-    TOP                      \ the txt
+    TOP                      \ the xt
     R> CFACOMPILE,           \ the code pointer
     DUP LAST XT! ;           \ update LAST
+
+\ Can't find words
+\ sd: include or remove?
+: (FIND) ( addr n x -- 0 )
+    DROP 2DROP FALSE ;
+
