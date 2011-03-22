@@ -32,17 +32,24 @@
 : ANNOUNCE     S" Attila v.1.0" TYPE     0 ;
 : LOAD-PRELUDE S" prelude.fs"   INCLUDED 0 ;
 
+\ Handy words for the warmstart hook
+: INTERACTIVE
+    ['] OUTER            EXECUTIVE XT!  \ interactive outer executive
+    INTERPRETATION-STATE STATE       !  \ interpreting
+    10                   BASE        !  \ decimal
+    0                    TRACE       !  \ not debugging
+    -1                   >IN         !  \ TIB needs a refill
+    0                    TIB @      C!  \ no data in TIB
+    0 ;
+
 \ Start an Attila session
 : START ( -- )
-    \ re-set the interpreter
-    (RESET)
-    
-    \ re-set the restart vector, so that WARM will jump
-    \ to it when called
-    ['] OUTER (START) XT!
+    \ re-set the restart vector, so if we restart again we'll
+    \ do a warm-start
+    ['] WARM (START) XT!
     
     \ run the start-up hook
-    STARTUP-HOOK RUN-HOOK
+    STARTUP-HOOK RUN-HOOK DROP
 
     \ warm-start the system 
     WARM ;
