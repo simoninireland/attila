@@ -25,6 +25,7 @@
 \ ---------- Character reading ----------
 
 \ Peek at the next character from the TIB, returning it or 0 if there are none
+\ This accesses the TIB "raw", without expanding escapes
 : PEEK-CHAR ( -- c | 0 )
     SOURCE 0= IF
 	0
@@ -32,7 +33,8 @@
 	C@
     THEN ;
 
-\ Read a character from the TIB, returning it or 0 if there are none
+\ Read a character from the TIB, returning it or 0 if there are none.
+\ Escapes are expanded
 : READ-CHAR ( -- c | 0 )
     PEEK-CHAR DUP IF
 	1 >IN +!
@@ -43,7 +45,7 @@
     0 DO
 	READ-CHAR ?DUP 0= IF
 	    \ no character, finish reading
-	    DROP I LEAVE
+	    DROP I EXIT
 	ELSE
 	    \ store character, move on
 	    OVER C!
@@ -92,26 +94,21 @@
     BEGIN
 	SOURCE ?DUP 0=
     WHILE
-	    EXHAUSTED? IF
+	    REFILL NOT IF
 		DROP 0 EXIT       \ no more input, fail
-	    ELSE
-		REFILL 0= IF
-		    DROP 0 EXIT
-		THEN
 	    THEN
     REPEAT
 
     0 SWAP
     0 DO
 	READ-CHAR 3 PICK C= IF
-	    LEAVE                \ leave having consumed delimiter
+	    -ROT DROP EXIT       \ leave having consumed delimiter
 	                         \ but without it counting in the
 	                         \ string to be returned
 	ELSE
 	    1+
 	THEN
-    LOOP
-    -ROT DROP ;
+    LOOP ;
 
 \ Parse a word delimited on either side by whitespace or the end-of-line
 : PARSE-WORD ( -- addr n | 0 )
@@ -120,16 +117,12 @@
 	CONSUME-WS
 	SOURCE ?DUP 0=
     WHILE
-	    EXHAUSTED? IF
+	    REFILL NOT IF
 		0 EXIT       \ no more input, fail
-	    ELSE
-		REFILL 0= IF
-		    0 EXIT
-		THEN
 	    THEN
     REPEAT
 
-    \ parse the next word
+    \ parse the next word up to the end or the first whitespace
     0 SWAP                   \ the length we've accepted
     0 DO
 	READ-CHAR WS? IF
