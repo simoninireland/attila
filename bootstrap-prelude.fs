@@ -65,6 +65,10 @@ include counted-loops.fs
 include case.fs
 include conditional-compilation.fs
 
+\ Hooks
+include hooks.fs
+include system-hooks.fs
+
 \ Data types
 include chars.fs
 include strings.fs
@@ -78,7 +82,6 @@ include records.fs
 include file.fs
 
 \ Word list control
-: ADD-TO-HOOK ! ;
 include wordlists.fs
 
 
