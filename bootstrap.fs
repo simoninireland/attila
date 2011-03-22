@@ -551,14 +551,14 @@ C: WARM ( -- )
     *(user_variable(USER_BASE)) = (CELL) 10;
     *(user_variable(USER_TRACE)) = (CELL) 0;
     if(*(user_variable(USER_INPUTSOURCE)) != NULL &&
-       *(user_variable(USER_INPUTSOURCE)) != stdin)
-        fclose(*(user_variable(USER_INPUTSOURCE)));
-    *(user_variable(USER_INPUTSOURCE)) = stdin;
+       *(user_variable(USER_INPUTSOURCE)) != STDIN_FILENO)
+        close(*(user_variable(USER_INPUTSOURCE)));
+    *(user_variable(USER_INPUTSOURCE)) = STDIN_FILENO;
     *(user_variable(USER__IN)) = -1; // in need of a refill
     if(*(user_variable(USER_OUTPUTSINK)) != NULL &&
-       *(user_variable(USER_OUTPUTSINK)) != stdout)
+       *(user_variable(USER_OUTPUTSINK)) != STDOUT_FILENO)
         fclose(*(user_variable(USER_OUTPUTSINK)));
-    *(user_variable(USER_OUTPUTSINK)) = stdout;
+    *(user_variable(USER_OUTPUTSINK)) = STDOUT_FILENO;
     if(master_executive == NULL)
         master_executive = xt_of("OUTER");
     *(user_variable(USER_EXECUTIVE)) = (CELL) master_executive;
@@ -573,11 +573,118 @@ C: BYE ( -- )
 ;C
 
 
+\ ---------- Terminal I/O ----------
+
+\ Write a line of text
+C: WRITE-LINE ( addr n fh -- ior )
+  CHARACTERPTR s;
+  
+  s = create_unix_string(addr, n);
+  PUSH_CELL(s);
+  PUSH_CELL(n);
+  PUSH_CELL(fh);
+  CALL(prim_write_file);
+  ior = POP_CELL();
+;C
+
+C: READ-FILE ( -- m ior )
+  do {
+    CALL(prim_read_file);  
+    ior = POP_CELL();   m = POP_CELL();
+    if((ior == 0) && (m == -1)) {
+      m = 0;
+      break;
+    }
+  } while(ior == 0);  
+;C
+      
+      
+\ Read a line into the text buffer from the input source.
+\ Leave a flag on the stack, 0 if the input source is exhausted
+C: REFILL fill_tib ( -- f )
+  int input_source;
+  char **tib;
+  int *offset;
+  int m;
+  int n;    
+  int ior;
+  char *ptr;    
+
+  input_source = (int) (*(user_variable(USER_INPUTSOURCE)));
+  tib = (char **) user_variable(USER_TIB);
+  offset = (int *) user_variable(USER__IN);
+  if(input_source == STDIN_FILENO) {
+    printf(" ok ");   fflush(stdout);
+  }
+  if(input_source == -1)
+    f = FALSE;
+  else {
+    ptr = *tib;   n = 0;
+    do {  
+      do {
+        // read line from underlying file
+        PUSH_CELL(ptr);
+        PUSH_CELL(1);
+        PUSH_CELL(input_source);
+        CALL(prim_read_file);
+	ior = POP_CELL();   m = POP_CELL();
+      } while((ior == 0) && (m == 0));
+      if((ior == 0) && (m > 0)) {
+	if(*ptr == '\n')
+	  break;
+	ptr++;   n++;
+      }
+    } while((ior == 0) && (m > 0) && (n < 254));
+    *(++ptr) = '\0';
+  }
+	  
+  // reset input to the start of the TIB
+  *offset = ((ior < 0) || (m < 0)) ? -1 : 0;
+  f = (*offset != -1);
+;C
+
+\ Place the address of the current input point in the TIB and the
+\ number of remaining characters onto the stack, or 0 if none
+C: SOURCE ( -- )
+  char *tib;
+  int offset;
+  char *addr;
+  int len;   
+      
+  tib = (char *) (*(user_variable(USER_TIB)));
+  offset = (int) (*(user_variable(USER__IN)));
+  if(offset == -1)
+    PUSH_CELL(0);
+  else {
+    addr = tib + offset;
+    len = strlen(addr);
+    if(len == 0)
+      PUSH_CELL(0);
+    else {
+      PUSH_CELL((CELL) addr);
+      PUSH_CELL((CELL) len);
+    }
+  }
+;C
+
+\ Print a character on the output stream
+C: EMIT prim_emit ( c -- )
+  int output_sink;
+
+  output_sink = (int) (*(user_variable(USER_OUTPUTSINK)));
+  PUSH_CELL(&c);
+  PUSH_CELL(sizeof(CHARACTER));
+  PUSH_CELL(output_sink);
+  CALL(prim_write_file);
+  POP_CELL();
+;C
+
+
 \ ---------- I/O and parsing ----------
 
 \ Parse the next word, consuming leading whitespace. Leave either
 \ an address count pair or zero on the stack
-C: PARSE-WORD ( -- )
+C: PARSE-WORD parse_word ( -- )
   CELL c = 0;
   char *tib = (char *) (*(user_variable(USER_TIB)));
   int *offset = (int *) user_variable(USER__IN);
@@ -690,23 +797,32 @@ C: PARSE ( c -- )
 
 \ Print the given string on the terminal
 C: TYPE ( addr n -- )
-  FILE *output_sink = (FILE *) (*(user_variable(USER_OUTPUTSINK)));
+  int output_sink;
   char *buf;
-	
-  // copy string to null-terminated local buffer
+
+  output_sink = (int) (*(user_variable(USER_OUTPUTSINK)));
   buf = (CHARACTERPTR) malloc(n + 1);
   memcpy(buf, (BYTEPTR) addr, n);   buf[n] = '\0';
-
-  // print and tidy up
-  fprintf(output_sink, "%s", buf);   fflush(output_sink);
+  PUSH_CELL(buf);
+  PUSH_CELL(n);
+  PUSH_CELL(output_sink);
+  CALL(prim_write_file);
+  POP_CELL();
   free(buf);
 ;C
 
 \ Print the top number on the stack
-C: . ( n -- )
-  FILE *output_sink = (FILE *) (*(user_variable(USER_OUTPUTSINK)));
+C: . dot ( n -- )
+  int output_sink;
+  char buf[256];
 
-  fprintf(output_sink, "%ld", n);   fflush(output_sink);
+  output_sink = (int) (*(user_variable(USER_OUTPUTSINK)));
+  sprintf(buf, "%ld", n);
+  PUSH_CELL(buf);
+  PUSH_CELL(strlen(buf));
+  PUSH_CELL(output_sink);
+  CALL(prim_write_file);
+  POP_CELL();
 ;C
 
 \ Print the whole stack
@@ -715,11 +831,14 @@ C: .S prim_dot_s ( -- )
     int i, n;
 
     n = DATA_STACK_DEPTH();
-    fprintf(output_sink, "#%ld", n);
+    PUSH_CELL('<');   CALL(prim_emit);
+    PUSH_CELL(n);     CALL(dot);
+    PUSH_CELL('>');   CALL(prim_emit);
+    PUSH_CELL(' ');   CALL(prim_emit);
     for(i = n - 1; i >= 0; i--) {
-        fprintf(output_sink, " %ld", *(DATA_STACK_ITEM(i)));
+	PUSH_CELL((CELL) *(DATA_STACK_ITEM(i)));  CALL(dot);
+        PUSH_CELL(' ');                           CALL(prim_emit);
     }
-    fflush(output_sink);
 ;C
 
 \ Return the digits character set as a Forth-level counted string
