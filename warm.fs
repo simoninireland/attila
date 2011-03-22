@@ -1,7 +1,7 @@
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -23,8 +23,11 @@
 \ Warm-start the system by running the warm-start hook and then
 \ re-starting the interpreter
 : WARM ( -- )
-    \ run the warm-start hook
-    WARMSTART-HOOK RUN-HOOK
+    \ reset the interpreter
+    RESET-INTERPRETER
 
-    \ re-start the interpreter
-    (WARM) ;
+    \ run the warm-start hook
+    WARMSTART-HOOK RUN-HOOK DROP
+
+    \ run the outer executive
+    EXECUTIVE XT@ EXECUTE ;
