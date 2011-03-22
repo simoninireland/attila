@@ -53,6 +53,7 @@ main( int argc, char **argv ) {
   return_stack_base = return_stack = top;   top += RETURN_STACK_SIZE;
   data_stack_base = data_stack = top;   top += DATA_STACK_SIZE;
   user = top;   top += USER_SIZE;
+  reset_io();
 
   // initialise dictionary
   init_dictionary();
