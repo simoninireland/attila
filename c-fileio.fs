@@ -20,9 +20,8 @@
 
 \ File I/O primitives using C library functions
 \
-\ We use the C standard streams functions to manage files, since
-\ they provide buffering etc. For some systems it might be necessary
-\ to implement these directly.
+\ We use operating-system-level access primitives and do buffering
+\ at the Attila level. All primitives are non-blocking.
 \
 \ This file has to export a primitive to reset the input system:
 \
@@ -33,29 +32,9 @@ CHEADER:
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/time.h>
+#include <sys/select.h>
 
-// File mode conversions
-CHARACTERPTR
-mode_string( CELL m ) {
-  static CHARACTER mode[3];
-  CHARACTERPTR s;
-
-  mode[0] = mode[1] = mode[2] = '\0';   s = mode;
-
-  if(m == O_RDONLY) {
-    *s++ = 'r';
-  } else if(m & O_WRONLY) {
-    if(m & O_TRUNC) {
-      *s++ = 'w';
-    } else {
-      *s++ = 'r';   *s++ = '+';
-    }  
-  } else if(m & O_RDWR) {
-    *s++ = 'r';   *s++ = '+';
-  }
-
-  return mode;
-}
 ;CHEADER
 
   
@@ -93,8 +72,8 @@ C: OPEN-FILE ( addr namelen m -- fh ior )
   CHARACTERPTR fn;
 
   fn = create_unix_string(addr, namelen);
-  fh = (CELL) fopen(fn, mode_string(m));
-  ior = (fh == 0) ? errno : 0;
+  fh = (CELL) open(fn, m);
+  ior = (fh < 0) ? errno : 0;
 ;C
 
 \ Create a file, returning a file handle and error code (0 for success).
@@ -103,22 +82,22 @@ C: CREATE-FILE ( addr namelen m -- fh ior )
   int mode;
 
   fn = create_unix_string(addr, namelen);
-  fh = (CELL) fopen(fn, mode_string(m | O_TRUNC));
+  fh = (CELL) open(fn, m | O_CREAT | O_TRUNC, 0655);
   ior = (fh == -1) ? (CELL) errno : 0;
 ;C
 
 \ Close a file
 C: CLOSE-FILE ( fh -- ior )
-  ior = (CELL) fclose((FILE *) fh);
+  ior = (CELL) close(fh);
 ;C
 
 \ Set the positon of the next read/write action
 C: REPOSITION-FILE ( off fh -- ior )      
   int m;
 
-  if(fh != stdin) {
-    m = fseek((FILE *) fh, off, SEEK_SET);
-    ior = (off == -1) ? (CELL) errno : 0;
+  if(fh != STDIN_FILENO) {
+    m = lseek(fh, off, SEEK_SET);
+    ior = (m == -1) ? (CELL) errno : 0;
   } else {
     ior = 0;
   }
@@ -126,8 +105,8 @@ C: REPOSITION-FILE ( off fh -- ior )
 
 \ Return the current read/write offset
 C: FILE-POSITION ( fh -- off ior ) 
-  if(fh != stdin) {
-    off = fseek((FILE *) fh, 0, SEEK_CUR);
+  if(fh != STDIN_FILENO) {
+    off = lseek(fh, 0, SEEK_CUR);
     ior = (off == -1) ? (CELL) errno : 0;      
   } else {
     off = 0;
@@ -135,55 +114,94 @@ C: FILE-POSITION ( fh -- off ior )
   }
 ;C
 
+\ Return the current input source: the user (0), a string (-1)
+\ or a file (a FILE *)
+C: SOURCE-ID ( -- id )
+  int f;
 
+  f = (int) (*user_variable(USER_INPUTSOURCE)); 
+  if(f == -1)
+    id = -1;
+  else if(f == STDIN_FILENO)
+    id = 0;
+  else
+    id = (CELL) f;
+;C
+
+  
 \ ---------- Block-based I/O ----------
 
-\ Read characters from the given file into a buffer
-C: READ-FILE ( addr n fh -- m ior )
-  m = fread((CHARACTERPTR) addr, n, 1, (FILE *) fh);
-  ior = (CELL) ferror((FILE *) fh);
-;C
-
-\ Write characters to the given file from the buffer
-C: WRITE-FILE ( addr n fh -- ior )
-  int m;
-      
-  m = fwrite((CHARACTERPTR) addr, n, 1, (FILE *) fh);
-  ior = (CELL) ferror((FILE *) fh);
-;C
-     
-      
-\ ---------- Line-based I/O ----------
-
-\ Read a line of text
-C: READ-LINE prim_read_line ( addr n fh -- m f ior )
-  CHARACTERPTR ptr;
-
-  if(feof((FILE*) fh) || ((ptr = fgets((CHARACTERPTR) addr, n, (FILE *) fh)) == 0)) {
-    m = 0;   f = 0;   ior = 0;
-  } else {    
-    m = strlen(ptr);
-    f = 1;
-    ior = (CELL) ferror((FILE *) fh);      
+\ Read characters from the given file into a buffer.
+\ This routine will return ( -- 0 0 ) if no characters have been
+\ read but the call was successful, and ( -- -1 0) if the
+\ end of file was reached
+C: (READ-FILE) prim_read_file ( addr n fh -- m ior )
+  int fd;
+  int nfds;
+  fd_set fds;
+  struct timeval interval;
+  
+  // check for readable characters
+  FD_ZERO(&fds);
+  FD_SET(fh, &fds);
+  nfds = fh + 1;
+  interval.tv_sec = 0;   interval.tv_usec = 0;
+  m = 0;
+  ior = select(nfds, &fds, NULL, &fds, &interval);
+  if(ior < 0)
+    ior = (CELL) errno;
+  else if(ior > 0) {
+    m = read(fh, (CHARACTERPTR) addr, n);
+    ior = (m < 0) ? (CELL) errno : 0;
+    if((ior == 0) && (m == 0))
+      m = -1; // EOF marker  
   }
 ;C
 
-\ Write a line of text
-C: WRITE-LINE ( addr n fh -- ior )
-  fprintf((FILE *) fh, "%s\n", create_unix_string(addr, n));
-  ior = (CELL) ferror((FILE *) fh);
+\ Write characters to the given file from the buffer
+C: (WRITE-FILE) prim_write_file ( addr n fh -- ior )
+  int m;
+      
+  m = write(fh, (CHARACTERPTR) addr, n);
+  ior = (m < 0) ? (CELL) errno : 0;
 ;C
 
 
-\ ---------- Reset the I/O sub-system ----------
+\ ---------- Character-based I/O ----------
+
+\ Emit a character on the given file
+C: (EMIT) ( c fh -- ior )
+  CHARACTER ch;
+
+  ch = (CHARACTER) c;
+  PUSH_CELL((CELL) &ch);
+  PUSH_CELL(sizeof(CHARACTER));
+  PUSH_CELL(fh);
+  CALL(prim_write_file);
+  ior = POP_CELL();
+;C
+
+      
+\ ---------- Initialising and resetting the I/O sub-system ----------
+\ sd: typically called from hooks, hence the 0 return code      
+
+\ Initialise to default streams
+C: INIT-I/O init_io ( -- )
+  setbuf(stdin, NULL);  // buffering done at Attila level
+  setbuf(stdout, NULL);
+  *user_variable(USER_INPUTSOURCE) = STDIN_FILENO;
+  *user_variable(USER_OUTPUTSINK) = STDOUT_FILENO;   
+  PUSH_CELL(0);
+;C
 
 \ Reset to default streams
 C: RESET-I/O reset_io ( -- )
-  if((FILE *) *user_variable(USER_INPUTSOURCE) != stdin)
+  if((FILE *) *user_variable(USER_INPUTSOURCE) != STDIN_FILENO)
     fclose((FILE *) *user_variable(USER_INPUTSOURCE));
-   *user_variable(USER_INPUTSOURCE) = stdin;
-  if((FILE *) *user_variable(USER_OUTPUTSINK) != stdout)
+  *user_variable(USER_INPUTSOURCE) = STDIN_FILENO;
+  if((FILE *) *user_variable(USER_OUTPUTSINK) != STDOUT_FILENO)
     fclose((FILE *) *user_variable(USER_OUTPUTSINK));
-   *user_variable(USER_OUTPUTSINK) = stdout; 
+  *user_variable(USER_OUTPUTSINK) = STDOUT_FILENO; 
+  PUSH_CELL(0);
 ;C
 
