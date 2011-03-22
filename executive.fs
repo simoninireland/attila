@@ -21,13 +21,13 @@
 \ The standard outer executive
 \
 \ Unlike the traditional outer executive, Attila's version is modularised
-\ to allow code to try to parse the input stream. The default version
+\ to allow code to try to parse the lexeme in the input stream. The default version
 \ tests for words (executed or compiled depending on the interpretation state
 \ and the word's immediacy) and numbers (stacked or compiled as literals).
-\ Adding a new type such as floats requires defining a hook word and hanging
+\ Adding a new lexeme type such as floats requires defining a hook word and hanging
 \ it on the PARSE-WORD-HOOK. Such parsers need to be written carefully with
 \ respect to their stack effects, as they're running within a larger loop.
-\ If running the hook gets to the end without an early exit, the element
+\ If running the hook gets to the end without an early exit, the lexeme
 \ is considered unparsed.
 \
 \ sd: handling strings here would be good.....
@@ -69,12 +69,21 @@ HANG-ON PARSE-WORD-HOOK
 
 \ ---------- The executive ----------
 
-\ The outer executive
+\ The interactive outer executive. The return stack stashing it to
+\ make sure that any word is executed in the stack environment it
+\ expects, not in one containing a copy of the current lexeme -- and
+\ words can't make assumptions about the return stack environment they're
+\ called in
 : OUTER \ ( -- )
     BEGIN
-	PARSE-WORD ?DUP IF
+	PARSE-WORD ?DUP 0= IF
+	    EXIT
+	ELSE
+	    2DUP >R >R                        \ stash lexeme for later
 	    PARSE-WORD-HOOK RUN-HOOK NOT IF
-		TYPE S" ?" ABORT
+		2DROP R> R> TYPE S" ?" ABORT
+	    ELSE
+		R> R> 2DROP                   \ forget lexeme
 	    THEN
 	THEN
-    EXHAUSTED? UNTIL ;
+    AGAIN ;
