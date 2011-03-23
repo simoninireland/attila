@@ -129,28 +129,38 @@ C: SOURCE-ID ( -- id )
 ;C
 
   
-\ ---------- Block-based I/O ----------
+\ ---------- Low-level non-blocking I/O ----------
 
-\ Read characters from the given file into a buffer.
-\ This routine will return ( -- 0 0 ) if no characters have been
-\ read but the call was successful, and ( -- -1 0) if the
-\ end of file was reached
-C: (READ-FILE) prim_read_file ( addr n fh -- m ior )
+\ Check whether a given file descriptor can be read, returning a
+\ success flag and an error code. This is a non-blocking poll,
+\ with the success flag TRUE only if there is data
+C: FILE-READ-READY? read_ready ( fh -- f ior )      
   int fd;
   int nfds;
   fd_set fds;
   struct timeval interval;
   
-  // check for readable characters
   FD_ZERO(&fds);
   FD_SET(fh, &fds);
   nfds = fh + 1;
   interval.tv_sec = 0;   interval.tv_usec = 0;
-  m = 0;
   ior = select(nfds, &fds, NULL, &fds, &interval);
-  if(ior < 0)
-    ior = (CELL) errno;
-  else if(ior > 0) {
+  f = (ior > 0);
+  ior = (ior < 0) ? errno : 0;    
+;C
+    
+\ Read characters from the given file into a buffer.
+\ This routine will return ( -- 0 0 ) if no characters have been
+\ read but the call was successful, and ( -- -1 0) if the
+\ end of file was reached
+C: (READ-FILE) prim_read_file ( addr n fh -- m ior )
+  CELL f;
+      
+  // check for readable characters
+  PUSH_CELL(fh);
+  CALL(read_ready);
+  ior = POP_CELL();   f = POP_CELL();
+  if((ior == 0) && (f > 0)) {
     m = read(fh, (CHARACTERPTR) addr, n);
     ior = (m < 0) ? (CELL) errno : 0;
     if((ior == 0) && (m == 0))
