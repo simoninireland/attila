@@ -80,14 +80,29 @@ AC_SUBST(CHARACTER_SIZE)
 AC_C_BIGENDIAN(BIGENDIAN=1, BIGENDIAN=0)
 AC_SUBST(BIGENDIAN)
 
-# headers etc
+# jumps
 AC_CHECK_HEADER(setjmp.h,,AC_MSG_ERROR([attila needs setjmp.h]))
 AC_CHECK_FUNCS(setjmp longjmp)
 
 # libc functions
 AC_CHECK_FUNCS(malloc calloc)
-AC_CHECK_FUNCS(bcopy bzero strlen strcpy strncpy strncmp strncasecmp toupper strspn strcspn)
+# (for bootstrapping only)
+AC_CHECK_FUNCS(bcopy bzero)
+AC_CHECK_FUNCS(strlen strcpy strncpy strncmp strncasecmp toupper strspn strcspn)
+
+# file access
+AC_CHECK_HEADER(unistd.h,,AC_MSG_ERROR([attila needs unistd.h]))
+AC_CHECK_HEADER(fcntl.h,,AC_MSG_ERROR([attila needs fcntl.h]))
+AC_CHECK_HEADER(errno.h,,AC_MSG_ERROR([attila needs errono.h]))
+AC_CHECK_HEADER(sys/time.h,,AC_MSG_ERROR([attila needs sys/time.h]))
+AC_CHECK_HEADER(sys/select.h,,AC_MSG_ERROR([attila needs sys/select.h for non-blocking i/o]))
+AC_CHECK_FUNCS(select open close lstat)
+# (for bootstrapping only)
 AC_CHECK_FUNCS(fgets printf sprintf sscanf)
+
+# sockets
+AC_CHECK_HEADER(sys/socket.h,,AC_MSG_ERROR([attila needs sys/socket.h]))
+AC_CHECK_FUNCS(socket bind accept listen)
 
 
 # ---------- Create files ----------
