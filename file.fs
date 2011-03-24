@@ -44,6 +44,7 @@
 	NIP
     ELSE
 	INPUTSOURCE !
+	EMPTY-TIB       \ force a refill at the next read attempt
 	TRUE
     THEN ;
 
@@ -70,7 +71,8 @@
 \ Re-direct subsequent input from the given file
 : (<FROM) \ ( fh -- ofh )
     INPUTSOURCE @
-    SWAP INPUTSOURCE ! ;
+    SWAP INPUTSOURCE !
+    EMPTY-TIB ;         \ force a refill when we try to read
 : <FROM \ ( "name" -- ofh )
     PARSE-WORD 2DUP R/O OPEN-FILE IF
 	DROP
@@ -82,5 +84,5 @@
 \ Restore previous output stream
 : FROM> \ ( ofh -- ) 
     INPUTSOURCE @ CLOSE-FILE DROP
-    INPUTSOURCE ! ;
+    INPUTSOURCE ! EMPTY-TIB ;
 
