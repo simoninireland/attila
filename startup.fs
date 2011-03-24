@@ -25,14 +25,27 @@
 \ warm-start the interpreter, setting the future restart point to
 \ the executive.
 \
-\ As a general rule, this word should never be executed from within
-\ a session.
+\ As a general rule, START should never be executed from within
+\ a session. It might actually be better to have it as a :NONAME.
 
-\ Handy words to be hung on the startup hook
-: ANNOUNCE     S" Attila v.1.0" TYPE     0 ;
-: LOAD-PRELUDE S" prelude.fs"   INCLUDED 0 ;
+\ ---------- Handy words to be hung on the startup hook ----------
 
-\ Handy words for the warmstart hook
+\ Announce the system
+: ANNOUNCE
+    S" Attila v.1.0 (" TYPE
+    (IMAGE-NAME) @ DUP C@ SWAP 1+ SWAP ( COUNT ) TYPE
+    S" )" TYPE
+    0 ;
+
+\ Load the standard prelude
+: LOAD-PRELUDE
+    S" prelude.fs"   INCLUDED
+    0 ;
+
+
+\ ---------- Handy words for the warmstart hook ----------
+
+\ Reset the elements of an interactive environment
 : INTERACTIVE
     ['] OUTER            EXECUTIVE XT!  \ interactive outer executive
     INTERPRETATION-STATE STATE       !  \ interpreting
@@ -41,6 +54,8 @@
     -1                   >IN         !  \ TIB needs a refill
     0                    TIB @      C!  \ no data in TIB
     0 ;
+
+\ ---------- Start-up ----------
 
 \ Start an Attila session
 : START ( -- )
