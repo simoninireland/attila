@@ -597,7 +597,14 @@ C: READ-FILE ( -- m ior )
     }
   } while(ior == 0);  
 ;C
-      
+
+\ Force a refill next time we try to read      
+C: EMPTY-TIB ( -- )
+  int *offset;
+
+  offset = (int *) user_variable(USER__IN);
+  *offset = -1;
+;C
       
 \ Read a line into the text buffer from the input source.
 \ Leave a flag on the stack, 0 if the input source is exhausted
