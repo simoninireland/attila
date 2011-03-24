@@ -64,6 +64,11 @@
 
 \ ---------- Line-based I/O ----------
 
+\ Empty the line buffer, forcing a refill at the next attempt to
+\ read input
+: EMPTY-TIB ( -- )
+    -1 >IN ! ;
+
 \ Display a prompt for user input. This only happens if we're reading
 \ from the terminal (standard input)
 : PROMPT ( -- )
@@ -87,7 +92,7 @@
 	SWAP 0<> OR NIP IF      \ read error
 	    \ set for refill and exit
 	    2DROP
-	    -1 >IN !
+	    EMPTY-TIB
 	    FALSE EXIT
 	THEN
 
