@@ -21,12 +21,18 @@
 \ Source file inclusion, with include paths
 \
 \ Inclusion searches for the named file appended to each path
-\ in turn until one is found.
-
+\ in turn until one is found. The user-given paths are searched
+\ first, followed by the system paths. There are no user-level words
+\ for changing the system paths, and this should be avoided: assume
+\ that they're read-only, set by the cross-compiler. (There shouldn't
+\ be any reason to touch them anyway.)
 
 \ ---------- Paths ----------
 
-\ The base of the include paths chain
+\ The base of the system include paths chain
+DATA SYSTEM-INCLUDE-PATH 0 ,
+
+\ The base of the user-specified include paths chain
 DATA INCLUDE-PATH 0 ,
 
 \ The buffer for the full file path
@@ -51,8 +57,7 @@ DATA INCLUDE-FILENAME 256 ALLOT
 \ Traverse the chain concatenating the given file name with
 \ the include path until we find one that exists, returning its
 \ full path
-: FIND-INCLUDE-FILE ( addr n -- addr' n' -1 | 0 )
-    INCLUDE-PATH
+: (FIND-INCLUDE-FILE) ( addr n link -- addr' n' -1 | 0 )
     BEGIN
 	NEXT-LINK-IN-CHAIN DUP 0<>
     WHILE
@@ -66,7 +71,15 @@ DATA INCLUDE-FILENAME 256 ALLOT
 	    THEN
     REPEAT
     DROP 2DROP FALSE ;
- 
+
+\ Traverse the user-supplied and system chains
+: FIND-INCLUDE-FILE ( addr n -- addr' n' -1 | 0 )
+    2DUP INCLUDE-PATH (FIND-INCLUDE-FILE) ?DUP 0<> IF
+	4 -ROLL 4 -ROLL 2DROP
+    ELSE
+	SYSTEM-INCLUDE-PATH (FIND-INCLUDE-FILE)
+    THEN ;
+
 
 \ ---------- Inclusion ----------
 
