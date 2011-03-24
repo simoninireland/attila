@@ -196,7 +196,7 @@ C: (EMIT) ( c fh -- ior )
 \ sd: typically called from hooks, hence the 0 return code      
 
 \ Initialise to default streams
-C: INIT-I/O init_io ( -- )
+C: INIT-I/O init_io ( -- 0 )
   setbuf(stdin, NULL);  // buffering done at Attila level
   setbuf(stdout, NULL);
   *user_variable(USER_INPUTSOURCE) = STDIN_FILENO;
@@ -205,12 +205,12 @@ C: INIT-I/O init_io ( -- )
 ;C
 
 \ Reset to default streams
-C: RESET-I/O reset_io ( -- )
-  if((FILE *) *user_variable(USER_INPUTSOURCE) != STDIN_FILENO)
-    fclose((FILE *) *user_variable(USER_INPUTSOURCE));
+C: RESET-I/O reset_io ( -- 0 )
+  if(*user_variable(USER_INPUTSOURCE) != STDIN_FILENO)
+    close(*user_variable(USER_INPUTSOURCE));
   *user_variable(USER_INPUTSOURCE) = STDIN_FILENO;
-  if((FILE *) *user_variable(USER_OUTPUTSINK) != STDOUT_FILENO)
-    fclose((FILE *) *user_variable(USER_OUTPUTSINK));
+  if(*user_variable(USER_OUTPUTSINK) != STDOUT_FILENO)
+    close(*user_variable(USER_OUTPUTSINK));
   *user_variable(USER_OUTPUTSINK) = STDOUT_FILENO; 
   PUSH_CELL(0);
 ;C
