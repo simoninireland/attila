@@ -52,7 +52,7 @@ C: RAW-SOCKET ( -- type )
 
 \ ---------- Socket creation ----------
 
-\ Create a new socket of the given tuype, returning an identifier and
+\ Create a new socket of the given type, returning an identifier and
 \ an error code (0 for success)
 C: (SOCKET) bracket_socket ( type -- s ior )
   s = CELL) socket(PF_INET, type, 0);
