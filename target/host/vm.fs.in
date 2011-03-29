@@ -30,7 +30,9 @@
 \ compilations), and that the endianness of the process is correct.
 \ You can reduce the stack sizes, but development systems will require
 \ a data stack of around 50 to accommodate some of the compiler
-\ structures.
+\ structures, and cross-compiling animage needs a stack of about 100
+\ to handle the deep nesting of includes and the extensive use of
+\ word lists.
 
 \ Core sizes
 @CELL_SIZE@ CONSTANT /CELL
@@ -43,8 +45,8 @@
 
 \ Sizes
 64 1024 * CONSTANT IMAGE-SIZE           \ initial image size in cells
-50        CONSTANT DATA-STACK-SIZE      \ data stack size in cells
-50        CONSTANT RETURN-STACK-SIZE    \ return stack size in cells
+90        CONSTANT DATA-STACK-SIZE      \ data stack size in cells
+90        CONSTANT RETURN-STACK-SIZE    \ return stack size in cells
 25        CONSTANT USER-SIZE            \ number of user variables allowed
 256       CONSTANT TIB-SIZE             \ terminal input buffer size
 
