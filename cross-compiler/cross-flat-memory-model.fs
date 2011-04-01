@@ -133,7 +133,7 @@
 
 \ Initialise the image, recording its name
 : INITIALISE-IMAGE ( addr n -- )
-    (INITIALISE-IMAGE)
+    [CROSS] IMAGE-SIZE (INITIALISE-IMAGE)
 
     \ allocate user variables
     USER-SIZE 0 DO
@@ -150,11 +150,14 @@
     S,
     
     \ initialise stacks and TIB
-    ALIGNED HERE (DATA-STACK) A!           \ data stack 
+    ALIGNED
+    HERE (DATA-STACK)       A!      \ data stack 
     DATA-STACK-SIZE CELLS   ALLOT
-    ALIGNED HERE (RETURN-STACK) A!         \ return stack 
+    ALIGNED
+    HERE (RETURN-STACK)     A!      \ return stack 
     RETURN-STACK-SIZE CELLS ALLOT
-    ALIGNED HERE TIB A!                    \ terminal input buffer
+    ALIGNED
+    HERE TIB                A!      \ terminal input buffer
     TIB-SIZE                ALLOT
     ALIGNED ;
 
