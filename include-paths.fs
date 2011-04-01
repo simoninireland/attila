@@ -40,15 +40,20 @@
 	    1-
     REPEAT ;
 
-\ Display the curent include path as a :-separated string
-: .INCLUDE-PATH ( -- )
-    S" ." TYPE
-    INCLUDE-PATH NEXT-LINK-IN-CHAIN
+\ Display a chain of strings as a :-separated string
+: (.INCLUDE-PATH) ( link -- )
+    NEXT-LINK-IN-CHAIN
     BEGIN
 	?DUP 0<>
     WHILE
-	    S" :" TYPE
+	    ." :"
 	    DUP DATA-LINK-IN-CHAIN TYPE
 	    NEXT-LINK-IN-CHAIN
-    REPEAT
+    REPEAT ;
+
+\ Display the curent include path as a :-separated string
+: .INCLUDE-PATH ( -- )
+    ." ."
+    INCLUDE-PATH        (.INCLUDE-PATH)
+    SYSTEM-INCLUDE-PATH (.INCLUDE-PATH)
     SPACE ;
