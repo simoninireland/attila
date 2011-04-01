@@ -22,15 +22,29 @@
 
 \ ---------- Memory management ----------
 
-\ TOP and HERE are the same in this model
-: TOP    (TOP) @ ;
-: HERE   TOP ;
+\ TOP and HERE are the same in this model, as are CEILING and THERE
+: TOP     (TOP) @ ;
+: HERE    TOP ;
+: CEILING (CEILING) @ ;
+: THERE   CEILING ;
+
+\ Access to last-defined word
 : LASTXT LAST @ ;
 
-\ Compile a character
+\ Allocate a number of bytes in code memory, checking for overflow
+\ sd: bounds checking should be a conditional-compilation option?
+: CALLOT ( n -- )
+    (TOP) +!
+    TOP CEILING >= IF
+	1 DIE   \ error code 1: out of memory
+    THEN ;
+
+\ Compile a character. This is the basic unit of compilation,
+\ for code and data (in this model)
 : CCOMPILE, \ ( c -- )
-    TOP C!
-    1 (TOP) +! ;
+    TOP
+    /CHAR CALLOT
+    C! ;
 
 \ Align code address on cell boundaries
 : CALIGN \ ( addr -- aaddr )
@@ -43,9 +57,10 @@
     THEN ;
 
 \ Compilation primitives for cells, real addresses, strings, addresses, xts
-\ sd: should be refactored to use [IF] etc
 : COMPILE, \ ( n -- )
     CALIGNED
+    
+
     /CELL 0 DO
 	BIGENDIAN? IF
 	    DUP /CELL I - 1- 8 * RSHIFT 255 AND CCOMPILE,
@@ -89,12 +104,11 @@
 : ALIGN   CALIGN ;
 : ALIGNED CALIGNED ;
 
-\ ALLOTting data space simply compiles zeros. Safe for 0 and negative amounts
+\ ALLOTting data space. Safe for zero and negative amounts. The allocated
+\ space isn't zeroed
 : ALLOT ( n -- )
     DUP 0> IF
-	0 DO
-	    0 C,
-	LOOP
+	CALLOT
     ELSE
 	DROP
     THEN ;
