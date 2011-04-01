@@ -94,14 +94,14 @@ cross-compiler>
 .( Initialising include path management...)
 <cross-compiler
 \ include path set-up -- messy, messy...
-: ADD-INCLUDE-PATH ( addr n -- )
-    [CROSS-COMPILER] ['] INCLUDE-PATH >BODY ADD-LINK-TO-CHAIN ;
-: ADD-INCLUDE-PATHS ( addr n -- )
+: ADD-SYSTEM-INCLUDE-PATH ( addr n -- )
+    [CROSS-COMPILER] ['] SYSTEM-INCLUDE-PATH >BODY ADD-LINK-TO-CHAIN ;
+: ADD-SYSTEM-INCLUDE-PATHS ( addr n -- )
     [CHAR] : SPLIT
     BEGIN
 	?DUP 0>
     WHILE
-	    ROT [CROSS-COMPILER] ADD-INCLUDE-PATH
+	    ROT [CROSS-COMPILER] ADD-SYSTEM-INCLUDE-PATH
 	    1-
     REPEAT ;
 cross-compiler>
@@ -155,34 +155,12 @@ include startup.fs
 target>
 
 
-\ ---------- Phase 4: Image finalisation and output ----------
-\ - Patch image with final pointers
-\ - Save image to disc ready for (cross-)compilation
+\ ---------- Phase 4: Image finalisation ----------
 
-.( Setting hooks and vectors)
-<TARGET
-\ Initial vectors
-' START (START)   XT!   \ cold start vector (first word executed)
-' OUTER EXECUTIVE XT!   \ executive (outer interpreter)
-
-\ Start-up behaviour
-' INIT-I/O     HANG-ON STARTUP-HOOK   \ initialise I/O sub-system
-' INTERACTIVE  HANG-ON STARTUP-HOOK   \ re-set interactive defaults
-' ANNOUNCE     HANG-ON STARTUP-HOOK   \ announce the system's identity
-' LOAD-PRELUDE HANG-ON STARTUP-HOOK   \ load the standard prelude
-
-\ Warm-start behaviour
-' RESET-I/O    HANG-ON WARMSTART-HOOK \ re-set I/O sub-system
-' INTERACTIVE  HANG-ON WARMSTART-HOOK \ re-set interactive defaults
-
-\ Include paths
-[FORTH] CROSS-COMPILER-TARGET-INCLUDE-PATH ADD-INCLUDE-PATHS
-TARGET>
+.( Aligning image...)
+[CROSS] ALIGN
 
 .( Finalising target image...)
 [CROSS] FINALISE-IMAGE
 
-.( Save the target image)
-CROSS-COMPILER-OUTPUT-FILE [CODE-GENERATOR] SAVE-IMAGE
-
-.( Done)
+.( Image created successfully)
