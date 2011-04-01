@@ -28,7 +28,7 @@
 
 \ Create the control part of new list element
 : (LIST-ELEMENT) \ ( -- elem )
-    HERE
+    ALIGNED HERE
     0 ,         \ back pointer
     0 , ;        \ forward pointer
 
