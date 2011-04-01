@@ -38,3 +38,29 @@ S" attila.c"             SET-CROSS-COMPILER-OUTPUT-FILE
 \ Run the standard image builder
 include cross-compiler/x-standard.fs
 
+\ Set hooks and vectors
+
+.( Setting hooks and vectors...)
+<TARGET
+\ Initial vectors
+' START (START)   XT!   \ cold start vector (first word executed)
+' OUTER EXECUTIVE XT!   \ executive (outer interpreter)
+
+\ Start-up behaviour
+' INIT-I/O     HANG-ON STARTUP-HOOK   \ initialise I/O sub-system
+' INTERACTIVE  HANG-ON STARTUP-HOOK   \ re-set interactive defaults
+' ANNOUNCE     HANG-ON STARTUP-HOOK   \ announce the system's identity
+' LOAD-PRELUDE HANG-ON STARTUP-HOOK   \ load the standard prelude
+
+\ Warm-start behaviour
+' RESET-I/O    HANG-ON WARMSTART-HOOK \ re-set I/O sub-system
+' INTERACTIVE  HANG-ON WARMSTART-HOOK \ re-set interactive defaults
+
+\ Include paths
+[FORTH] CROSS-COMPILER-TARGET-INCLUDE-PATH ADD-SYSTEM-INCLUDE-PATHS
+TARGET>
+
+.( Save the target image)
+CROSS-COMPILER-OUTPUT-FILE [CODE-GENERATOR] SAVE-IMAGE
+
+.( Done)
