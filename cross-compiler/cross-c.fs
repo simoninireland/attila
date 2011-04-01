@@ -29,7 +29,7 @@
 
 \ Test whether two strings are case-insensitively equal, leaving
 \ a flag and the first string
-: S=CI? \ ( addr1 n1 addr2 n2 -- add1 n1 f )
+: S=CI? \ ( addr1 n1 addr2 n2 -- addr1 n1 f )
     2OVER S=CI ;
 
 \ Test whether a list of strings contains the given string, working
@@ -45,6 +45,38 @@
 	    ELSE
 		<ELEMENT
 	    THEN
+    REPEAT
+    ROT 2DROP ;
+
+\ Append a newline to a zstring
+: Z+NL \ ( zaddr -- )
+    ZCOUNT +
+    NL OVER C!
+    1+ NULL SWAP C! ;
+
+\ Accumulate text up until the line beginning with the
+\ given terminator into the given zstring
+\ sd: should perhaps be <<Z, by analogy with Perl's naming convention?
+: >>Z ( addr n zs -- zs )
+    DUP NULLSTRING -ROT S>Z    \ zero the string
+    BEGIN
+	DUP
+	REFILL IF
+	    SOURCE 5 PICK 5 PICK S=CI? IF
+		    \ terminator, exit
+		    2DROP DROP
+		    EMPTY-TIB
+		    FALSE
+	    ELSE
+		\ non-terminator, continue
+		TRUE
+	    THEN
+	ELSE
+	    S" Input ended before terminator" ABORT
+	THEN
+    WHILE
+	    \ accumulate the line into the zstring
+	    Z+S DUP Z+NL
     REPEAT
     ROT 2DROP ;
 
@@ -81,28 +113,24 @@ DATA (PRIMNAME) 32 ALLOT        \ buffer for name
 
 \ ---------- Primitive parser ----------
 
-\ Buffer for the text (allows 20kb of source per primitive or literal block)
-DATA (PRIMTEXT) 20 1024 * ALLOT
-
-\ Append a newline to a zstring
-: Z+NL \ ( zaddr -- )
-    ZCOUNT +
-    NL OVER C!
-    1+ NULL SWAP C! ;
+\ Buffer for the text (allows 5kb of source per primitive or literal block)
+5 1024 * VALUE PRIMTEXT-SIZE
+DATA (PRIMTEXT) PRIMTEXT-SIZE ALLOT
 
 <WORDLISTS ALSO CROSS-COMPILER DEFINITIONS
 
 \ Parse a C primitive, creating a locator word that holds all its details
 : C:
     PARSE-WORD
-    TOP ROT S,                             \ primitive's Forth-level name: ( naddr )
+    ALIGNED HERE ROT S,                    \ primitive's Forth-level name: ( naddr )
 
     PARSE-WORD S" (" S=CI? IF              \ compile primitive's primitive name
 	2DROP PRIMNAME                     \ create a primitive name
     ELSE
 	PARSE-WORD 2DROP                   \ consume the open bracket
     THEN
-    TOP ROT S,                             \ store primitive's C-level name: ( naddr paddr )
+
+    ALIGNED HERE ROT S,                    \ store primitive's C-level name: ( naddr paddr )
 
     NULLSTRING STRING-ELEMENT              \ compile the parameters list
     BEGIN
@@ -120,35 +148,18 @@ DATA (PRIMTEXT) 20 1024 * ALLOT
     REPEAT
     2DROP                                  \ result list: ( naddr paddr al rl )
 
-    NULLSTRING (PRIMTEXT) S>Z              \ compile text
-    (PRIMTEXT)
-    BEGIN
-	DUP
-	REFILL IF
-	    SOURCE 1- S" ;C" S=CI? IF
-		2DROP DROP
-		REFILL DROP
-		FALSE
-	    ELSE
-		TRUE
-	    THEN
-	ELSE
-	    S" Input ended before ;C" ABORT
-	THEN
-    WHILE
-	    Z+S DUP Z+NL
-    REPEAT
-    TOP SWAP Z,                           \ primitive text: ( naddr paddr al nl zaddr )
+    S" ;C" (PRIMTEXT) >>Z                  \ compile text
+    ALIGNED HERE SWAP Z,                   \ primitive text: ( naddr paddr al nl zaddr )
 
-    CREATE-PRIMITIVE-LOCATOR              \ build the locator
+    CREATE-PRIMITIVE-LOCATOR               \ build the locator
 
     LASTXT EXECUTE >R
-    R@ PRIMITIVE-NAME @ COUNT             \ cross-compile word onto target
+    R@ PRIMITIVE-NAME @ COUNT              \ cross-compile word onto target
     R@ PRIMITIVE-CFA @
     [CROSS] (HEADER,)
 
     R@ TARGET-XT !                        \ store txt of word in locator
-
+    \ ." Primitive: " R@ PRIMITIVE-NAME @ COUNT TYPE CR
     R> A-ELEMENT PRIMITIVES ELEMENT+>> ;  \ add locator to chain of primitives
 
 WORDLISTS>
@@ -169,26 +180,9 @@ WORDLISTS>
 
 \ Parse a C header, creating a block
 : CHEADER: \ ( -- )
-    NULL (PRIMTEXT) C!
-    (PRIMTEXT)
-    BEGIN
-	DUP
-	REFILL IF
-	    SOURCE 1- S" ;CHEADER" S=CI? IF
-		2DROP DROP
-		REFILL DROP
-		FALSE
-	    ELSE
-		TRUE
-	    THEN
-	ELSE
-	    S" Input ended before ;CHEADER" ABORT
-	THEN
-    WHILE
-	    Z+S DUP Z+NL
-    REPEAT
-
+    S" ;CHEADER" (PRIMTEXT) >>Z                 \ compile text
     CBLOCKNAME (CBLOCK)
+
     LASTXT EXECUTE A-ELEMENT CBLOCKS ELEMENT+>> ;
 
 WORDLISTS>
