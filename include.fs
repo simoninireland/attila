@@ -74,31 +74,36 @@ DATA INCLUDE-FILENAME 256 ALLOT
 
 \ Traverse the user-supplied and system chains
 : FIND-INCLUDE-FILE ( addr n -- addr' n' -1 | 0 )
-    2DUP INCLUDE-PATH (FIND-INCLUDE-FILE) ?DUP 0<> IF
-	4 -ROLL 4 -ROLL 2DROP
+    \ try as-is first
+    2DUP READABLE? IF
+	TRUE
     ELSE
-	SYSTEM-INCLUDE-PATH (FIND-INCLUDE-FILE)
+	2DUP INCLUDE-PATH (FIND-INCLUDE-FILE) ?DUP 0<> IF
+	    4 -ROLL 4 -ROLL 2DROP
+	ELSE
+	    SYSTEM-INCLUDE-PATH (FIND-INCLUDE-FILE)
+	THEN
+    THEN ;
+
+\ Print the full path to a file to be included
+: .INCLUDED ( addr n -- )
+    2DUP FIND-INCLUDE-FILE IF
+	2SWAP 2DROP TYPE
+    ELSE
+	TYPE 32 EMIT ( SPACE ) S" not found" TYPE
     THEN ;
 
 
 \ ---------- Inclusion ----------
 
-\ Find the given file either absolutely or via the include path chain
-\ and load it if found
+\ Find the given file via the include path chain and load it if found
 : INCLUDED \ ( addr len -- )
-    \ try as-is first
-    2DUP READABLE? IF
+    2DUP FIND-INCLUDE-FILE IF
 	\ found it, load it
+	2SWAP 2DROP
 	LOAD
     ELSE
-	\ not available directly, try via inclusion
-	2DUP FIND-INCLUDE-FILE IF
-	    \ found it, load it
-	    2SWAP 2DROP
-	    LOAD
-	ELSE
-	    TYPE 32 EMIT ( SPACE ) S" not found in include path" ABORT
-	THEN
+	TYPE 32 EMIT ( SPACE ) S" not found in include path" ABORT
     THEN ;
 
 \ Include the following file
