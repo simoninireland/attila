@@ -160,6 +160,7 @@ regular = \
 	c-core.fs \
 	c-flat-memory-model-runtime.fs \
 	c-itil.fs \
+	bootstrap-prelude.fs \
 	itil.fs \
 	c-continuations-runtime.fs \
 	c-fileio.fs \
