@@ -557,7 +557,7 @@ C: WARM ( -- )
     *(user_variable(USER__IN)) = -1; // in need of a refill
     if(*(user_variable(USER_OUTPUTSINK)) != NULL &&
        *(user_variable(USER_OUTPUTSINK)) != STDOUT_FILENO)
-        fclose(*(user_variable(USER_OUTPUTSINK)));
+        close(*(user_variable(USER_OUTPUTSINK)));
     *(user_variable(USER_OUTPUTSINK)) = STDOUT_FILENO;
     if(master_executive == NULL)
         master_executive = xt_of("OUTER");
@@ -651,7 +651,7 @@ C: REFILL fill_tib ( -- f )
 ;C
 
 \ Place the address of the current input point in the TIB and the
-\ number of remaining characters onto the stack, or 0 if none
+\ number of remaining characters onto the stack
 C: SOURCE ( -- )
   char *tib;
   int offset;
@@ -660,17 +660,14 @@ C: SOURCE ( -- )
       
   tib = (char *) (*(user_variable(USER_TIB)));
   offset = (int) (*(user_variable(USER__IN)));
-  if(offset == -1)
-    PUSH_CELL(0);
+  if(offset == -1) {
+    PUSH_CELL(tib + 1);   PUSH_CELL(0);
+  }  
   else {
     addr = tib + offset;
-    len = strlen(addr);
-    if(len == 0)
-      PUSH_CELL(0);
-    else {
-      PUSH_CELL((CELL) addr);
-      PUSH_CELL((CELL) len);
-    }
+    len = strlen(addr) - 1; // discount final newline
+    PUSH_CELL((CELL) addr);
+    PUSH_CELL((CELL) len);
   }
 ;C
 
@@ -834,7 +831,6 @@ C: . dot ( n -- )
 
 \ Print the whole stack
 C: .S prim_dot_s ( -- )
-    FILE *output_sink = (FILE *) (*(user_variable(USER_OUTPUTSINK)));
     int i, n;
 
     n = DATA_STACK_DEPTH();
