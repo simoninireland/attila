@@ -45,8 +45,8 @@
 
 \ Sizes
 64 1024 * CONSTANT IMAGE-SIZE           \ initial image size in cells
-90        CONSTANT DATA-STACK-SIZE      \ data stack size in cells
-90        CONSTANT RETURN-STACK-SIZE    \ return stack size in cells
+100       CONSTANT DATA-STACK-SIZE      \ data stack size in cells
+100       CONSTANT RETURN-STACK-SIZE    \ return stack size in cells
 25        CONSTANT USER-SIZE            \ number of user variables allowed
 256       CONSTANT TIB-SIZE             \ terminal input buffer size
 
