@@ -43,7 +43,7 @@ HOOK (END-DEFINITION)
 : ; ( xt -- ) [ IMMEDIATE ] \ make ; immediate immediately, to ensure that the
                             \ shadow is used at the end of this definition
                             \ when cross-compiling
-    NEXT,
+    ALIGNED NEXT,
     END-DEFINITION
     POSTPONE [ DROP ; ( IMMEDIATE )
 
