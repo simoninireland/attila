@@ -65,7 +65,7 @@ VARIABLE CURRENT-WORDLIST
 \ pointer as its identifier. The body stores the xt of the last
 \ word added to this word list
 : (NAMED-WORDLIST) \ ( addr n -- wid )
-    HERE >R
+    ALIGNED HERE >R
     0 ,
     SCOMPILE,
     R> ; 
