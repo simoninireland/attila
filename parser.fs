@@ -28,7 +28,7 @@
 \ This accesses the TIB "raw", without expanding escapes
 : PEEK-CHAR ( -- c | 0 )
     SOURCE 0= IF
-	0
+	DROP 0
     ELSE
 	C@
     THEN ;
@@ -92,8 +92,9 @@
 : PARSE ( c -- addr n | 0 )
     \ read until we have some input to parse
     BEGIN
-	SOURCE ?DUP 0=
+	SOURCE DUP 0=
     WHILE
+	    2DROP
 	    REFILL NOT IF
 		DROP 0 EXIT       \ no more input, fail
 	    THEN
@@ -115,8 +116,9 @@
     \ read until we have a line containing non-whitespace
     BEGIN
 	CONSUME-WS
-	SOURCE ?DUP 0=
+	SOURCE DUP 0=
     WHILE
+	    2DROP
 	    REFILL NOT IF
 		0 EXIT       \ no more input, fail
 	    THEN
