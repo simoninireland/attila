@@ -54,4 +54,4 @@
     INTERPRETING? IF
 	1 CELLS +
     THEN
-    @ EXECUTE ;
+    XT@ EXECUTE ;
