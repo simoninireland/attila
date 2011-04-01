@@ -47,7 +47,7 @@
 	    ELSE
 		OVER 0> IF
 		    \ characters, succeed
-		    4 ROLL 4 ROLL DROP 2DROP EXIT
+		    4 ROLL 4 ROLL DROP 2DROP  EXIT
 		ELSE
 		    \ no characters, loop
 		    2DROP
@@ -109,14 +109,14 @@
     AGAIN ;
 	    
 \ Return the input point and length remaining in the TIB
-: SOURCE ( -- addr n | 0 )
+: SOURCE ( -- addr n )
     >IN @ 0< IF
 	\ input pointer negative, we already need a refill
-	0
+	TIB A@ 1+ 0
     ELSE
-	\ are there characters remaining?
-	TIB A@ C@ >IN @ - DUP 0> IF
-	    \ yes, return the correct base address
-	    TIB A@ 1+ >IN @ + SWAP
-	THEN
+	\ characters remaining
+	TIB A@ C@ >IN @ -
+
+	\ offset to the correct address
+	TIB A@ 1+ >IN @ + SWAP
     THEN ;
