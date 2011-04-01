@@ -18,14 +18,11 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Cross-compiler target image manager4 for C compilers
+\ Cross-compiler target image manager for flat memory images
 \
 \ This image is maintained in memory at the granularity of target cells (so
 \ ALIGN etc align on cell boundaries). Each cell is associated with an output
-\ word that emits it when the image is saved. For cells holding numbers this
-\ emits the value directly; for cells holding Attila (image) addresses, xts etc
-\ this emits an address of the C-level data structure; for cells holding CFAs,
-\ this emits a pointer to a C primitive by name.
+\ word that emits it when the image is saved.
 \
 \ The cells in the image need not be the same size as those in the host,
 \ but cannot (at present) be larger.
@@ -41,9 +38,12 @@
 \ when the image block is created
 0 VALUE IMAGE
 
+\ The highest image address
+0 VALUE HIGHEST-IMAGE-ADDRESS
+
 \ The highest address actually stored to in the image
 VARIABLE HIGHEST-MODIFIED-IMAGE-ADDRESS
-: T>HIGHEST ( taddr -- )
+: T>HIGHEST ( taddr -- taddr )
     DUP HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] @ > IF
 	DUP HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] !
     THEN ;
@@ -54,8 +54,16 @@ VARIABLE HIGHEST-MODIFIED-IMAGE-ADDRESS
 : IMAGECELLS \ ( -- n )
     IMAGEBYTES /CELL /MOD SWAP IF 1+ THEN ;
 
-\ Return the host address of the given target image address
+\ Check for address overflow
+: T>OVERFLOW ( taddr -- taddr )
+    DUP HIGHEST-IMAGE-ADDRESS > IF
+	S" Image memory overflow" ABORT
+    THEN ;
+
+\ Return the host address of the given target image address, checking
+\ for overflow
 : T> \ ( taddr -- addr )
+    T>OVERFLOW
     T>HIGHEST
     /CELL /MOD
     /IMAGECELL * + IMAGE + 1 CELLS + ;
@@ -159,17 +167,18 @@ DEFER EMIT-CFA
 
 \ ---------- Initialising and finalising the image ----------
 
-\ Initialise the image
-: (INITIALISE-IMAGE) \ ( -- )
+\ Initialise the image for the given bumber of host cells
+: (INITIALISE-IMAGE) \ ( cells -- )
     \ allocate the image and point IMAGE at it
-    [FORTH] HERE TO IMAGE
-    IMAGE-SIZE /IMAGECELL * [FORTH] ALLOT
-    0 HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] !
+    [FORTH] HERE      TO IMAGE
+    DUP 1+ /CELL * 1- TO HIGHEST-IMAGE-ADDRESS
+    DUP /IMAGECELL * [FORTH] ALLOT
     
     \ all cells are treated as data cells initially
-    IMAGE-SIZE 0 DO
+    0 DO
 	['] EMIT-CELL I /CELL * E!
-    LOOP ;
+    LOOP
+    0 HIGHEST-MODIFIED-IMAGE-ADDRESS [FORTH] ! ;
  
 \ Finalise the image -- nothing to do in this model
 : (FINALISE-IMAGE) ( -- )
