@@ -143,9 +143,9 @@ C: FILE-READ-READY? read_ready ( fh -- f ior )
   FD_ZERO(&fds);
   FD_SET(fh, &fds);
   nfds = fh + 1;
-  interval.tv_sec = 0;   interval.tv_usec = 0;
+  interval.tv_sec = 0;   interval.tv_usec = 50; // sd: should be variable?
   ior = select(nfds, &fds, NULL, &fds, &interval);
-  f = (ior > 0);
+  f = (ior > 0) ? TRUE : FALSE;
   ior = (ior < 0) ? errno : 0;    
 ;C
     
@@ -157,10 +157,11 @@ C: (READ-FILE) prim_read_file ( addr n fh -- m ior )
   CELL f;
       
   // check for readable characters
+  m = 0;
   PUSH_CELL(fh);
   CALL(read_ready);
   ior = POP_CELL();   f = POP_CELL();
-  if((ior == 0) && (f > 0)) {
+  if((ior == 0) && f) {
     m = read(fh, (CHARACTERPTR) addr, n);
     ior = (m < 0) ? (CELL) errno : 0;
     if((ior == 0) && (m == 0))
