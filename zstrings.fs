@@ -69,7 +69,7 @@
 
 \ Compile a zstring into data memory
 : Z, \ ( zaddr -- )
-    HERE SWAP
+    ALIGNED HERE SWAP
     ZCOUNT 1+ ALLOT
     SWAP ZMOVE ;
 
