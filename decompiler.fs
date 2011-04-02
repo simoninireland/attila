@@ -29,7 +29,6 @@
 \
 \ However flawed, though, the current implementation helps debugging significantly.
 
-
 \ ---------- Indentation and raw output ----------
 
 \ Current indentation
@@ -49,23 +48,16 @@ VARIABLE DECOMPILER-LINE-INDENTATION
 
 \ ---------- Special words ----------
 
-\ Maximum number of special words -- should be enough
-32 VALUE MAX-SPECIAL-WORDS
+\ Chain of special word records
+VARIABLE SPECIAL-WORDS
 
-\ Look-up table for "special" words that hack the compiled space, for example
-\ by compiling literals and strings. Each entry is an xt of the special word
-\ coupled with the xt of the display word for it
-DATA SPECIAL-WORDS-TABLE MAX-SPECIAL-WORDS 2* CELLS ALLOT
-
-\ Current number of special words
-0 VALUE SPECIAL-WORDS
-
-\ Add a special word to the table
+\ Add a special word to the table consisting of two
+\ cells, the xt of a word and the xt used to display that word
 : ADD-SPECIAL-WORD ( display-xt xt -- )
-    SPECIAL-WORDS 2* CELLS SPECIAL-WORDS-TABLE +
-    DUP ROT ! 1 CELLS + !
-    SPECIAL-WORDS 1+ TO SPECIAL-WORDS ;
+    SPECIAL-WORDS (NEW-LINK-IN-CHAIN) 2 CELLS , XT, XT, ;
 
+
+\ ---------- Display words ----------
 \ Each special word should have a stack effect
 \    ( ip-before xt -- ip-after )
 \ and display the given word and leave the ip ready for the next word,
@@ -89,17 +81,12 @@ DATA SPECIAL-WORDS-TABLE MAX-SPECIAL-WORDS 2* CELLS ALLOT
 
 \ Display branches as offsets
 :NONAME
-    DROP
+    >NAME TYPE SPACE
     1 CELLS +
-    ." (BRANCH) " DUP @ . CR
+    DUP @ . CR
     1 CELLS + ;
-' (BRANCH) ADD-SPECIAL-WORD
-:NONAME
-    DROP
-    1 CELLS +
-    ." (?BRANCH) " DUP @ . CR
-    1 CELLS + ;
-' (?BRANCH) ADD-SPECIAL-WORD
+DUP ' (BRANCH)  ADD-SPECIAL-WORD
+    ' (?BRANCH) ADD-SPECIAL-WORD
 
 \ Display a "normal" (non-special) word
 : (DISPLAY-NONSPECIAL-WORD) ( ip xt -- ip' )
@@ -109,18 +96,20 @@ DATA SPECIAL-WORDS-TABLE MAX-SPECIAL-WORDS 2* CELLS ALLOT
 
 \ Look-up a word in the special words table, returning its display word or 0
 : SPECIAL-WORD? ( xt -- display-xt | 0 )
-    0 SPECIAL-WORDS-TABLE
-    SPECIAL-WORDS 0 DO
-	DUP @                ( xt 0 swt sxt )
-	3 PICK = IF          ( xt 0 swt )
-	    DUP 1 CELLS + @  ( xt 0 swt dxt )
-	    -ROT DROP SWAP   ( xt dst swt )
-	    LEAVE
-	ELSE                 ( xt 0 swt )
-	    2 CELLS +
-	THEN
-    LOOP
-    DROP NIP ;
+    SPECIAL-WORDS
+    BEGIN
+	NEXT-LINK-IN-CHAIN ?DUP 0<>
+    WHILE
+	    DUP DATA-LINK-IN-CHAIN DROP
+	    DUP XT@ 3 PICK = IF
+		\ xts match, return the display word
+		/CELL + XT@
+		ROT 2DROP
+		EXIT
+	    ELSE
+		DROP
+	    THEN
+    REPEAT DROP 0 ;
 	
 \ Return the word used to display the given word. This will be from the special
 \ word table, or (DISPLAY-NONSPECIAL-WORD) for non-special words
@@ -192,5 +181,3 @@ DATA SPECIAL-WORDS-TABLE MAX-SPECIAL-WORDS 2* CELLS ALLOT
 : DECOMPILE ( "name" -- )
     ' (DECOMPILE) ;
 
-		
-		    
