@@ -106,7 +106,7 @@ DATA (FIND-BEHAVIOUR) XT,
 \ Grab the xt of the next word in the input at compile time and leave
 \ it on the stack at run-time
 : ['] \ ( "name" -- )
-    ' POSTPONE LITERAL ; IMMEDIATE
+    ' POSTPONE XTLITERAL ; IMMEDIATE
 
 
 \ ---------- Compilation ----------
