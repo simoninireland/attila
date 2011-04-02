@@ -94,3 +94,13 @@ MAX-LEAVES STACK LEAVES
 : (CS-END) \ ( -- )
     CS-DROP ;
 
+
+\ ---------- Hook words ----------
+
+\ Clear the control stacks if we warm-start
+:NONAME
+    CS ST-CLEAR
+    LEAVES ST-CLEAR
+    FALSE ;
+HANG-ON WARMSTART-HOOK
+
