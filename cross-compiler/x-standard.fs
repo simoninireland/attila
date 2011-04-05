@@ -51,10 +51,10 @@ C: USERVAR uservar ( n -- addr )
   addr = (CELL) &image[n];
 ;C
 
-include c-core.fs
-include c-segment.fs
-include c-flat-memory-model-runtime.fs
-include c-itil.fs
+include stdc/stdc-core.fs
+include stdc/stdc-segment.fs
+include stdc/stdc-flat-memory-model-runtime.fs
+include stdc/stdc-itil.fs
 target>
 
 
@@ -124,7 +124,7 @@ include words-itil-common.fs
 include words-itil-named.fs
 
 \ continuations
-include c-continuations-runtime.fs
+include stdc/stdc-continuations-runtime.fs
 
 \ hooks and chains
 include chain.fs
@@ -132,7 +132,7 @@ include hooks-runtime.fs
 include system-hooks.fs
 
 \ terminal and file i/o
-include c-fileio.fs
+include stdc/stdc-fileio.fs
 include type.fs
 include io.fs
 
