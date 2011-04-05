@@ -71,9 +71,9 @@ TESTING" Counting"
 
 TESTING" String data compilation"
 
-{ 99 HERE 6 CHARS + C!   \ check for overflows
-  HERE
+{ HERE
   S" hello" S,
+  99 C,                  \ check for overflows
   DUP            C@      \ count
   SWAP 1+    DUP C@      \ letters
   SWAP CHAR+ DUP C@
