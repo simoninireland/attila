@@ -49,7 +49,6 @@ INTERPRET/COMPILE ."
 
 \ Place a string into data memory. Safe for empty strings
 : S, \ ( addr n -- )
-    ALIGNED
     DUP C,
     ?DUP 0> IF
 	0 DO
