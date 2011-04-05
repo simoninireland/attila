@@ -67,6 +67,7 @@
 \ Empty the line buffer, forcing a refill at the next attempt to
 \ read input
 : EMPTY-TIB ( -- )
+    0 TIB A@ C!
     -1 >IN ! ;
 
 \ Display a prompt for user input. This only happens if we're reading
