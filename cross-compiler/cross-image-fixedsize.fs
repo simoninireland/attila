@@ -170,6 +170,7 @@ DEFER EMIT-CFA
 \ Initialise the image for the given bumber of host cells
 : (INITIALISE-IMAGE) \ ( cells -- )
     \ allocate the image and point IMAGE at it
+    DUP /IMAGECELL * 2* [FORTH] (ALLOT) \ pre-allocate (easily) enough memory
     [FORTH] HERE      TO IMAGE
     DUP 1+ /CELL * 1- TO HIGHEST-IMAGE-ADDRESS
     DUP /IMAGECELL * [FORTH] ALLOT
