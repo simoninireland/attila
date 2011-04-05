@@ -4,7 +4,7 @@ include comments.fs
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -49,6 +49,7 @@ include defer.fs                     \ DEFER ... IS
 \ The VM
 include vm.fs                        \ Virtual machine structures and constants 
 include ascii.fs                     \ ASCII operations
+include hooks.fs                     \ Dynamic behaviour at strategic points
 
 \ Data structures
 include stacks.fs                    \ General stacks
@@ -68,7 +69,6 @@ include loops.fs                     \ BEGIN ... AGAIN
 include counted-loops-runtime.fs     \ DO ... LOOP and +LOOP
 include counted-loops.fs
 include case.fs                      \ CASE ... OF ... ENDOF ... ENDCASE
-include hooks.fs                     \ Dynamic behaviour at strategic points
 include conditional-compilation.fs   \ [IF] ... [ELSE] ... [THEN]
 include continuations.fs             \ Continuations
 
