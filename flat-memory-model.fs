@@ -68,9 +68,6 @@
 	ELSE
 	    \ enough memory, allocate it
 	    (TOP) +!
-
-	    \ ensure we keep a quantum at the top of the current segment
-	    SEGMENT-QUANTUM (CALLOT)
 	THEN
     ELSE
 	\ do nothing for non-positive allocations
