@@ -158,6 +158,7 @@ host = \
 # system sources, used to cross-compile a basic virtual machine
 regular = \
 	c-core.fs \
+	c-segment.fs \
 	c-flat-memory-model-runtime.fs \
 	c-itil.fs \
 	bootstrap-prelude.fs \
