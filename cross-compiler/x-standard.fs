@@ -52,6 +52,7 @@ C: USERVAR uservar ( n -- addr )
 ;C
 
 include c-core.fs
+include c-segment.fs
 include c-flat-memory-model-runtime.fs
 include c-itil.fs
 target>
@@ -158,7 +159,8 @@ target>
 \ ---------- Phase 4: Image finalisation ----------
 
 .( Aligning image...)
-[CROSS] ALIGN
+[CROSS] CALIGNED
+[CROSS] ALIGNED
 
 .( Finalising target image...)
 [CROSS] FINALISE-IMAGE
