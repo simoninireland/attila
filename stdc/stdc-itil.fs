@@ -70,6 +70,10 @@ static void print_return_stack() {
 
 \ ---------- The inner interpreter ---------- 
 
+CHEADER:
+XTPTR ip;     // interpreter instruction pointer
+;CHEADER
+
 \ Execute an xt from the stack
 C: EXECUTE execute ( xt -- )
     PRIMITIVE prim;
