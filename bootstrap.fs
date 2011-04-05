@@ -243,9 +243,14 @@ C: XT, ( -- )
 C: ALLOT allot ( n -- )
     top += n;
 ;C
+C: CALLOT callot ( n -- )
+    CALL(allot);
+;C
 
 \ Pre-allocation not used
 C: (ALLOT) ( n -- )
+;C
+C: (CALLOT) ( n -- )
 ;C
     
 \ Compile a cell (generally an xt) into the code of a word
