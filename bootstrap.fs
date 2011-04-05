@@ -244,6 +244,10 @@ C: ALLOT allot ( n -- )
     top += n;
 ;C
 
+\ Pre-allocation not used
+C: (ALLOT) ( n -- )
+;C
+    
 \ Compile a cell (generally an xt) into the code of a word
 C: COMPILE, prim_compile_cell ( xt -- )
     CELLPTR t;
