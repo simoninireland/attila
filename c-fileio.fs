@@ -198,8 +198,6 @@ C: (EMIT) ( c fh -- ior )
 
 \ Initialise to default streams
 C: INIT-I/O init_io ( -- )
-  setbuf(stdin, NULL);  // buffering done at Attila level
-  setbuf(stdout, NULL);
   *user_variable(USER_INPUTSOURCE) = STDIN_FILENO;
   *user_variable(USER_OUTPUTSINK) = STDOUT_FILENO;   
   PUSH_CELL(0);
