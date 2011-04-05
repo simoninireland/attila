@@ -110,7 +110,6 @@ AC_CHECK_FUNCS(socket bind accept listen)
 
 AC_CONFIG_FILES([
 Makefile
-target/host/c-main-interactive.h
 target/host/vm.fs
 bootstrap-vm.fs
 tools/crosscompile.fs
