@@ -32,9 +32,9 @@
 CHEADER:
 #ifdef DEBUGGING
 static int indent;
-static char buf[256];
 
 static void print_word_name( XT xt ) {
+   static char trace[256];
    XT _xt;
    int i;
    CELL n;
@@ -44,10 +44,10 @@ static void print_word_name( XT xt ) {
    CALL(xt_to_name);
    n = POP_CELL();
    addr = (BYTEPTR) POP_CELL();
-   strncpy(buf, addr, n);   buf[n] = '\0';
+   strncpy(trace, addr, n);   trace[n] = '\0';
    for(i = 0; i < indent; i++) printf(" ");
-      // printf("%x %s ", (CELL) (((BYTEPTR) xt - (BYTEPTR) image) / sizeof(CELL)), buf);
-      printf("%s ", buf);
+      // printf("%x %s ", (CELL) (((BYTEPTR) xt - (BYTEPTR) image) / sizeof(CELL)), trace);
+      printf("%s ", trace);
 }
 
 static void print_data_stack() {
