@@ -63,17 +63,17 @@
 	ROT 2DROP (<TO)
     THEN ;
 
-\ Restore previous output stream
+\ Restore previous output stream, closing the temporary replacement
 : TO> \ ( ofh -- ) 
     OUTPUTSINK @ CLOSE-FILE DROP
     OUTPUTSINK ! ;
 
 \ Re-direct subsequent input from the given file
 : (<FROM) \ ( fh -- ofh )
-    INPUTSOURCE @
-    SWAP INPUTSOURCE !
+    INPUTSOURCE @ SWAP
+    INPUTSOURCE !
     EMPTY-TIB ;         \ force a refill when we try to read
-: <FROM \ ( "name" -- ofh )
+: <FROM \ ( "name" -- )
     PARSE-WORD 2DUP R/O OPEN-FILE IF
 	DROP
 	TYPE 32 EMIT S" cannot be re-directed from" ABORT
@@ -81,7 +81,7 @@
 	ROT 2DROP (<FROM)
     THEN ;
 
-\ Restore previous output stream
+\ Restore previous input stream, closing the temporary replacement
 : FROM> \ ( ofh -- ) 
     INPUTSOURCE @ CLOSE-FILE DROP
     INPUTSOURCE ! EMPTY-TIB ;
