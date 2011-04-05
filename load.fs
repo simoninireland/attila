@@ -20,7 +20,7 @@
 
 \ Source file inclusion
 
-\ Load a file
+\ Load a file, closing it afterwards
 : (LOAD) \ ( fh -- )
     (<FROM)
     EXECUTIVE @ EXECUTE
