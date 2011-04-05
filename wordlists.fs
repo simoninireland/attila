@@ -68,7 +68,7 @@ VARIABLE CURRENT-WORDLIST
     ALIGNED HERE >R
     0 ,
     SCOMPILE,
-    R> ; 
+    ALIGNED R> ; 
 
 \ Create a named wordlist from the next name in the input stream
 : NAMED-WORDLIST \ ( "name" -- wid )
