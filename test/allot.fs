@@ -57,8 +57,10 @@ TESTING" Segmented allocation"
 \ Allotting a large block generates a new segment
 { CEILING HERE - 3 * 2 / DUP (ALLOT) ALLOT -> }
 
-\ The segment is always left with more than a segment quantum free
+\ We always have a segment quantum of data after a new word
+\ is defined
 { CEILING HERE - SEGMENT-QUANTUM - 2 CELLS + DUP (ALLOT) ALLOT
+  :NONAME ; DROP 
   CEILING HERE - SEGMENT-QUANTUM > -> TRUE }
 
 
