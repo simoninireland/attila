@@ -58,8 +58,8 @@ nodist_attila_SOURCES = attila.c
 # ----- The bootstrapped interpreter primitives file -----
 
 # primitives generated from C/Forth code
-primitives.c: bootstrap.fs c-core.fs c-fileio.fs
-	$(PERL) $(srcdir)/tools/primgen -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/c-core.fs $(srcdir)/c-fileio.fs
+primitives.c: bootstrap.fs stdc/stdc-core.fs stdc/stdc-fileio.fs
+	$(PERL) $(srcdir)/tools/primgen -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/stdc/stdc-core.fs $(srcdir)/stdc/stdc-fileio.fs
 
 
 # ----- The cross-compiled interpreter VM -----
@@ -157,14 +157,14 @@ host = \
  
 # system sources, used to cross-compile a basic virtual machine
 regular = \
-	c-core.fs \
-	c-segment.fs \
-	c-flat-memory-model-runtime.fs \
-	c-itil.fs \
+	stdc/stdc-core.fs \
+	stdc/stdc-segment.fs \
+	stdc/stdc-flat-memory-model-runtime.fs \
+	stdc/stdc-itil.fs \
 	bootstrap-prelude.fs \
 	itil.fs \
-	c-continuations-runtime.fs \
-	c-fileio.fs \
+	stdc/stdc-continuations-runtime.fs \
+	stdc/stdc-fileio.fs \
 	ascii.fs \
 	chain.fs \
 	hooks-runtime.fs \
@@ -196,6 +196,7 @@ test = 	test/core-system-tests.fs \
 	test/allot.fs \
 	test/ascii.fs \
 	test/strings.fs \
+	test/evaluate.fs \
 	test/formatting.fs \
 	test/loops.fs \
 	test/conditional-compilation.fs \
@@ -217,10 +218,6 @@ CLEANFILES = primitives.c attila.c
 
 # Make sure the data directories are readable by everyone
 install-data-hook:
-	chmod a+x $(pkgdatadir)
-	chmod a+x $(pkgdatadir)/target
-	chmod a+x $(pkgdatadir)/target/host
-	chmod a+x $(pkgdatadir)/cross-compiler
-	chmod a+x $(pkgdatadir)/test
+	chmod -R a+x $(pkgdatadir)
 
 
