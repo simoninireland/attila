@@ -49,6 +49,19 @@ TESTING" Allotting"
   HERE SWAP - -> 0 }
 
 
+TESTING" Segmented allocation"
+
+\ We don't move HERE etc just by testing
+{ HERE 1 CELLS (ALLOT) HERE = -> TRUE }
+
+\ Allotting a large block generates a new segment
+{ CEILING HERE - 3 * 2 / DUP (ALLOT) ALLOT -> }
+
+\ The segment is always left with more than a segment quantum free
+{ CEILING HERE - SEGMENT-QUANTUM - 2 CELLS + DUP (ALLOT) ALLOT
+  CEILING HERE - SEGMENT-QUANTUM > -> TRUE }
+
+
 TESTING" Data compilation"
 
 \ Data compilation must leave HERE aligned
