@@ -1,7 +1,7 @@
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -18,9 +18,9 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ A simple, flat memory model with headers, for indirected threading.
+\ A simple, flat memory model with code and data in a single segment.
 
-\ ---------- Memory management ----------
+\ ---------- Basic memory access and allocation ----------
 
 \ TOP and HERE are the same in this model, as are CEILING and THERE
 : TOP     (TOP) @ ;
@@ -29,15 +29,60 @@
 : THERE   CEILING ;
 
 \ Access to last-defined word
+\ sd: seems like the wrong place for this....
 : LASTXT LAST @ ;
 
-\ Allocate a number of bytes in code memory, checking for overflow
-\ sd: bounds checking should be a conditional-compilation option?
-: CALLOT ( n -- )
-    (TOP) +!
-    TOP CEILING >= IF
-	1 DIE   \ error code 1: out of memory
+\ Return the amount of memory we allocate to allocate enough for the
+\ given amount
+: >SEGMENT-SIZE ( n -- n' )
+    SEGMENT-SIZE /MOD SWAP IF 1+ THEN SEGMENT-SIZE * ;
+
+\ Ensure that there is enough memory to CALLOT n bytes, creating a new segment
+\ and resetting if necessary. Note that this doesn't actually *allocate*
+\ memory, it just makes sure it *can be* allocated. TOP is not guaranteed
+\ to be CALIGNED afterwards
+: (CALLOT) ( n -- )
+    DUP CEILING TOP - > IF 
+	\ not enough room, try to create a new segment
+	>SEGMENT-SIZE CREATE-SEGMENT ?DUP IF
+	    \ new segment, re-set the variables
+	    OVER (TOP) !
+	    + 1- (CEILING) !
+	ELSE
+	    \ can't get a new segment, die
+	    1 DIE
+	THEN
+    ELSE
+	\ enough memory already
+	DROP
     THEN ;
+
+\ Allocate a number of bytes in code memory, checking for overflow, Safe for zero
+\ and negative amounts, and checks for out-of-memory issues. Use (CALLOT) to
+\ ensure there's enough to allocate before calling CALLOT
+: CALLOT ( n -- )
+    DUP 0> IF
+	DUP CEILING TOP - > IF
+	    \ out of memory
+	    1 DIE
+	ELSE
+	    \ enough memory, allocate it
+	    (TOP) +!
+
+	    \ ensure we keep a quantum at the top of the current segment
+	    SEGMENT-QUANTUM (CALLOT)
+	THEN
+    ELSE
+	\ do nothing for non-positive allocations
+	DROP
+    THEN ;
+
+\ ALLOTting data space is just like CALLOTting code space in this model
+: (ALLOT) ( n -- ) (CALLOT) ;
+: ALLOT   ( n -- )  CALLOT  ;
+
+
+\ ---------- Code compilation ----------
 
 \ Compile a character. This is the basic unit of compilation,
 \ for code and data (in this model)
@@ -93,6 +138,9 @@
 
 \ CTCOMPILE, is defined in the inner interpreter
 
+
+\ ---------- Data compilation ----------
+
 \ In this model, data and code compilation are the same
 : C,      CCOMPILE, ;
 : ,       COMPILE, ;
@@ -104,14 +152,8 @@
 : ALIGN   CALIGN ;
 : ALIGNED CALIGNED ;
 
-\ ALLOTting data space. Safe for zero and negative amounts. The allocated
-\ space isn't zeroed
-: ALLOT ( n -- )
-    DUP 0> IF
-	CALLOT
-    ELSE
-	DROP
-    THEN ;
+
+\ ---------- Memory access ----------
 
 \ Memory access also doesn't distinguish between address types
 \ !, @, C@, C!, 2@ amd 2! are in core.fs: these words are the "manipulators"
