@@ -1,7 +1,7 @@
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -43,12 +43,16 @@
 \   1 = big-endian
 @BIGENDIAN@ CONSTANT BIGENDIAN?
 
-\ Sizes
+\ Virtual machine sizes
 64 1024 * CONSTANT IMAGE-SIZE           \ initial image size in cells
 100       CONSTANT DATA-STACK-SIZE      \ data stack size in cells
 100       CONSTANT RETURN-STACK-SIZE    \ return stack size in cells
 25        CONSTANT USER-SIZE            \ number of user variables allowed
 256       CONSTANT TIB-SIZE             \ terminal input buffer size
+
+\ Memory management
+24 1024 *   CONSTANT SEGMENT-SIZE       \ size in bytes incrmental allocation for segments
+16 /CELL *  CONSTANT SEGMENT-QUANTUM    \ number of bytes we guarantee to be able to allot
 
 \ Status masks
 1 CONSTANT IMMEDIATE-MASK          \ IMMEDIATE words, executed even when compiling
