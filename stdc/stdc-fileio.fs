@@ -35,6 +35,19 @@ CHEADER:
 #include <sys/time.h>
 #include <sys/select.h>
 
+// Forth to C filenames
+char buf[256];
+char *unix_filename( char *addr, int n ) {
+  int i;
+  char *ptr;
+
+  ptr = addr;
+  for(i = 0; i < n; i++)
+    buf[i] = *ptr++;
+  buf[n] = '\0';
+
+  return buf;
+}
 ;CHEADER
 
   
@@ -63,7 +76,7 @@ C: BIN ( m -- m )
 C: DELETE-FILE ( addr namelen -- ior )
   CHARACTERPTR fn;
 
-  fn = create_unix_string(addr, namelen);
+  fn = unix_filename(addr, namelen);
   ior = (CELL) unlink(fn);
 ;C
 
@@ -71,7 +84,7 @@ C: DELETE-FILE ( addr namelen -- ior )
 C: OPEN-FILE ( addr namelen m -- fh ior )
   CHARACTERPTR fn;
 
-  fn = create_unix_string(addr, namelen);
+  fn = unix_filename(addr, namelen);
   fh = (CELL) open(fn, m);
   ior = (fh < 0) ? errno : 0;
 ;C
@@ -81,7 +94,7 @@ C: CREATE-FILE ( addr namelen m -- fh ior )
   CHARACTERPTR fn;
   int mode;
 
-  fn = create_unix_string(addr, namelen);
+  fn = unix_filename(addr, namelen);
   fh = (CELL) open(fn, m | O_CREAT | O_TRUNC, 0655);
   ior = (fh == -1) ? (CELL) errno : 0;
 ;C
