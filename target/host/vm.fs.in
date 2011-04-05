@@ -51,8 +51,9 @@
 256       CONSTANT TIB-SIZE             \ terminal input buffer size
 
 \ Memory management
-24 1024 *   CONSTANT SEGMENT-SIZE       \ size in bytes incrmental allocation for segments
-16 /CELL *  CONSTANT SEGMENT-QUANTUM    \ number of bytes we guarantee to be able to allot
+64 1024 *   CONSTANT SEGMENT-SIZE       \ size in bytes incremental allocation for segments
+32 /CELL *  CONSTANT SEGMENT-QUANTUM    \ number of bytes we guarantee to be able to allot,
+                                        \ typically the body of an "average" word
 
 \ Status masks
 1 CONSTANT IMMEDIATE-MASK          \ IMMEDIATE words, executed even when compiling
