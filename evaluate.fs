@@ -25,11 +25,11 @@
 
 \ Evaluate the given string as though it was entered from the terminal
 : EVALUATE \ ( addr n -- )
-    SAVE-INPUT N>R
-    TIB @ SWAP CMOVE
+    SAVE-INPUT >R >R >R
+    TIB @ SMOVE
     0 >IN !
     1 NEGATE INPUTSOURCE !
     EXECUTIVE @ EXECUTE
-    NR> RESTORE-INPUT DROP ;
+    R> R> R> RESTORE-INPUT DROP ;
 
 
