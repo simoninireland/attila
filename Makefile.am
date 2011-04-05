@@ -152,8 +152,14 @@ crosscompiler = \
 # host development system additional sources
 host = \
 	target/host/x-host.fs \
-	target/host/vm.fs \
-	target/host/c-main-interactive.h
+	target/host/vm.fs
+
+# standard runtime
+runtime = \
+	stdc/stdc-types-standard.h \
+	stdc/stdc-stacks-bare.h \
+	stdc/stdc-main.h \
+	stdc/stdc-runtime-standard.h
  
 # system sources, used to cross-compile a basic virtual machine
 regular = \
@@ -209,7 +215,7 @@ test = 	test/core-system-tests.fs \
 # ----- Distribution -----
 
 # Distributed files
-nobase_dist_pkgdata_DATA = $(forth) $(crosscompiler) $(host) $(regular) $(test)
+nobase_dist_pkgdata_DATA = $(forth) $(runtime) $(crosscompiler) $(host) $(regular) $(test)
 nobase_dist_doc_DATA = attila.html
 
 # Files to be cleaned
