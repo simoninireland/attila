@@ -44,6 +44,8 @@ include defer.fs
 \ The VM
 include bootstrap-vm.fs
 include ascii.fs
+include hooks.fs
+include system-hooks.fs
 
 \ Data structures
 include stacks.fs
@@ -64,10 +66,6 @@ include counted-loops-runtime.fs
 include counted-loops.fs
 include case.fs
 include conditional-compilation.fs
-
-\ Hooks
-include hooks.fs
-include system-hooks.fs
 
 \ Data types
 include chars.fs
