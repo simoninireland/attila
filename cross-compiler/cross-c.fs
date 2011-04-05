@@ -115,12 +115,14 @@ DATA (PRIMNAME) 32 ALLOT        \ buffer for name
 
 \ Buffer for the text (allows 5kb of source per primitive or literal block)
 5 1024 * VALUE PRIMTEXT-SIZE
+PRIMTEXT-SIZE (ALLOT)
 DATA (PRIMTEXT) PRIMTEXT-SIZE ALLOT
 
 <WORDLISTS ALSO CROSS-COMPILER DEFINITIONS
 
 \ Parse a C primitive, creating a locator word that holds all its details
 : C:
+    PRIMTEXT-SIZE (ALLOT)                  \ probably enough
     PARSE-WORD
     ALIGNED HERE ROT S,                    \ primitive's Forth-level name: ( naddr )
 
@@ -180,6 +182,7 @@ WORDLISTS>
 
 \ Parse a C header, creating a block
 : CHEADER: \ ( -- )
+    PRIMTEXT-SIZE (ALLOT)
     S" ;CHEADER" (PRIMTEXT) >>Z                 \ compile text
     CBLOCKNAME (CBLOCK)
 
