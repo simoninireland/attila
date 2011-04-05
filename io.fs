@@ -70,18 +70,25 @@
     0 TIB A@ C!
     -1 >IN ! ;
 
-\ Display a prompt for user input. This only happens if we're reading
-\ from the terminal (standard input)
+\ Display a prompt for user input
 : PROMPT ( -- )
-    SOURCE-ID 0= IF
-	32 EMIT ( SPACE ) S" ok " TYPE
-    THEN ;
+    32 EMIT ( SPACE ) S" ok " TYPE ;
 
 \ Read a line of text from the input source, returning a "data available" flag
 : REFILL ( -- f )
-    \ prompt for user input if appropriate
-    PROMPT
-
+    EMPTY-TIB
+    
+    \ source-dependent functions
+    SOURCE-ID ?DUP 0= IF
+	\ terminal input, display a prompt
+	PROMPT
+    ELSE
+	0< IF
+	    \ reading a string, we can't refill
+	    FALSE EXIT
+	THEN
+    THEN
+    
     \ read a line of data into the TIB
     TIB A@ 1+ 0
     BEGIN
@@ -93,7 +100,6 @@
 	SWAP 0<> OR NIP IF      \ read error
 	    \ set for refill and exit
 	    2DROP
-	    EMPTY-TIB
 	    FALSE EXIT
 	THEN
 
