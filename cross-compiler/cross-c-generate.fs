@@ -103,8 +103,8 @@
     ." // VM definition" CR
     CROSS-COMPILER-TARGET-VM-FILE GENERATE-VM CR CR
 
-    ." // Architecture definition" CR
-    ." #include " QUOTES CROSS-COMPILER-TARGET-MAIN-FILE TYPE QUOTES CR CR
+    ." // Runtime" CR
+    ." #include " QUOTES CROSS-COMPILER-TARGET-RUNTIME-FILE TYPE QUOTES CR CR
 
     ." // Primitives table" CR
     GENERATE-PRIMITIVE-DECLARATIONS CR CR
