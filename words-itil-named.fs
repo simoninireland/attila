@@ -25,18 +25,20 @@
 
 \ Create a header for the named word with the given code field
 : (WORD) \ ( addr n cf -- xt )
-    CALIGNED                 \ align TOP on the next cell boundary 
-    >R                       \ stash the code field
-    DUP >R                   \ ...and the name length
+    OVER SEGMENT-QUANTUM + (CALLOT)  \ make room for a large-ish word, just in case
+    SEGMENT-QUANTUM (ALLOT)          \ ...and its data
+    CALIGNED                         \ align TOP on the next cell boundary 
+    >R                               \ stash the code field
+    DUP >R                           \ ...and the name length
     CSEQCOMPILE,
     CALIGNED      
-    R> CCOMPILE,             \ compile the name length
-    0 CCOMPILE,              \ status byte
+    R> CCOMPILE,                     \ compile the name length
+    0 CCOMPILE,                      \ status byte
     CALIGNED
-    LASTXT ACOMPILE,         \ compile the link pointer
-    TOP                      \ the txt
-    R> CFACOMPILE,           \ the code pointer
-    DUP LAST XT! ;           \ update LAST
+    LASTXT ACOMPILE,                 \ compile the link pointer
+    TOP                              \ the txt
+    R> CFACOMPILE,                   \ the code pointer
+    DUP LAST XT! ;                   \ update LAST
 
 
 \ ---------- Basic finding ----------
