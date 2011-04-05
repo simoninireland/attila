@@ -40,13 +40,10 @@
 \ Restore the previously-save input state, if possible
 : RESTORE-INPUT \ ( fh pos 2 -- f )
     DROP
-    OVER REPOSITION-FILE ?DUP IF
-	NIP
-    ELSE
-	INPUTSOURCE !
-	EMPTY-TIB       \ force a refill at the next read attempt
-	TRUE
-    THEN ;
+    OVER REPOSITION-FILE DROP \ don't care if re-positioning fails
+    INPUTSOURCE !
+    EMPTY-TIB                 \ force a refill at the next read attempt
+    TRUE ;
 
 
 \ ---------- Re-directing I/O ----------
