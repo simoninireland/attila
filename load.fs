@@ -28,7 +28,7 @@
 
 \ Test whether the given file exists and is readable
 : READABLE? ( addr n -- f )
-    R/O OPEN-FILE IF
+    R/O OPEN-FILE 0<> IF
 	DROP FALSE
     ELSE
 	CLOSE-FILE DROP
@@ -37,7 +37,7 @@
     
 \ Load a file
 : LOAD \ ( addr len -- )
-    2DUP R/O OPEN-FILE IF
+    2DUP R/O OPEN-FILE 0<> IF
 	DROP TYPE 32 EMIT ( SPACE ) S" can't be loaded" ABORT
     ELSE
 	ROT 2DROP
