@@ -36,7 +36,12 @@
 \ Hook for word parsers
 HOOK PARSE-WORD-HOOK
 
+
 \ ---------- Parsing components----------
+\ Parsing hooks must all have the stack comment ( addr n -- -1 | addr n 0 )
+\ They take a lexeme as a string and either process it -- completing the
+\ hook and returnig TRUE -- or don't in which case they leave it on the
+\ stack and add FALSE
 
 \ Words, compile or execute depending on mode and immediacy
 :NONAME ( addr n -- -1 | addr n 0 )
@@ -69,21 +74,15 @@ HANG-ON PARSE-WORD-HOOK
 
 \ ---------- The executive ----------
 
-\ The interactive outer executive. The return stack stashing it to
-\ make sure that any word is executed in the stack environment it
-\ expects, not in one containing a copy of the current lexeme -- and
-\ words can't make assumptions about the return stack environment they're
-\ called in
+\ The interactive outer executive reads words while they're available
+\ and processes them using the parsing hook
 : OUTER \ ( -- )
     BEGIN
 	PARSE-WORD ?DUP 0= IF
 	    EXIT
 	ELSE
-	    2DUP >R >R                        \ stash lexeme for later
 	    PARSE-WORD-HOOK RUN-HOOK NOT IF
-		2DROP R> R> TYPE S" ?" ABORT
-	    ELSE
-		R> R> 2DROP                   \ forget lexeme
+		TYPE S" ?" ABORT
 	    THEN
 	THEN
     AGAIN ;
