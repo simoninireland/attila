@@ -217,7 +217,7 @@ WORDLISTS>
 
 
 \ ---------- Common behaviours ----------
-      
+`      
 \ The run-time behaviour of a variable, returning its body address
 C: (VAR) dovar ( -- addr )
     PUSH_CELL(_xt);
@@ -286,7 +286,8 @@ C: INIT-INTERPRETER init ( -- )
 
 \ Emergency abnormal exit
 C: DIE prim_die ( rc -- )
-  printf("Exited abnormally with code %d", rc);
+  if(rc != 0)
+    printf("Exited abnormally with code %d", rc);
   exit(rc);
 ;C
 
