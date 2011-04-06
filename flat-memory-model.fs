@@ -102,7 +102,6 @@
 : COMPILE, \ ( n -- )
     CALIGNED
     
-
     /CELL 0 DO
 	BIGENDIAN? IF
 	    DUP /CELL I - 1- 8 * RSHIFT 255 AND CCOMPILE,
@@ -125,7 +124,7 @@
 
 \ Compile a string. Safe for empty strings
 : SCOMPILE, \ ( addr n -- )
-    CALIGNED DUP CCOMPILE, CSEQCOMPILE, ;
+    DUP CCOMPILE, CSEQCOMPILE, ;
 
 \ There's no distinction between addresses at run-time
 : RACOMPILE,  COMPILE, ;
