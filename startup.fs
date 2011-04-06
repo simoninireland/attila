@@ -18,44 +18,15 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Normal interactive start-up
+\ Normal start-up
 \
-\ This START word performs the actions needed to start the system from
-\ scratch. By default this is to load the standard prelude and then
-\ warm-start the interpreter, setting the future restart point to
-\ the executive.
+\ This word can be changed, but probably never will be unles the
+\ system is running without hooks or if a particular turnkey
+\ behaviour is wanted from the get-go.
 \
-\ As a general rule, START should never be executed from within
+\ As a general rule, START should never actually be executed from within
 \ a session. It might actually be better to have it as a :NONAME.
 
-\ ---------- Handy words to be hung on the startup hook ----------
-
-\ Announce the system
-: ANNOUNCE
-    S" Attila v.1.0 (" TYPE
-    (IMAGE-NAME) @ DUP C@ SWAP 1+ SWAP ( COUNT ) TYPE
-    S" )" TYPE
-    0 ;
-
-\ Load the standard prelude
-: LOAD-PRELUDE
-    S" prelude.fs"   INCLUDED
-    0 ;
-
-
-\ ---------- Handy words for the warmstart hook ----------
-
-\ Reset the elements of an interactive environment
-: INTERACTIVE
-    ['] OUTER            EXECUTIVE XT!  \ interactive outer executive
-    INTERPRETATION-STATE STATE       !  \ interpreting
-    10                   BASE        !  \ decimal
-    0                    TRACE       !  \ not debugging
-    -1                   >IN         !  \ TIB needs a refill
-    0                    TIB @      C!  \ no data in TIB
-    0 ;
-
-\ ---------- Start-up ----------
 
 \ Start an Attila session
 : START ( -- )
