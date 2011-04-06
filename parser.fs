@@ -24,62 +24,33 @@
 
 \ ---------- Character reading ----------
 
-\ Peek at the next character from the TIB, returning it or 0 if there are none
-\ This accesses the TIB "raw", without expanding escapes
-: PEEK-CHAR ( -- c | 0 )
-    SOURCE 0= IF
-	DROP 0
-    ELSE
-	C@
-    THEN ;
-
-\ Read a character from the TIB, returning it or 0 if there are none.
-\ Escapes are expanded
-: READ-CHAR ( -- c | 0 )
-    PEEK-CHAR DUP IF
-	1 >IN +!
-    THEN ;
-
-\ Read at most n characters into addr, returning the number actually retrieved
-: ACCEPT ( addr n -- m )
-    0 DO
-	READ-CHAR ?DUP 0= IF
-	    \ no character, finish reading
-	    DROP I EXIT
-	ELSE
-	    \ store character, move on
-	    OVER C!
-	    /CHAR +
-	THEN
-    LOOP ;
-    
 \ Consume all leading instances of the given character in the TIB
 : CONSUME ( c -- )
-    BEGIN
-	PEEK-CHAR ?DUP 0= IF
-	    DROP LEAVE
-	ELSE
-	    OVER C= NOT IF
-		DROP LEAVE
+    SOURCE ?DUP 0> IF
+	0 DO
+	    2DUP C@ C= IF
+		1 >IN +!
+		/CHAR +
+	    ELSE
+		2DROP EXIT
 	    THEN
-	THEN
-	READ-CHAR DROP
-    AGAIN ;
+	LOOP
+    THEN 2DROP ;  
 
 \ Consume all leading characters in a given character class in the TIB. The
 \ character class is given by a classifying word that returns a flag given
 \ a character
 : CONSUME-CLASS ( xt -- )
-    BEGIN
-	PEEK-CHAR ?DUP 0= IF
-	    DROP LEAVE
-	ELSE
-	    OVER EXECUTE NOT IF
-		DROP LEAVE
+    SOURCE ?DUP 0> IF
+	0 DO
+	    2DUP C@ SWAP EXECUTE IF
+		1 >IN +!
+		/CHAR +
+	    ELSE
+		2DROP EXIT
 	    THEN
-	THEN
-	READ-CHAR DROP
-    AGAIN ;
+	LOOP
+    THEN 2DROP ;  
 
 \ Consume all leading whitespace in the TIB
 : CONSUME-WS ( -- ) ['] WS? CONSUME-CLASS ;
@@ -101,12 +72,14 @@
     REPEAT
 
     0 SWAP
-    0 DO
-	READ-CHAR 3 PICK C= IF
-	    -ROT DROP EXIT       \ leave having consumed delimiter
-	                         \ but without it counting in the
-	                         \ string to be returned
+    0 DO ( c addr i )
+	2DUP + C@ 3 PICK C= IF
+	    -ROT DROP
+	    1 >IN +!              \ consume the delimiter, but without
+	                          \ adding it to the string returned
+	    EXIT
 	ELSE
+	    1 >IN +!
 	    1+
 	THEN
     LOOP ;
@@ -116,23 +89,24 @@
     \ read until we have a line containing non-whitespace
     BEGIN
 	CONSUME-WS
-	SOURCE DUP 0=
+	SOURCE ?DUP 0=
     WHILE
-	    2DROP
+	    DROP
 	    REFILL NOT IF
-		0 EXIT       \ no more input, fail
+		FALSE EXIT       \ no more input, fail
 	    THEN
     REPEAT
 
     \ parse the next word up to the end or the first whitespace
-    0 SWAP                   \ the length we've accepted
+    0 SWAP
     0 DO
-	READ-CHAR WS? IF
+	2DUP + C@ WS? IF
 	    EXIT
 	ELSE
+	    1 >IN +!
 	    1+
 	THEN
-    LOOP ;
+    LOOP ; 
 
 
 \ ---------- Digits ----------
