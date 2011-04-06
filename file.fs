@@ -68,8 +68,7 @@
 \ Re-direct subsequent input from the given file
 : (<FROM) \ ( fh -- ofh )
     INPUTSOURCE @ SWAP
-    INPUTSOURCE !
-    EMPTY-TIB ;         \ force a refill when we try to read
+    INPUTSOURCE ! EMPTY-TIB ;
 : <FROM \ ( "name" -- )
     PARSE-WORD 2DUP R/O OPEN-FILE IF
 	DROP
