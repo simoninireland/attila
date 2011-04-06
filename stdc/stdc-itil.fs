@@ -217,7 +217,7 @@ WORDLISTS>
 
 
 \ ---------- Common behaviours ----------
-`      
+      
 \ The run-time behaviour of a variable, returning its body address
 C: (VAR) dovar ( -- addr )
     PUSH_CELL(_xt);
