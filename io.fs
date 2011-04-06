@@ -100,6 +100,7 @@
 	SWAP 0<> OR NIP IF      \ read error
 	    \ set for refill and exit
 	    2DROP
+	    EMPTY-TIB
 	    FALSE EXIT
 	THEN
 
