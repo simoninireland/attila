@@ -24,7 +24,7 @@
 #define STDC_X_STANDARD
 
 #include "stdc/stdc-types-standard.h"
-#include "stdc/stdc-stacks-bare.h"
+#include "stdc/stdc-stacks-protected.h"
 #include "stdc/stdc-main.h"
 
 #endif
