@@ -158,6 +158,8 @@ host = \
 runtime = \
 	stdc/stdc-types-standard.h \
 	stdc/stdc-stacks-bare.h \
+	stdc/stdc-stacks-protected.h \
+	stdc/stdc-dot.fs \
 	stdc/stdc-main.h \
 	stdc/stdc-runtime-standard.h
  
@@ -192,6 +194,7 @@ regular = \
 	include.fs \
 	include-paths.fs \
 	executive.fs \
+	interactive.fs \
 	startup.fs
 
 # test suite
