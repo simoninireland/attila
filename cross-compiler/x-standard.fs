@@ -152,6 +152,7 @@ include include.fs
 
 \ interactive executive
 include executive.fs
+include interactive.fs
 include startup.fs
 target>
 
