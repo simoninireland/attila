@@ -105,9 +105,8 @@
     THEN
     DROP CALIGNED ;
 : SCOMPILE, \ ( addr n -- )
-    CALIGNED DUP CCOMPILE, CSEQCOMPILE, ;
+    DUP CCOMPILE, CSEQCOMPILE, ;
 : S, \ ( addr n -- )
-    ALIGNED
     DUP C,
     1+ 0 DO
 	DUP [FORTH] C@ C,
