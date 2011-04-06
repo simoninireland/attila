@@ -28,7 +28,7 @@ CHEADER:
 
 \ Print the top number on the stack
 C: . dot ( n -- )
-    printf("%ld ", n);
+    printf("%ld ", n);   fflush(stdout);
 ;C
 
 \ Print the whole stack
@@ -39,4 +39,5 @@ C: .S prim_dot_s ( -- )
     printf("<%ld> ", n);
     for(i = n - 1; i >= 0; i--)
         printf("%ld ", *(DATA_STACK_ITEM(i)));
+    fflush(stdout);
 ;C
