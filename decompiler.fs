@@ -110,7 +110,7 @@ DUP ' (BRANCH)  ADD-SPECIAL-WORD
 		DROP
 	    THEN
     REPEAT DROP 0 ;
-	
+
 \ Return the word used to display the given word. This will be from the special
 \ word table, or (DISPLAY-NONSPECIAL-WORD) for non-special words
 : (DISPLAY-WORD) ( xt -- display-xt )
