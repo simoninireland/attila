@@ -1,0 +1,42 @@
+% ---------- Typographical elements ----------
+
+% A chapter precis
+\newenvironment{precis}{%
+  \begin{center}
+    \begin{minipage}{0.75\columnwidth}
+      \itshape
+}{%
+    \end{minipage}
+  \end{center}%
+}
+
+
+
+
+% ---------- Word definitions ----------
+
+% Define a new word
+\newenvironment{defword}[3][***]{%
+  \vspace{10pt}
+  \noindent
+  \begin{minipage}{\columnwidth}
+    \hrule\vspace{5pt}
+    \texttt{#2 (\textit{#3})} \ifthenelse{\equal{#1}{***}}{\relax}{\hfill``{#1}''}
+    \par\vspace{10pt}
+}{%
+    \vspace{5pt}\hrule\par
+  \end{minipage}%
+  \vspace{10pt}
+}
+
+% Refer to a word
+\newcommand{\word}[1]{\texttt{#1}}
+
+% Refer to an argument in an stack comment
+\renewcommand{\arg}[1]{\texttt{\textit{#1}}}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "attila"
+%%% End: 

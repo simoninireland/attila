@@ -1,0 +1,89 @@
+\documentclass{book}
+
+% ---------- Typography ----------
+
+% Titling
+\title{Attila: an abstract re-targetable threaded interpreter}
+\author{Simon Dobson}
+
+% Packages
+\usepackage{xspace}
+\usepackage{ifthen}
+\usepackage{natbib}
+
+% Local style
+\usepackage{words}
+
+\begin{document}
+
+% ---------- Frontmatter ----------
+\maketitle
+
+\include{introduction}
+%\include installation}
+
+
+% ---------- Main content ----------
+
+\part{Getting started}
+\label{part:getting-started}
+
+%\include{basics}
+
+
+\part{Attila features}
+\label{part:features}
+
+%\include{include}
+%\include{prelude}
+%\include{stack}
+%\include{arithmetic}
+\include{compiler}
+%\include{conditionals}
+%\include{loops}
+%\include{terminal-io}
+%\include{create-does}
+%\include{interpret-compile}
+%\include{variables}
+%\include{defer}
+%\include{chars-strings}
+%\include{zstrings}
+%\include{file-io}
+%\include{formatting}
+%\include{records}
+%\include{wordlists}
+%\include{dynamic-memory}
+%\include{decompiler}
+ 
+
+\part{Understanding the internals}
+\label{part:internals}
+
+%\include{architecture}
+%\include{threaded-interpreter}
+%\include{vm}
+
+
+\part{Porting Attila}
+\label{part:porting}
+
+\include{cross-compiler}
+
+
+\part{Attila and embedded systems}
+\label{part:embedded-systems}
+
+
+% ---------- Endmatter ----------
+
+\bibliographystyle{apalike}
+\bibliography{attila}
+
+
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

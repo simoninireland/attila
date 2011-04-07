@@ -1,0 +1,191 @@
+\chapter{The cross-compiler}
+\label{chap:cross-compiler}
+
+\begin{precis}
+  This chapter describes the Attila cross-compiler, which is the
+  mechanism by which Attila is compiled, extended and ported to other
+  systems. We start with what cross-compilation is and why it's a good
+  idea, and then show how you can use the cross-compiler to build new
+  Attila virtual machines or standalone programs. This is the basis
+  for embedding Attila that we'll look at in
+  part~\ref{part:embedded-systems}.
+\end{precis}
+
+\section{What is cross-compilation?}
+\label{sec:what-is-cross-compilation}
+
+A compiler is a tool that takes a program written in one language (the
+\emph{source} language) and translates it into an equivalent program
+in another language (the \emph{target} language). Often the target
+language is the machine code of a particular processor, in which case
+we have a \emph{native-code compiler}: another popular choice is to
+target C, which is then run through a C compiler to generate
+executable machine code.
+
+This raises the question of what language to write the compiler itself
+in. There are a number of popular choices: C, obviously, but also
+Haskell and ML to benefit from the improved expressive power one gets
+from functional languages. Of course using languages like this means
+that the compiler-writer needs to work in at least two languages: the
+language being compiled, and the language in which the compiler is
+written (and possibly another target language too). Sometimes this is
+useful, sometimes not: it certainly adds to the cognitive load of
+compiler-writing.
+
+because a compiler generates code, it targets a particular kind of
+computer (the target computer). Often the compiler runs on the same
+kind of machine that it targets: often exactly the same machine. For
+modern server, desktop and laptop computers that's fine, but it works
+less well for compiling code for an embedded device like a washing
+machine: compilers are often large pieces of code, too bit for a
+washing machine to run itself. In this case it's common for the
+compiler to run on a different machine (the \emph{host} machine) and
+generate code for the target. This is important, because the host may
+not even be able to execute the code that the compiler generates for
+the target. This technique -- of using one machine to build code that
+runs on another -- is called \emph{cross-compilation} and is
+accomplished using a \emph{cross-compiler}.
+
+
+\section{What is bootstrapping?}
+\label{sec:what-is-bootstrapping}
+
+One of the disadvantages of the compilers we've just described is that
+they require programmers to know several languages. In many cases it'd
+be more attractive to focus on \emph{one} language, and if that
+language is sufficiently powerful and expressive to write a compiler in,
+we could use it to write a compiler \emph{for itself}: the host
+language would be the same as the source language, and potentially
+might also be the same as the target language. That way we only need
+to learn a single language to write our compiler.
+
+A moment's thought will show the problem with this: what compiler do
+we start off using, if we haven't got a compiler for it. Let's use C
+as an example. We can write a C compiler in C, and then compile this
+compiler using \emph{another} C compiler. If we have a new machine
+that needs a C compiler, we can use a C cross-compiler to generate a
+compiler for that target machine. You can use this trick several
+times, cross-compiling compilers to new platforms.
+
+Of course someone had to write an initial compiler from scratch, which
+would be hard and probably involve assembler, so it makes sense to
+avoid doing this as far as possible. So suppose we create a simple
+language that's \emph{just about} expressive enough to write a
+compiler in, and hand-craft a compiler for that language. We then
+write the compiler for our real target language in this minimal
+language, and use our hand-crafted compiler to build a compiler for
+the full language. This approach is called \emph{bootstrapping}: we
+build an initial, bootstrap compiler and use this to compile the
+``real'' compiler. The bootstrap compiler will typically be simple and
+inefficient, but that's fine: the \emph{next} compiler, the one we use
+the bootstrap compiler to build, can be full-featured and flexible. By
+doing this we minimise the work of writing a compiler in a strange
+host language, and maximise the use of our target language. In effect
+the target language compiler is written in itself -- with a bit of
+magic to start the process off.
+
+
+\section{The Attila cross-compiler}
+\label{sec:attila-cross-compiler}
+
+Attila is based around a cross-compiler for Forth. The source and host
+languages are both Forth: \emph{everything} is written in Forth,
+including the compiler and cross-compiler.
+
+In the initial installation of the system, of course, we can't use
+Attila to compile itself since we don't have an Attila system to work
+from. We therefore have a small bootstrap compiler,
+\texttt{bootattila}, that's written in C and implements a limited
+sub-set of Forth, adequate for writing a cross-compiler in. We then
+use this bootstrap compiler to load a Forth cross-compiler, which can
+then load and compile the ``real'' Attila system, \texttt{attila},
+from its source code, which is written in Forth. Once that's done we
+can forget about \texttt{bootattila}, because any time we want to
+re-build, port or amend the Attila compiler we can do so from within
+Attila, in Forth.
+
+Actually it's not \emph{quite} that simple. Some of the really
+low-level parts of Attila are too low-level to be written in
+Forth. The base level of Attila is therefore written in some other
+base target language -- typically C, but also possible assembler for a
+particular platform. The Attila cross-compiler generates code for this
+target language, which is then compiled to build a new \texttt{attila}
+binary. The reason this is a \emph{cross}-compiler is that the C
+compiler (or assembler) that we use to build the final binary may not
+target the same system that we're running the cross-compiler on. The
+cross-compiler can therefore build Attila run-times that are intended
+for other systems, specifically for embedded systems -- a topic we
+return to in part~\ref{part:embedded-systems}.
+
+\subsection{Cross-compiler basics}
+\label{sec:cross-compiler-basics}
+
+A Forth compiler is simply a word set that is designed to create new
+words (see section\ref{sec:compiler}). The colon-compiler is the
+archetypal version: it takes Forth program source code of the form:
+
+\begin{verbatim}
+: 2* ( n -- m )
+    2 * ;
+\end{verbatim}
+
+\noindent and generates a runnable definition of the given word
+(\word{2*} in this case).  To do this it uses a combination of the
+defining word \word{:}, the outer executive, and some low-level words
+like \word{(WORD)} and \word{COMPILE,} to create the executable
+definition and its code in a form that Attila can execute.
+
+A Forth \emph{cross}-compiler is conceptually very simple. Like the
+compiler, it reads source code and ``compiles'' it. Unlike the
+compiler, it generates code in a form that \emph{can't} be directly
+executed by can be used to \emph{generate} executable code at a later
+stage. To do this it simply re-defines the compiler word set so that
+the compilation process can proceed as exactly as normal, except for
+the fact that the words produce different code. The cross-compiler
+consists of a modified version of the normal Forth compiler that
+intercepts all the words used in compilation and re-defines them to
+perform cross-compilation instead, plus some housekeeping functions to
+do with recording and saving the cross-compilable code that's generated. 
+
+
+\section{Using the cross-compiler}
+\label{sec:using-cross-compiler}
+
+The cross-compiler has two main uses:
+
+\begin{enumerate}
+\item\label{enum:using-cross-compiler-dev} It can be used to
+  \emph{re-create an Attila development system}, perhaps for a new
+  machine or to add new features into the virtual machine image.
+\item\label{enum:using-cross-compiler-standalone} Alternatively, it
+  can be used to \emph{create standalone Attila programs} that aren't
+  intended to be interactive Forth systems but instead perform some
+  dedicated function. This is more like ``normal'' programming, in the
+  sense that the final product isn't intended to be a development
+  system.
+\end{enumerate}
+
+Option~\ref{enum:using-cross-compiler-dev} is used when Attila is
+first installed, and can be used to customise the ``standard'' system
+with new features. Option \ref{enum:using-cross-compiler-standalone}
+is used to build embedded systems, as well as stand-alone programs
+that to all intents and purposes are independent of having been
+written using Attila, and can be distributed and executed without
+further access to an Attila compiler. 
+
+\subsection{Re-building the standard system}
+\label{sec:cross-compiler-rebuilding}
+
+
+
+\subsection{Driver files}
+\label{sec:cross-compiler-driver-file}
+
+
+ 
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "attila"
+%%% End: 

@@ -1,0 +1,65 @@
+\chapter{The compiler}
+\label{chap:compiler}
+
+\begin{precis}
+  In this chapter we discuss the Attila Forth compiler word set. We
+  cover the user-level words generally encountered in ``normal'' code,
+  and then look at the words used to implement the core compiler
+  functionality.
+\end{precis}
+
+
+\section{The colon-compiler}
+\label{sec:colon-compiler}
+
+
+\begin{defword}[colon]{:}{``name'' -- xt}
+  Define a new word \arg{name} and switch into compilation mode.
+\end{defword}
+
+\begin{defword}[semi]{;}{xt --}
+  Complete the definition of a word begun by \word{:} and enter
+  interpretation mode.
+\end{defword}
+
+\begin{defword}[open square]{[}{--}
+  Enter interpretation mode.
+\end{defword}
+
+\begin{defword}[close square]{]}{--}
+  Enter compilation mode.
+\end{defword}
+
+\subsection{No-name definitions}
+\label{sec:colon-noname}
+
+It's sometimes useful to define ``anonymous'' words that can't be
+referred to by name. At the very least these avoid cluttering-up the
+namespace, but they can be stored in variables, hung on hooks or used
+for building other structures where they won't be called or compiled
+in the usual way.
+
+\begin{defword}{colon no name}{:NONAME}{-- xt xt}
+  Begin the definition of a new anonymous word and enter compilation
+  mode.
+\end{defword}
+
+A typical idiom for no-name definitions might be:
+
+\begin{verbatim}
+:NONAME ( -- FALSE )
+    SOME-INTERESTING-THING EXECUTE
+    FALSE ;
+HANG-ON INTERESTING-HOOK
+\end{verbatim}
+
+\noindent The word is defined anonymously. It's xt is left on the
+stack after the closing \word{;} and so can be used by the following
+code (\texttt{HANG-ON INTERESTING-HOOK}) that hangs the word onto a
+hook that will presumably be called at some point to run a string of
+words built at run-time.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "attila"
+%%% End: 

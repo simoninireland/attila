@@ -1,0 +1,151 @@
+
+\chapter{Introduction}
+\label{chap:introduction}
+
+\section{Notational conventions}
+\label{sec:conventions}
+
+\subsection{Stack effect comments}
+\label{sec:stack-comments}
+
+Forth is a stack-based language, and so the effect that a word has on
+the language's stacks is vital to understanding how the word
+works. Forth uses a standard format for describing stack effects: a
+comment that describes the stack before and after the word's
+execution. The stack comments for all the words in the system is given
+along with their definitions, presented in a standard described below
+(section~\ref{sec:word-definitions}).
+
+The most common stack comment describes the use of the data stack, and
+looks like:
+
+\begin{center}
+  \texttt{( \textit{a b -- c} )}
+\end{center}
+
+\noindent This stack comment describes the stack affect of a word that
+expects two values on the data stack, \arg{a} and \arg{b}, with
+\arg{b} being the top item, and performs some action that leaves a
+single value \arg{d} on the stack afterwards, Crucially, by convention
+\emph{no elements farther down the stack are affected}, so the stack
+comment describes all there is to know about what the word reads off
+the stack and pushes back onto it.
+
+If a word affects the return stack, it will have an additional stack
+comment such as:
+
+\begin{center}
+  \texttt{( \textit{a --} ) R:( -- a)}
+\end{center}
+
+\noindent where the stack comment prefixed with \texttt{R:} describes
+the effect on the return stack in the same way as a normal stack
+effect describes the data stack. Systems with other stacks may have
+other comments as well, for example \texttt{F:} for the floating-point
+stack.
+
+A small number of words read the next word or words in the input
+stream, for example to create a named word. This is captured in the
+stack comment as though the element read was on the stack: the comment
+for the word \word{CREATE} for example is:
+
+\begin{center}
+  \texttt{( \textit{``name'' --} )}
+\end{center}
+
+\noindent indicating that, when executed, it reads a word from the
+input stream.
+
+A small number of words also have ``alternative'' stack effects, in
+which they may change the stack in two or more different ways. A good
+example of this is the word \word{FIND}, which looks for the
+definition of a word and has two different effects depending on
+whether it finds it. Its stack effect is:
+
+\begin{center}
+  \texttt{( \textit{addr n -- xt -1 | 0} )}
+\end{center}
+
+\noindent Here the two possible after-effects of the word are
+\arg{xt -1} \emph{or} \arg{0}. A user of this word will check the top
+value and then know whether there's a second value there or not.
+
+\subsection{Word definitions}
+\label{sec:word-definitions}
+
+Stack comments are only partial documentation of a word, of course,
+and to understand what they do you need to refer to their full
+definition. In this book all words are described using a standard
+format. For example the definition of the word \word{DUP} is:
+
+\begin{defword}[dupe]{DUP}{a -- a a}
+  Duplicate the cell on the top of the stack.
+\end{defword}
+
+The top line consists of the Forth name of the word (\word{DUP}) and
+its stack effect as described above
+(section~\ref{sec:stack-comments}), which may include effects for
+multiple stacks (although in the case of \word{DUP} it's only the
+ordinary data stack that's affected). If the pronunciation of the word
+isn't obvious, a clue will be given -- well, a clue for a native UK
+english-speaker, anyway! -- in quotes at the right. The body of the
+definition is a description of the word's effect \emph{from the
+  perspective of the user}.
+
+\subsection{Word names}
+\label{sec:word-names}
+
+A Forth system consists of a \emph{lot} of words, and some naming
+conventions are handy to help spot what's going on. The following
+conventions are used in Attila:
+
+\begin{center}
+  \begin{tabular}[c]{|p{.2\columnwidth}|p{.5\columnwidth}|p{.2\columnwidth}|}
+    \hline
+    Name style & Meaning & Examples \\
+    \hline\hline
+    Ending in \texttt{!} & Store into memory & \word{!} \word{XT!} \\
+    \hline
+    Ending in \texttt{@} & Fetch from memory & \word{@} \word{C@} \\
+    \hline
+    Ending in \texttt{,} & Compile to memory & \word{,} \word{COMPILE,}
+    \\
+    \hline
+    Starting with a ``type name'' & A word that operates on that type &
+    \word{C@} \word{XT!} \\
+    \hline
+    Round brackets & An ``inner'' word, used for defining something but
+    not intended for general use & \word{(FIND)} \word{(START)} \\
+    \hline
+    Square brackets & ``Immediate'' words that execute even when in
+    compilation mode & \word{[IF]} \word{[COMPILE]} \\
+    \hline
+  \end{tabular}
+\end{center}
+
+It's worth repeating that these are \emph{conventions}, not
+\emph{rules}: they aren't used completely consistently, and may be
+misleading (although we try not to). Certainly not all immediate words
+appear in square brackets, for example.
+
+
+\section{A brief history of Forth}
+\label{sec:history}
+
+\ldots
+
+One of the first book-length references to Forth comes from
+\citet{TIL}, who describes the implementation of a Forth compiler from
+the ground up in Intel 8080 machine code. The system is so compact
+that it will fit comfortably into 4k of memory -- quite an
+accomplishment for an interactive system! Some of the memory savings
+seem quite inspired in hindsight, but would have been regarded as
+pass\'e for modern systems -- until very recently when the increased
+use of wireless sensor networks raised to profile of programming on
+highly resource-constrained platforms.  
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "attila"
+%%% End: 
