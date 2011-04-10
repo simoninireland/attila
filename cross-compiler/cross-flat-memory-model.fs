@@ -144,10 +144,6 @@
     IMAGE-SIZE /CELL * (CEILING) A!
     0 LAST A!
 
-    \ store the image name
-    ALIGNED HERE (IMAGE-NAME) A!
-    S,
-    
     \ initialise stacks and TIB
     ALIGNED
     HERE (DATA-STACK)       A!      \ data stack 
