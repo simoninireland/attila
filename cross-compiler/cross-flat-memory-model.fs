@@ -130,8 +130,8 @@
 
 \ ---------- High-level image initialisation and finalisation ----------
 
-\ Initialise the image, recording its name
-: INITIALISE-IMAGE ( addr n -- )
+\ Initialise the image
+: INITIALISE-IMAGE ( -- )
     [CROSS] IMAGE-SIZE (INITIALISE-IMAGE)
 
     \ allocate user variables
