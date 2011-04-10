@@ -37,5 +37,6 @@ testcases test/conditional-compilation.fs
 testcases test/hooks.fs
 testcases test/chains.fs
 testcases test/parser.fs
+testcases test/smallsets.fs
 
 TEST-CAMPAIGN-REPORT
