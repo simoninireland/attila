@@ -30,7 +30,6 @@ include cross-compiler/cross-target.fs
 S" target/host:@datadir@:@datadir@/target/host" SET-CROSS-COMPILER-TARGET-INCLUDE-PATH
 
 \ Other paths will be relative to this
-S" host"                         SET-CROSS-COMPILER-TARGET-NAME
 S" vm.fs"                        SET-CROSS-COMPILER-TARGET-VM-FILE
 S" stdc/stdc-runtime-standard.h" SET-CROSS-COMPILER-TARGET-RUNTIME-FILE
 S" attila.c"                     SET-CROSS-COMPILER-OUTPUT-FILE
@@ -39,7 +38,6 @@ S" attila.c"                     SET-CROSS-COMPILER-OUTPUT-FILE
 include cross-compiler/x-standard.fs
 
 \ Set hooks and vectors
-
 .( Setting hooks and vectors...)
 <TARGET
 \ Initial vectors
