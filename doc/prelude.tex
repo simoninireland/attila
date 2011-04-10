@@ -1,0 +1,35 @@
+
+\chapter{The standard prelude}
+\label{chap:standard-prelude}
+
+Attila is designed to be minimal at start-up, and to load its main
+features as required from source code. This reduces the amount of
+bound-in code and encourages experimentation -- at the expense of
+making the system load slightly slower than it might do otherwise.
+
+The standard system loads a standard prelude, \texttt{prelude.fs},
+which simply includes the source files making up a ``standard'' Forth
+language system. Many of these features are essential for a system
+that's going to define more code, since it includes things like
+control structures and conditionals -- which are strictly unnecessary
+to \emph{run} code, although necessary to \emph{build} it.
+
+The standard prelude include a number of elements, including:
+
+\begin{itemize}
+\item Conditionals and loops
+\item Data words
+\item Variables, constants and values
+\item Character and string-handling, include ``long'' strings
+\item Formatted numeric output
+\item Records
+\item File I/O and redirection
+\item Flexible include paths
+\item Word lists
+\item Dynamic memory management
+\end{itemize}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "attila"
+%%% End: 

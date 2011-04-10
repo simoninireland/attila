@@ -12,6 +12,8 @@
 \section{The colon-compiler}
 \label{sec:colon-compiler}
 
+The main ``colon-definition'' compiler word set consists of just two
+words:
 
 \begin{defword}[colon]{:}{``name'' -- xt}
   Define a new word \arg{name} and switch into compilation mode.
@@ -22,6 +24,23 @@
   interpretation mode.
 \end{defword}
 
+The compilation process is intimately tied-up with the outer executive
+(section~\ref{sec:outer-interpreter}), whose behaviour is dependent on
+the current state of the compiler/interpreter.
+
+\begin{defword}{STATE}{-- addr}
+  Variable holding the current compiler state.
+\end{defword}
+
+\begin{defword}{INTERPRETING?}{-- f}
+  True if the system is currently in interpretation mode.
+\end{defword}
+
+It is sometimes useful to be able to drop into interpretation state
+while compiling, for example to perform the calculation of a complex
+constant at compile-time rather than repeating the calculation at
+run-time. Square brackets facilitate this.
+
 \begin{defword}[open square]{[}{--}
   Enter interpretation mode.
 \end{defword}
@@ -29,6 +48,18 @@
 \begin{defword}[close square]{]}{--}
   Enter compilation mode.
 \end{defword}
+
+A typical idiom for calculating a constant at compile time would be:
+
+\begin{verbatim}
+: SOME-WORD ( -- c )
+    RUN-TIME-CALCULATION [ COMPILE-TIME-CALCULATION ] LITERAL ;
+\end{verbatim}
+
+\noindent The calculation in square brackets is done at compile-time,
+with the interpreter dropping into interpretation state for the
+bracketed code. This leaves a value on the stack which is then picked
+up by \word{LITERAL} and compiled as a literal constant for run-time. 
 
 \subsection{No-name definitions}
 \label{sec:colon-noname}
@@ -39,7 +70,7 @@ namespace, but they can be stored in variables, hung on hooks or used
 for building other structures where they won't be called or compiled
 in the usual way.
 
-\begin{defword}{colon no name}{:NONAME}{-- xt xt}
+\begin{defword}[colon no name]{:NONAME}{-- xt xt}
   Begin the definition of a new anonymous word and enter compilation
   mode.
 \end{defword}
