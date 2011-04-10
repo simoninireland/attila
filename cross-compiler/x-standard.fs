@@ -43,7 +43,7 @@ cross-compiler>
 \ - Load really basic primitives, inner interpreter
 
 .( Initialising cross-compiler target image...)
-CROSS-COMPILER-TARGET-NAME [cross] initialise-image
+[cross] initialise-image
 
 .( Initialising image with really basic primitives...)
 <target
@@ -167,3 +167,4 @@ target>
 [CROSS] FINALISE-IMAGE
 
 .( Image created successfully)
+
