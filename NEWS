@@ -1,54 +1,7 @@
 Attila history
 ==============
 
-version 0.3
-	- renamed colonhelpers.fs as base.fs, as a single location
-	  for "primitives" that don't need to be in the VM core
-	- moved base.fs to the front of the standard prelude
-	- implemented a separated namespace, codespace and dataspace
-	  memory model, which highlighted some memory problems
-	  elsewhere
-	- added announcement and copyright to the binary
-	- changed how re-direction of START-DEFINITION, END-DEFINITION
-	  and FIND work in the initial dictionary
-	- changed CONSTANT to be standards-compliant, and added
-	  VALUE ... TO as well
-	- fixed /MOD to be standards-compliant, added */MOD and
-	  derived /, MOD and */ from these primitives
- 	- split primitives.c and interactive.c into a finer decomposition
-	  of primitives by function
-	- fixed the counting behaviour of PICK, RPICK and ROLL to treat
-	  0 as the top of the stack
-	- made vocabularies the unit of dictionary memory management
-	  within the VM, split-out some primitives and changed the
-	  Attila words accordingly
-	- added locals.fs with local definitions of symbolic names
-	  for arguments to a word
-	- refactored ANS and Gforth (stack comment style) locals
-	- added INTERPRET/COMPILE for compile-state-dependent definitions,
-	  and used it to refactor various words
-	- moved TIB reference into user area
-	- started maintaining an offset into the TIB rather than a
-	  current pointer, to support >IN
-	- added TIB and >IN as user variables
+release 1.0 (10Apr2011)
+	- version able to build itself completely
+	- first public release
 
-version 0.2 (12May2007)
-	- Added CASE construction
-	- Introduced COMPILE, and used it in the prelude code
-	- Added dynamic memory word set (no RESIZE yet)
-	- Fixed loading of source code from package data directory
-
-version 0.1 (21Feb2007)
-	- Placed under version control
-	- First reasonably usable version
-	- Changed project name to Attila (abstract multi-targeted
-	  threaded interpreter)
-	- Include paths for source code
-	- Command-line options and automatic prelude loading
-
-version 0.0.2 (28Jan2007)
-	- Switched to more abstract dictionary module, hiding the
-	  details of the layout of words
-
-version 0.0.1 (19Jan2007)
-	- Initial version able to build itself
