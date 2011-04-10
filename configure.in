@@ -19,7 +19,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 # Autoconf and Automake magic
-AC_INIT([attila],[0.9])
+AC_INIT([attila],[1.0],[bugs@threaded-interpreter.org],[attila],[http://www.threaded-interpreter.org])
 AC_PREREQ(2.54)
 AM_PROG_CC_STDC
 AM_INIT_AUTOMAKE
@@ -27,10 +27,13 @@ AM_INIT_AUTOMAKE
 
 # ---------- Basic programs ----------
 
-# uncomment if debugging
+# Uncomment if debugging
 # AC_DEFINE(DEBUGGING,[1])
 
-# compilation and installation
+# Host compilation and installation
+IMAGE_NAME=host
+AC_SUBST(PACKAGE_NAME)
+AC_SUBST(IMAGE_NAME)
 AC_PROG_CC
 CFLAGS='-g'
 AC_PROG_INSTALL
@@ -45,10 +48,11 @@ test -z $UNAME && AC_MSG_ERROR([attila needs a version of uname to bootstrap the
 
 # ---------- Sizes, headers, functions and libraries ----------
 
-# standard C types
+# Standard C types
 AC_HEADER_STDC
 AC_TYPE_SIZE_T
 
+# Endinanness
 # sd: we need to expose these at autoconf level to expand vm.fs.in so we
 # can't use AC_CHECK_SIZEOF
 AC_TRY_RUN([#include <stdio.h>
@@ -76,11 +80,11 @@ AC_SUBST(CELL_SIZE)
 AC_SUBST(DOUBLE_CELL_SIZE)
 AC_SUBST(CHARACTER_SIZE) 
 
-# endian-ness
+# Endian-ness
 AC_C_BIGENDIAN(BIGENDIAN=1, BIGENDIAN=0)
 AC_SUBST(BIGENDIAN)
 
-# jumps
+# Jumps
 AC_CHECK_HEADER(setjmp.h,,AC_MSG_ERROR([attila needs setjmp.h]))
 AC_CHECK_FUNCS(setjmp longjmp)
 
@@ -90,7 +94,7 @@ AC_CHECK_FUNCS(malloc calloc)
 AC_CHECK_FUNCS(bcopy bzero)
 AC_CHECK_FUNCS(strlen strcpy strncpy strncmp strncasecmp toupper strspn strcspn)
 
-# file access
+# File access
 AC_CHECK_HEADER(unistd.h,,AC_MSG_ERROR([attila needs unistd.h]))
 AC_CHECK_HEADER(fcntl.h,,AC_MSG_ERROR([attila needs fcntl.h]))
 AC_CHECK_HEADER(errno.h,,AC_MSG_ERROR([attila needs errono.h]))
@@ -100,12 +104,12 @@ AC_CHECK_FUNCS(select open close lstat)
 # (for bootstrapping only)
 AC_CHECK_FUNCS(fgets printf sprintf sscanf)
 
-# sockets
+# Sockets
 AC_CHECK_HEADER(sys/types.h,,AC_MSG_ERROR([attila needs sys/types.h for sockets]))
 AC_CHECK_HEADER(sys/socket.h,,AC_MSG_ERROR([attila needs sys/socket.h]))
 AC_CHECK_FUNCS(socket bind accept listen)
 
-# signals
+# Signals
 AC_CHECK_HEADER(signal.h,,AC_MSG_ERROR([attila needs signal.h for development VM]))
 
 
