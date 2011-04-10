@@ -122,7 +122,7 @@
 : B>KB ( nb -- nkb )
     1024 /MOD SWAP IF 1+ THEN ;
 : SUMMARISE-IMAGE ( -- )
-    ." Image name: " CROSS-COMPILER-TARGET-NAME TYPE SPACE ." (" CROSS-COMPILER-OUTPUT-FILE TYPE ." )" CR
+    ." Image name: " [CROSS] VM-IMAGE-NAME TYPE SPACE ." (" CROSS-COMPILER-OUTPUT-FILE TYPE ." )" CR
     ." VM characteristics: " [CROSS] /CELL . SPACE ." bytes/cell, "
                              [CROSS] BIGENDIAN? IF ." big-endian" ELSE ." little-endian" THEN CR
     20 SPACES                [CROSS] /CHAR . SPACE ." bytes/char" CR
