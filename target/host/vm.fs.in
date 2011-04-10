@@ -43,6 +43,10 @@
 \   1 = big-endian
 @BIGENDIAN@ CONSTANT BIGENDIAN?
 
+\ Target image name and version
+S" @IMAGE_NAME@"      SCONSTANT VM-IMAGE-NAME   \ name of this image 
+S" @PACKAGE_VERSION@" SCONSTANT VM-VERSION      \ VM version
+
 \ Virtual machine sizes
 64 1024 * CONSTANT IMAGE-SIZE           \ initial image size in cells
 300       CONSTANT DATA-STACK-SIZE      \ data stack size in cells
@@ -82,7 +86,6 @@
 14 USER LAST                  \ xt of the most-recently-defined word
 15 USER TRACE                 \ trace (debugging) flag
 16 USER CURRENT               \ the current wordlist receiving definitions
-17 USER (IMAGE-NAME)          \ pointer to counted string holding image name
 
 \ Truth values
 0        CONSTANT FALSE
