@@ -20,13 +20,13 @@
 
 # ----- Main programs -----
 
-# toplevel programs
+# Toplevel programs
 bin_PROGRAMS = bootattila attila
 
 
 # ----- Supporting programs and scripts -----
 
-# tools used to bootstrap system
+# Tools used to bootstrap system
 EXTRA_DIST = \
 	target/host/x-host-initial.fs.in\
 	target/host/x-host.fs.in\
@@ -37,7 +37,7 @@ EXTRA_DIST = \
 
 # ----- Sources -----
 
-# bootstrapping sources
+# Bootstrapping sources
 bootattila_SOURCES = vm.h \
 	primgen.h \
 	bootstrap.fs \
@@ -47,48 +47,48 @@ bootattila_SOURCES = vm.h \
 	bootstrap-prelude.fs \
 	bootstrap-vm.fs
 
-# generated primitives file
+# Generated primitives file
 nodist_bootattila_SOURCES = primitives.c
 
-# cross-compiler sources and generated VM
+# Cross-compiler sources and generated VM
 attila_SOURCES = 
 nodist_attila_SOURCES = attila.c
 
 
 # ----- The bootstrapped interpreter primitives file -----
 
-# primitives generated from C/Forth code
+# Primitives generated from C/Forth code
 primitives.c: bootstrap.fs stdc/stdc-core.fs stdc/stdc-fileio.fs
 	$(PERL) $(srcdir)/tools/primgen -o primitives.c $(srcdir)/bootstrap.fs $(srcdir)/stdc/stdc-core.fs $(srcdir)/stdc/stdc-fileio.fs
 
 
 # ----- The cross-compiled interpreter VM -----
 
-# substitutions for directories in host cross-compiler driver
+# Substitutions for directories in host cross-compiler driver
 dirs = sed \
 	-e 's,@datadir\@,$(pkgdatadir),g' \
 	-e 's,@abs_srcdir\@,$(abs_srcdir),g' \
 	-e 's,@abs_builddir\@,$(abs_builddir),g'
 
-# host development system initial cross-compiler driver
+# Host development system initial cross-compiler driver
 target/host/x-host-initial.fs: target/host/x-host-initial.fs.in
 	$(dirs) $(srcdir)/target/host/x-host-initial.fs.in >$(abs_builddir)/target/host/x-host-initial.fs
 
-# host development system general cross-compiler driver
+# Host development system general cross-compiler driver
 target/host/x-host.fs: target/host/x-host.fs.in
 	$(dirs) $(srcdir)/target/host/x-host.fs.in >$(abs_builddir)/target/host/x-host.fs
 
-# cross-compiled system image
+# Cross-compiled system image
 attila.c: bootattila $(regular) target/host/x-host-initial.fs
 	cd $(srcdir) && $(abs_builddir)/bootattila <$(abs_builddir)/tools/crosscompile.fs
 
 
 # ----- Self-testing -----
 
-# self-tests run on installation
+# Self-tests run on installation
 check: test
 
-# test suite
+# Test suite
 test: attila
 	cd $(srcdir) && $(abs_builddir)/attila <$(srcdir)/tools/test.fs
 
@@ -97,7 +97,7 @@ test: attila
 
 # ----- The system sources -----
 
-# all the Forth code intended for normal use
+# All the Forth code intended for normal use
 forth = prelude.fs \
 	comments.fs \
 	conditionals.fs \
@@ -128,6 +128,7 @@ forth = prelude.fs \
 	formatting.fs \
 	lists.fs \
 	records.fs \
+	smallsets.fs \
 	evaluate.fs \
 	c.fs \
 	wordlists.fs \
@@ -135,7 +136,7 @@ forth = prelude.fs \
 	decompiler.fs \
 	funit.fs
 
-# cross-compiler
+# Cross-compiler
 crosscompiler = \
 	cross-compiler/cross-target.fs \
 	cross-compiler/cross-compiler.fs \
@@ -149,12 +150,12 @@ crosscompiler = \
 	cross-compiler/cross-environments.fs \
 	cross-compiler/x-standard.fs
 
-# host development system additional sources
+# Host development system additional sources
 host = \
 	target/host/x-host.fs \
 	target/host/vm.fs
 
-# standard runtime
+# Standard runtime
 runtime = \
 	stdc/stdc-types-standard.h \
 	stdc/stdc-stacks-bare.h \
@@ -163,7 +164,7 @@ runtime = \
 	stdc/stdc-main.h \
 	stdc/stdc-runtime-standard.h
  
-# system sources, used to cross-compile a basic virtual machine
+# System sources, used to cross-compile a basic virtual machine
 regular = \
 	stdc/stdc-core.fs \
 	stdc/stdc-segment.fs \
@@ -197,7 +198,7 @@ regular = \
 	interactive.fs \
 	startup.fs
 
-# test suite
+# Test suite
 test = 	test/core-system-tests.fs \
 	test/stack.fs \
 	test/arithmetic.fs \
@@ -212,14 +213,28 @@ test = 	test/core-system-tests.fs \
 	test/continuations.fs \
 	test/hooks.fs \
 	test/chains.fs \
-	test/parser.fs
+	test/parser.fs \
+	test/smallsets.fs
 
+# Example programs 
+examples = \
+	examples/sudoku/sudoku.fs \
+	examples/sudoku/check-sudoku.fs \
+	examples/sudoku/read-sudoku.fs \
+	examples/sudoku/solve-sudoku.fs \
+	examples/sudoku/test/sudoku.fs \
+	examples/sudoku/test/1.sudoku \
+	examples/sudoku/test/2.sudoku \
+	examples/sudoku/test/3.sudoku
 
 # ----- Distribution -----
 
 # Distributed files
-nobase_dist_pkgdata_DATA = $(forth) $(runtime) $(crosscompiler) $(host) $(regular) $(test)
-nobase_dist_doc_DATA = attila.html
+nobase_dist_pkgdata_DATA = \
+	$(forth) \
+	$(runtime) $(crosscompiler) $(host) $(regular) \
+	$(test) $(examples)
+# nobase_dist_doc_DATA = doc/attila.pdf
 
 # Files to be cleaned
 DISTCLEANFILES = primitives.c attila.c target/host/x-host-initial.fs
