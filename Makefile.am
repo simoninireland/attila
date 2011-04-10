@@ -227,6 +227,7 @@ examples = \
 	examples/sudoku/test/2.sudoku \
 	examples/sudoku/test/3.sudoku
 
+
 # ----- Distribution -----
 
 # Distributed files
@@ -234,7 +235,7 @@ nobase_dist_pkgdata_DATA = \
 	$(forth) \
 	$(runtime) $(crosscompiler) $(host) $(regular) \
 	$(test) $(examples)
-# nobase_dist_doc_DATA = doc/attila.pdf
+nobase_dist_doc_DATA = doc/attila.pdf
 
 # Files to be cleaned
 DISTCLEANFILES = primitives.c attila.c target/host/x-host-initial.fs
