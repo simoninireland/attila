@@ -28,14 +28,17 @@
 
 \ Announce the system
 : ANNOUNCE
-    S" Attila v.1.0 (" TYPE
-    (IMAGE-NAME) @ DUP C@ SWAP 1+ SWAP ( COUNT ) TYPE
+    S" Attila v." TYPE
+    VM-VERSION TYPE
+    32 ( SPACE ) EMIT
+    S" (" TYPE
+    VM-IMAGE-NAME TYPE
     S" )" TYPE
     0 ;
 
 \ Load the standard prelude
 : LOAD-PRELUDE
-    S" prelude.fs"   INCLUDED
+    S" prelude.fs" INCLUDED
     0 ;
 
 
