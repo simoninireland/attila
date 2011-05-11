@@ -41,6 +41,9 @@
 : */ \ ( a b c -- (a*b)/c )
     */MOD NIP ;
 
+\ Add a and b modulo c
+: +MOD \ ( a b c -- (a+b)%c
+    ROT + SWAP MOD ;
 
 \ ---------- Block sizes ----------
 
