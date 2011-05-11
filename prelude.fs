@@ -81,6 +81,7 @@ include formatting.fs                \ Formatted numeric output
 include lists.fs                     \ Linked lists
 include records.fs                   \ Record types with named fields
 include smallsets.fs                 \ Small sets using bit-fields
+include ring.fs                      \ Ring buffers
 
 \ File management
 include file.fs                      \ I/O re-direction
