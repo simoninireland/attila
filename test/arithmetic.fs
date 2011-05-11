@@ -1,7 +1,7 @@
 \ $Id$
 
 \ This file is part of Attila, a retargetable threaded interpreter
-\ Copyright (c) 2007--2010, Simon Dobson <simon.dobson@computer.org>.
+\ Copyright (c) 2007--2011, Simon Dobson <simon.dobson@computer.org>.
 \ All rights reserved.
 \
 \ Attila is free software; you can redistribute it and/or
@@ -287,3 +287,8 @@ TESTING" Basic arithmetic operations"
 { MID-UINT+1 1 RSHIFT 2 *               -> MID-UINT+1 }
 { MID-UINT+1 2 RSHIFT 4 *               -> MID-UINT+1 }
 { MID-UINT+1 1 RSHIFT MID-UINT+1 OR 2 * -> MID-UINT+1 }
+
+{ 1 0 3 +MOD -> 1 }
+{ 1 1 3 +MOD -> 2 }
+{ 1 2 3 +MOD -> 0 }
+{ 1 3 3 +MOD -> 1 }
