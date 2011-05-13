@@ -32,7 +32,9 @@
     VM-VERSION TYPE
     32 ( SPACE ) EMIT
     S" (" TYPE
-    VM-IMAGE-NAME TYPE
+    VM-TARGET-NAME TYPE
+    S" /" TYPE
+    VM-RUNTIME TYPE
     S" )" TYPE
     0 ;
 
