@@ -44,7 +44,8 @@
 @BIGENDIAN@ CONSTANT BIGENDIAN?
 
 \ Target image name and version
-S" @IMAGE_NAME@"      SCONSTANT VM-IMAGE-NAME   \ name of this image 
+S" @IMAGE_NAME@"      SCONSTANT VM-TARGET-NAME  \ name of this image 
+S" @RUNTIME_NAME@"    SCONSTANT VM-RUNTIME      \ underlying runtime
 S" @PACKAGE_VERSION@" SCONSTANT VM-VERSION      \ VM version
 
 \ Virtual machine sizes
