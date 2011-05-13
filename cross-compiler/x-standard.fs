@@ -126,6 +126,9 @@ include words-itil-named.fs
 \ continuations
 include stdc/stdc-continuations-runtime.fs
 
+\ interval timing
+include stdc/stdc-millis.fs
+
 \ hooks and chains
 include chain.fs
 include hooks-runtime.fs
