@@ -114,12 +114,11 @@
     LOOP DROP ;
 
 \ Similarly for memory movements -- from host addr to target taddr
-: CMOVE ( addr taddr n -- )
+: MOVE ( addr taddr n -- )
     1+ 0 DO
 	OVER [FORTH] C@ OVER C!
 	/CHAR + SWAP [FORTH] /CHAR + SWAP
     LOOP 2DROP ;
-: CMOVE> CMOVE ;
 
 \ ALLOTting data space simply data-compiles zeros
 : ALLOT ( n -- )
