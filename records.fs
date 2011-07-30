@@ -99,4 +99,4 @@
 
 \ Copy a record to given address
 : RECORDMOVE ( rec addr -- )
-    OVER RECORDSIZE CMOVE ;
+    OVER RECORDSIZE MOVE ;
