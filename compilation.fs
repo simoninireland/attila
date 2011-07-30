@@ -88,9 +88,10 @@ DATA (FIND-BEHAVIOUR) XT,
     (FIND-BEHAVIOUR) XT@ EXECUTE ;
     
 \ Look up a word, returning its xt
+\ sd: depends on (ABORT) being as it is, not being a hook
 : (') ( addr n -- xt )
     2DUP FIND 0= IF
-	TYPE S" ?" ABORT
+	TYPE S" ?" ( ABORT ) (ABORT) @ EXECUTE
     ELSE
 	ROT 2DROP
     THEN ;
