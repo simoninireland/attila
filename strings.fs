@@ -44,8 +44,8 @@ INTERPRET/COMPILE ."
 : .( BL CONSUME [CHAR] ) PARSE TYPE CR ; IMMEDIATE
 
 \ Push the first character of a string onto the stack
-: CHAR \ ( addr len -- c )
-    DROP C@ ;
+: CHAR \ ( "string" -- c )
+    PARSE-WORD DROP C@ ;
 
 \ Place a string into data memory. Safe for empty strings
 : S, \ ( addr n -- )
