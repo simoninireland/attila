@@ -134,6 +134,7 @@ forth = prelude.fs \
 	wordlists.fs \
 	dynamic-memory.fs \
 	decompiler.fs \
+	environment.fs \
 	funit.fs
 
 # Cross-compiler
@@ -196,8 +197,7 @@ regular = \
 	include-paths.fs \
 	executive.fs \
 	interactive.fs \
-	startup.fs \
-	environment.fs
+	startup.fs
 
 # Test suite
 test = 	test/core-system-tests.fs \
