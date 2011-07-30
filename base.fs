@@ -28,7 +28,7 @@
 \ principle is clear
 
 \ ---------- Derived arithmetic operators ----------
-    
+
 \ Divide a by b as integers
 : / \ ( a b -- a/b )
     /MOD NIP ;
@@ -68,7 +68,7 @@
 
 \ Fill an n-byte block of memory with a given byte value (usually 0). Safe
 \ for zero and negative amounts
-: CFILL ( addr n v -- )
+: FILL ( addr n v -- )
     ROT 1- BEGIN
 	DUP 0 >=
     WHILE
