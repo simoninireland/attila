@@ -139,14 +139,14 @@ include stdc/stdc-fileio.fs
 include type.fs
 include io.fs
 
-\ starting and re-starting
-include warm.fs
-include abort.fs
-
 \ parsing and colon-compilation
 include parser.fs
 include compilation.fs
 include colon.fs
+
+\ starting and re-starting
+include warm.fs
+include abort.fs
 
 \ code loading
 include file.fs
