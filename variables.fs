@@ -23,4 +23,7 @@
 \ Create a variable holding a single-precision cell
 : VARIABLE \ ( "name" -- )
     DATA 0 , ;
-  
+
+\ Create a variable holding a double-cell value (or two single cells)
+: 2VARIABLE \ ( "name" -- )
+    DATA 0 , 0 , ;
