@@ -43,7 +43,7 @@ DATA INCLUDE-FILENAME 256 ALLOT
     INCLUDE-FILENAME /CHAR + DUP /CHAR - C@ 2SWAP 
     2OVER /CHAR * +
     SWAP DUP >R
-    CMOVE
+    /CHAR * MOVE
     R> + SWAP /CHAR - C! ;
 
 \ Construct a file path from a chain component and a file stem
