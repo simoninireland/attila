@@ -30,3 +30,6 @@ HOOK STARTUP-HOOK
 \ Hook executed at warm-start
 HOOK WARMSTART-HOOK
 
+\ The basic abort handler
+\ sd: should this be a hook too?
+DATA (ABORT) ' NOOP XT,
