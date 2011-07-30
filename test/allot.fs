@@ -242,15 +242,15 @@ TESTING" Block filling"
   BLOCK1 20 0 BLOCK-FILL-TEST -> TRUE } 
 
 \ Filling
-{ BLOCK2 5 32 CFILL
+{ BLOCK2 5 32 FILL
   BLOCK2 5 32 BLOCK-FILL-TEST -> TRUE }
 
 \ Boundary overruns
-{ BLOCK2 5 32 CFILL
+{ BLOCK2 5 32 FILL
   BLOCK2 1- C@ BLOCK2 5 + C@ -> 0 0 }
 
 \ Negative and zero fills
-{ BLOCK2 0 45 CFILL
+{ BLOCK2 0 45 FILL
   BLOCK2 C@ -> 32 }
-{ BLOCK2 -1 45 CFILL
+{ BLOCK2 -1 45 FILL
   BLOCK2 1- C@ BLOCK2 C@ -> 0 32 }
