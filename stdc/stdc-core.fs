@@ -405,28 +405,26 @@ C: C@ ( addr -- c )
     c = (*((CHARACTERPTR) addr));
 ;C
 
-\ sd: These next two words are deliberately coded without using memcpy()
+\ sd: These next words are deliberately coded without using memcpy()
 \ or bcopy() to minimise library dependencies    
-    
-\ Move a block of memory from addr1 to addr2, starting from the lower address
-C: CMOVE ( addr1 addr2 n -- )
+
+\ Move the n bytes at addr1 to addr2
+C: MOVE ( addr1 addr2 n -- )
     int i;
     BYTEPTR ptr1, ptr2;
 
-    ptr1 = (BYTEPTR) addr1;    ptr2 = (BYTEPTR) addr2;
-    for(i = 0; i < n ; i++) {
-        *ptr2++ = *ptr1++;
-    }
-;C
-
-\ Move a block of memory from addr1 to addr2, starting from the higher address
-C: CMOVE> ( addr1 addr2 n -- )
-    int i;
-    BYTEPTR ptr1, ptr2;
-
-    ptr1 = (BYTEPTR) ((BYTEPTR) addr1 + n - 1);    ptr2 = (BYTEPTR) ((BYTEPTR) addr2 + n - 1);
-    for(i = 0; i < n ; i++) {
-        *ptr2-- = *ptr1--;
-    }
+    if(addr1 == addr2)
+        return;
+    if(addr1 < addr2 ) {
+        ptr1 = (BYTEPTR) ((BYTEPTR) addr1 + n - 1);    ptr2 = (BYTEPTR) ((BYTEPTR) addr2 + n - 1);
+    	for(i = 0; i < n ; i++) {
+            *ptr2-- = *ptr1--;
+    	}
+    } else {
+        ptr1 = (BYTEPTR) addr1;    ptr2 = (BYTEPTR) addr2;
+    	for(i = 0; i < n ; i++) {
+            *ptr2++ = *ptr1++;
+    	}
+    }     
 ;C
 
