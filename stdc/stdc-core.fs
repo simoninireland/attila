@@ -205,7 +205,7 @@ C: ABS ( n1 -- n2 )
     n2 = (n1 < 0) ? -n1 : n1;
 ;C
 
-
+	
 \ ---------- Comparisons ----------
 \ sd: This set isn't minimal, in that some could be defined in terms of
 \ others. But there's no canonical way to decide which is which so we may
@@ -337,6 +337,16 @@ C: 1+ ( n1 -- n2 )
 \ Decrement the top stack item    
 C: 1- ( n1 -- n2 )
     n2 = n1 - 1;
+;C
+
+\ Increment the top stack item twoce
+C: 2+ ( n1 -- n2 )
+    n2 = n1 + 2;
+;C
+
+\ Decrement the top stack item twice    
+C: 2- ( n1 -- n2 )
+    n2 = n1 - 2;
 ;C
 
 \ Double the top stack item    
