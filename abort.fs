@@ -20,13 +20,20 @@
 
 \ Aborting
 \
-\ A simple abort handler, for systems without proper exceptions.
+\ The user-level abort words, for accessing the (ABORT) handler.
 
-
-\ Abort to a warm-start with an error message
+\ Abort with a message
 : ABORT \ ( addr n -- )
-    TYPE WARM ;
+    (ABORT) @ EXECUTE ;
 
+\ Abort with an inline message
+: ABORT" \ ( "message" -- )
+    [CHAR] " PARSE
+    INTERPRETING? IF
+	ABORT
+    ELSE
+	POSTPONE SLITERAL [COMPILE] ABORT
+    THEN ; IMMEDIATE
 
 
 
