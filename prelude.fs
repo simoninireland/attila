@@ -102,6 +102,7 @@ include dynamic-memory.fs            \ ALLOCATE, FREE, RESIZE
 
 \ Compilation and debugging support
 include decompiler.fs                \ Word decompilation
+include environment.fs               \ Environmental queries
 
 \ Local variables
 \ include locals-base.fs           \ base definitions
