@@ -91,7 +91,7 @@ FALSE VALUE VERBOSE-LOGGING
     1 CAMPAIGN-TESTS-PERFORMED +!
     1 TEST-NUMBER +!
     VERBOSE-LOGGING IF
-	." Case #" TEST-NUMBER @ . CR
+	." CASE #" TEST-NUMBER @ . ." :" CR
     THEN ;
 
 \ Separate test from expected results, collecting the test results into the
@@ -108,6 +108,7 @@ FALSE VALUE VERBOSE-LOGGING
 : }
     DEPOSITED DUP RESULT-STACK-DEPTH !
     ACTUAL-STACK-DEPTH @ <> IF
+	." FAIL: "
 	." Test #"                             TEST-NUMBER @ . SPACE
 	." Wrong number of results: expected " RESULT-STACK-DEPTH @ .
 	." , got "                             ACTUAL-STACK-DEPTH @ . CR
@@ -119,6 +120,7 @@ FALSE VALUE VERBOSE-LOGGING
 		STACK-CACHE I CELLS + @
 		2DUP <> IF
 		    SWAP
+		    ." FAIL: "
 		    ." Test #"                 TEST-NUMBER @ . SPACE
 		    ." Wrong value: expected " .
 		    ." , got "                 . CR
