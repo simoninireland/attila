@@ -55,7 +55,7 @@
     (NEW-LINK-IN-CHAIN)
     DUP ,                    \ store the size
     HERE OVER ALLOT          \ allot space for data block
-    SWAP CMOVE ;             \ store the data block
+    SWAP MOVE ;              \ store the data block
 
 \ Common typed links
 : ADD-CELL-LINK-TO-CHAIN ( v link -- ) (NEW-LINK-IN-CHAIN) /CELL , , ;
