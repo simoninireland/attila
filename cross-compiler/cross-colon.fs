@@ -236,7 +236,7 @@
 
 \ Compile the next character as a literal
 : [CHAR] \ ( "name" -- )
-    PARSE-WORD CHAR [ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ] ; [FORTH] IMMEDIATE
+    CHAR [ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ] ; [FORTH] IMMEDIATE
 
 \ Postpone dynamically
 : POSTPONE ( "name" -- )
