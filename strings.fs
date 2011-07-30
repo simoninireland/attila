@@ -47,6 +47,13 @@ INTERPRET/COMPILE ."
 : CHAR \ ( "string" -- c )
     PARSE-WORD DROP C@ ;
 
+\ Move strings. MOVE is dafe for overlapping blocks, so
+\ it doesn't matter which we use
+: CMOVE ( addr1 addr2 n -- )
+    CHARS MOVE ;
+: CMOVE>  ( addr1 addr2 n -- )
+    CMOVE ;
+
 \ Place a string into data memory. Safe for empty strings
 : S, \ ( addr n -- )
     DUP C,
