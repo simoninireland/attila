@@ -44,15 +44,20 @@
     0 ;
 
 
-\ ---------- Handy words for the startup/warmstart hooks ----------
+\ ---------- Initialisation and reseting ----------
+
+\ Abort by issuing the message and then warm-starting
+: INTERACTIVE-ABORT ( addr n -- )
+    TYPE WARM ;
 
 \ Reset the elements of an interactive environment
 : INTERACTIVE
-    ['] OUTER            EXECUTIVE XT!  \ interactive outer executive
-    INTERPRETATION-STATE STATE       !  \ interpreting
-    10                   BASE        !  \ decimal
-    0                    TRACE       !  \ not debugging
-    -1                   >IN         !  \ TIB needs a refill
-    0                    TIB @      C!  \ no data in TIB
+    ['] OUTER             EXECUTIVE XT!  \ interactive outer executive
+    INTERPRETATION-STATE  STATE       !  \ interpreting
+    10                    BASE        !  \ decimal
+    0                     TRACE       !  \ not debugging
+    -1                    >IN         !  \ TIB needs a refill
+    0                     TIB @      C!  \ no data in TIB
+    ['] INTERACTIVE-ABORT (ABORT)     !  \ abort handler
     0 ;
 
