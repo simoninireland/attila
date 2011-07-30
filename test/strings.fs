@@ -30,15 +30,12 @@ TESTCASES" String handling"
 TESTING" Character encoding"
 
 \ Test we can extract the first character correctly
-{ S" hello" CHAR -> 104 }
+{ CHAR hello -> 104 }
 
 
 TESTING" Parsing"
 
 { PARSE-WORD hello NIP      -> 5 }
-{ PARSE-WORD hello CHAR     -> 104 }
-{ PARSE-WORD hello NOOP NIP -> 5 }
-
 { S" hello" NIP       -> 5 }
 { S" hello world" NIP -> 11 }
 
