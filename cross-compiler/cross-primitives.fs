@@ -55,10 +55,6 @@
 VARIABLE (#PRIM) 0 (#PRIM) !    \ uniques
 DATA (PRIMNAME) 32 ALLOT        \ buffer for name
 
-\ Move a string
-: SMOVE \ ( addr1 n addr2 -- )
-    ROT 1+ ROT 1- ROT SWAP CMOVE ;
-
 \ Create a new name
 : (GENPRIMNAME) \ ( stemaddr stemn -- addr n )
     (PRIMNAME) SMOVE
