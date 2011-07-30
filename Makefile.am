@@ -196,7 +196,8 @@ regular = \
 	include-paths.fs \
 	executive.fs \
 	interactive.fs \
-	startup.fs
+	startup.fs \
+	environment.fs
 
 # Test suite
 test = 	test/core-system-tests.fs \
