@@ -415,7 +415,7 @@ C: MOVE ( addr1 addr2 n -- )
 
     if(addr1 == addr2)
         return;
-    if(addr1 < addr2 ) {
+    else if(addr1 < addr2 ) {
         ptr1 = (BYTEPTR) ((BYTEPTR) addr1 + n - 1);    ptr2 = (BYTEPTR) ((BYTEPTR) addr2 + n - 1);
     	for(i = 0; i < n ; i++) {
             *ptr2-- = *ptr1--;
