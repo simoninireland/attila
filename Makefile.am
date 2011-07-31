@@ -175,6 +175,7 @@ regular = \
 	itil.fs \
 	stdc/stdc-continuations-runtime.fs \
 	stdc/stdc-fileio.fs \
+	stdc/stdc-millis.fs \
 	ascii.fs \
 	chain.fs \
 	hooks-runtime.fs \
