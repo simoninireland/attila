@@ -37,7 +37,7 @@
     [CHAR] " PARSE TYPE ;
 :NONAME \ ( "str" -- )
     POSTPONE S"
-    [COMPILE] TYPE ;
+    POSTPONE TYPE ;
 INTERPRET/COMPILE ."
 
 \ Immediately print anything up to the next closing bracket

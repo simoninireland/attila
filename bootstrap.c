@@ -83,7 +83,7 @@ init_dictionary() {
   NEXT();
 
   // default START-DEFINITION behaviour
-  // can be remapped later using ( xt ) (START-DEFINITION) ADD-HOOK
+  // can be remapped later using ( xt ) (START-DEFINITION) ADD-TO-HOOK
   VARIABLE("(START-DEFINITION)");
   COMPILE_DATA_REFERENCE_TO("DUMMY-HOOK");
 
@@ -96,7 +96,7 @@ init_dictionary() {
   NEXT();
 
   // default END-DEFINITION behaviour
-  // can be remapped later using ( xt ) (END-DEFINITION) ADD-HOOK
+  // can be remapped later using ( xt ) (END-DEFINITION) ADD-TO-HOOK
   VARIABLE("(END-DEFINITION)");
   COMPILE_DATA_REFERENCE_TO("DUMMY-HOOK");
 
@@ -358,8 +358,21 @@ init_dictionary() {
   COMPILE("DROP");
   NEXT();
 
-  // postpone an IMMEDIATE word
+  // compile compilation semantics of a word
   DEFINE_IMMEDIATE("POSTPONE");
+  COMPILE("'");
+  COMPILE("DUP");
+  COMPILE("IMMEDIATE?");
+  COMPILE_IF(if18,th18,el18);
+    COMPILE("CTCOMPILE,");
+  COMPILE_ELSE(if18,th18,el18);
+    COMPILE("XTLITERAL");
+    COMPILE_COMPILE("CTCOMPILE,");
+  COMPILE_ELSETHEN(if18,th18,el18);
+  NEXT();
+
+  // compile the next word, IMMEDIATE or not
+  DEFINE_IMMEDIATE("[COMPILE]");
   COMPILE("'");
   COMPILE("COMPILE,");
   NEXT();
@@ -373,13 +386,13 @@ init_dictionary() {
   // grab the xt for the next word and leave it on the stack
   DEFINE_IMMEDIATE("[']");
   COMPILE("'");
-  COMPILE("LITERAL");
+  COMPILE("XTLITERAL");
   NEXT();
 
   // compile the code to compile the next word
-  DEFINE_IMMEDIATE("[COMPILE]");
+  DEFINE_IMMEDIATE("COMPILE");
   COMPILE("[']");
-  COMPILE_COMPILE("COMPILE,");
+  COMPILE_COMPILE("CTCOMPILE,");
   NEXT();
 
   // compile the first character of the next word as a literal

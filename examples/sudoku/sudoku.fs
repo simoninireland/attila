@@ -38,7 +38,7 @@
 
 \ The cell at row i, column j, numbered from 0
 : SUDOKU-CELL ( i j sud -- addr )
-    -ROT GRID-SIZE * CELLS -ROT CELLS + + ;
+    ROT GRID-SIZE * CELLS ROT CELLS + + ;
 
 \ Access cells
 : SUDOKU! ( v i j sud -- ) SUDOKU-CELL ! ;
@@ -48,7 +48,7 @@
 : .SUDOKU ( sud -- )
     GRID-SIZE 0 DO
 	GRID-SIZE 0 DO
-	    DUP J I -ROT SUDOKU@
+	    DUP J I ROT SUDOKU@
 	    DUP NP = IF
 		DROP ." ."
 	    ELSE

@@ -84,7 +84,8 @@ C: EXECUTE execute ( xt -- )
 	if(xt == (XT) NULL) { 
             indent -= 3;
         } else {
-            printf("%d: %d ", (ip - 1), xt);
+            // address image-offset: xt words-name data-stack R: return-stack
+            printf("%d (0x%x): %d ", (ip - 1), ((BYTEPTR) (ip - 1) - (BYTEPTR) image) / sizeof(CELL), xt);
             print_word_name(xt);
 	    printf(" ");
 	    print_data_stack();

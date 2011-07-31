@@ -18,24 +18,27 @@
 \ along with this program; if not, write to the Free Software
 \ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
-\ Conditionals
+\ Foreign function calls.
 \
-\ These immediate words construct conditionals and loops using
-\ the primitive (BRANCH) and (?BRANCH) words.
-\
-\ Note that these words are all IMMEDIATE. Note further that conditionals
-\ do *not* count as control structures, and so LEAVE and related words refer
-\ to any containing loop
+\ This library uses libffi(3) to make calls to C functions acquired
+\ either statically (linked within the Attila) or dynamically (loaed
+\ at run-time using c-dl.fs).
 
-\ Test the top of the stack and branch if false
-: IF \ ( -- addr )
-    POSTPONE (?BRANCH) JUMP-FORWARD ; IMMEDIATE
+CHEADER:
 
-\ Jump out and resolve the previous IF branch
-: ELSE \ ( addr -- addr' )
-    POSTPONE (BRANCH) JUMP-FORWARD
-    SWAP JUMP-HERE ; IMMEDIATE
+#include <ffi.h>
 
-\ Complete the conditional by resolving the last branch
-: THEN \ ( addr -- )
-    JUMP-HERE ; IMMEDIATE
+;CHEADER
+
+
+\ ---------- Declaring function prototypes ----------
+
+\ ---------- Making calls ----------
+
+
+
+
+
+
+
+	    

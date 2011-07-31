@@ -1,6 +1,11 @@
 Attila history
 ==============
 
+release 1.1
+	- added rings, random numbers, millisecond-resolution timer
+	  primitives
+	- fixed non-standard definitions of ROT, ROLL etc
+ 
 release 1.0 (10Apr2011)
 	- version able to build itself completely
 	- first public release

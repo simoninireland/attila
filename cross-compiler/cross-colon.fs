@@ -71,7 +71,7 @@
 
 \ Compile the code needed to cross-compile at run-time the next
 \ word in the input stream
-: [COMPILE] \ ( "name" -- )
+: COMPILE \ ( "name" -- )
     PARSE-WORD
     [CROSS-COMPILER] CROSS-COMPILING? IF
 	2DUP [CROSS-COMPILER] FIND IF
@@ -88,32 +88,78 @@
 	[ 'CROSS CTCOMPILE,   ] LITERAL [FORTH] CTCOMPILE,
     THEN ; IMMEDIATE
 
+\ Cross-compile the next work in the input stream, IMMEDIATE or not
+: [COMPILE] ( "name" -- )
+    [CROSS-COMPILER] ' CTCOMPILE, ; [FORTH] IMMEDIATE
+
+\ Cross-compile the appropriate compilation semantics
+: POSTPONE ( "name" -- )
+    PARSE-WORD
+    [CROSS-COMPILER] CROSS-COMPILING? IF
+	\ cross-compiling, check within image
+	2DUP [CROSS-COMPILER] FIND ?DUP IF
+	    \ found, cross-compile compilation semantics
+	    2SWAP 2DROP
+	    0< ( IMMEDIATE? ) IF
+		\ IMMEDIATE (on the target) word, cross-compile 
+		[CROSS] CTCOMPILE,
+	    ELSE
+		\ non-IMMEDIATE, cross-compile code to (cross-)compile
+		S" (LITERAL)" [CROSS-COMPILER] (') [CROSS] CTCOMPILE,
+		[CROSS] XTCOMPILE,
+		S" CTCOMPILE," [CROSS-COMPILER] (') [CROSS] CTCOMPILE,
+	    THEN
+	ELSE
+	    TYPE S" not found on target" ABORT
+	THEN
+    ELSE
+	\ called within definition of a cross-compiler word,
+	\ check for IMMEDIATE word accessible locally
+	2DUP [FORTH] FIND IF
+	    \ found, check for immediacy
+	    DUP [FORTH] IMMEDIATE? IF
+		\ found and IMMEDIATE, compile it
+		-ROT 2DROP
+		[FORTH] CTCOMPILE,
+		EXIT
+	    ELSE
+		\ drop through
+		DROP
+	    THEN
+	THEN
+	
+	\ compile the code to cross-compile it
+	[ 'FORTH SLITERAL [FORTH] CTCOMPILE, ]
+	[ 'CROSS-COMPILER (') ] LITERAL [FORTH] CTCOMPILE,
+	[ 'CROSS CTCOMPILE,   ] LITERAL [FORTH] CTCOMPILE,
+    THEN ; [FORTH] IMMEDIATE
+
 
 \ ---------- Literals ----------
 
 \ Cross-compile the top of the stack as a literal
 : LITERAL \ ( n -- )
-    [CROSS-COMPILER] [COMPILE] (LITERAL)
+    [CROSS-COMPILER] POSTPONE (LITERAL)
     COMPILE, ; [FORTH] IMMEDIATE
 
 \ Cross-compile the address on the top of the stack as a literal
 : ALITERAL \ ( addr -- )
-    [CROSS-COMPILER] [COMPILE] (LITERAL)
+    [CROSS-COMPILER] POSTPONE (LITERAL)
     ACOMPILE, ; [FORTH] IMMEDIATE
 
 \ Cross-compile the xt on the top of the stack as a literal
 : XTLITERAL \ ( xt -- )
-    [CROSS-COMPILER] [COMPILE] (LITERAL)
+    [CROSS-COMPILER] POSTPONE (LITERAL)
     XTCOMPILE, ; [FORTH] IMMEDIATE
 
 \ Cross-compile the cfa on the top of the stack as a literal
 : CFALITERAL \ ( cfa -- )
-    [CROSS-COMPILER] [COMPILE] (LITERAL)
+    [CROSS-COMPILER] POSTPONE (LITERAL)
     CFACOMPILE, ; [FORTH] IMMEDIATE
 
 \ Cross-compile the string on the top of the stack as a literal
 : SLITERAL \ ( addr len -- )
-    [CROSS-COMPILER] [COMPILE] (SLITERAL)
+    [CROSS-COMPILER] POSTPONE (SLITERAL)
     SCOMPILE, ; [FORTH] IMMEDIATE
 
 
@@ -238,10 +284,6 @@
 : [CHAR] \ ( "name" -- )
     CHAR [ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ] ; [FORTH] IMMEDIATE
 
-\ Postpone dynamically
-: POSTPONE ( "name" -- )
-    [CROSS-COMPILER] ' CTCOMPILE, ; [FORTH] IMMEDIATE
-
 
 <WORDLISTS ONLY FORTH ALSO CROSS-COMPILER DEFINITIONS
 
@@ -287,7 +329,6 @@ WORDLISTS>
     [ 'CROSS-COMPILER :NONAME    ] LITERAL OVER EXECUTE
     [ 'CROSS-COMPILER [          ] LITERAL OVER EXECUTE
     [ 'CROSS-COMPILER ]          ] LITERAL OVER EXECUTE
-    [ 'CROSS-COMPILER POSTPONE   ] LITERAL OVER EXECUTE
     [ 'CROSS-COMPILER IMMEDIATE  ] LITERAL OVER EXECUTE
     [ 'CROSS          IMMEDIATE? ] LITERAL OVER EXECUTE
     DROP ;
@@ -311,6 +352,6 @@ WORDLISTS>
     INCLUDED
     EXECUTIVE ! ;
 : INCLUDE ( "name" -- )
-    PARSE-WORD [CROSS-COMPILER] INCLUDED ;
+    PARSE-WORD [CROSS-COMPILER] INCLUDED ; IMMEDIATE
 
 WORDLISTS>

@@ -32,18 +32,18 @@
 
 \ Check the two top values, continue if equal and jump if not
 : OF \ ( v1 v2 -- | v1 )
-    [COMPILE] OVER [COMPILE] =
-    [COMPILE] (?BRANCH) JUMP-FORWARD
-    [COMPILE] DROP ; IMMEDIATE
+    POSTPONE OVER POSTPONE =
+    POSTPONE (?BRANCH) JUMP-FORWARD
+    POSTPONE DROP ; IMMEDIATE
 
 \ Jump out to the end of the structure, and resolves the jump from the
 \ previous case to to here
 : ENDOF \ ( -- )
-    [COMPILE] (BRANCH) >END
+    POSTPONE (BRANCH) >END
     JUMP-HERE ; IMMEDIATE
 
 \ End the structure
 : ENDCASE \ ( v1 -- )
-    [COMPILE] DROP ENDS> (CS-END) ; IMMEDIATE
+    POSTPONE DROP ENDS> (CS-END) ; IMMEDIATE
     
     

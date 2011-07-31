@@ -44,7 +44,7 @@
     EMPTY-SMALLSET
     GRID-SIZE 0 DO ( r sud ss )
 	\ get the column value
-	>R 2DUP R> ROT         ( r sud ss r sud )
+	>R 2DUP R> -ROT        ( r sud ss r sud )
 	I SWAP SUDOKU@         ( r sud ss v )
 
 	\ check validity
@@ -60,7 +60,7 @@
     EMPTY-SMALLSET
     GRID-SIZE 0 DO ( c sud ss )
 	\ get the row value
-	>R 2DUP R> ROT         ( c sud ss c sud )
+	>R 2DUP R> -ROT        ( c sud ss c sud )
 	I ROT SUDOKU@          ( c sud ss v )
 
 	\ check validity
@@ -105,7 +105,7 @@
     \ check squares
     3 0 DO
 	3 0 DO
-	    DUP J 3 * I 3 * -ROT CHECK-SQUARE NOT IF
+	    DUP J 3 * I 3 * ROT CHECK-SQUARE NOT IF
 		DROP FALSE EXIT
 	    THEN
 	LOOP

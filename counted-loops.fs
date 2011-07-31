@@ -31,21 +31,21 @@
 
 \ Start the loop
 : DO
-    [COMPILE] (DO)
+    POSTPONE (DO)
     2 (CS-START) ; IMMEDIATE \ after the (DO) so we don't re-do the setup code
 
 \ End the loop, with arbitrary increment for the index
 : +LOOP
-    [COMPILE] (+LOOP)
-    [COMPILE] (?BRANCH) >BEGIN
+    POSTPONE (+LOOP)
+    POSTPONE (?BRANCH) >BEGIN
     ENDS>
     (CS-END) ; IMMEDIATE
 
 \ Increment the index by one
 : LOOP
     1 POSTPONE LITERAL
-    [COMPILE] (+LOOP)
-    [COMPILE] (?BRANCH) >BEGIN
+    POSTPONE (+LOOP)
+    POSTPONE (?BRANCH) >BEGIN
     ENDS>
     (CS-END) ; IMMEDIATE
 \ sd: This is repetitous to facilitate cross-compilation, where a defining

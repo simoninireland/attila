@@ -53,14 +53,14 @@
     BEGIN
 	?DUP
     WHILE
-	    [COMPILE] RDROP
+	    COMPILE RDROP
 	    1-
     REPEAT ;
 
 \ Escape from the current loop, jumping to the end
 : LEAVE \ ( -- )
     (LEAVE)
-    [COMPILE] (BRANCH) >END ; IMMEDIATE
+    POSTPONE (BRANCH) >END ; IMMEDIATE
     
 \ Return from this word immediately, unwinding any loops
 \ sd: Will need re-coding when we do exceptions, to thread back up the stack

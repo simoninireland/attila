@@ -114,7 +114,7 @@ ALSO LOCALS ALSO DEFINITIONS
     (CREATE-RESULTS)                       \ push the results, if any
     LOCALS-MARKER @ EXECUTE                \ forget the local symbols
     PREVIOUS                               \ into previous environment
-    [COMPILE] LOCALS>                      \ compile code to clean up locals stack
+    POSTPONE LOCALS>                      \ compile code to clean up locals stack
     [ PREVIOUS ] POSTPONE ; ; IMMEDIATE    \ do the normal ; behaviour
 (DEFINITIONS)
 
@@ -141,12 +141,12 @@ ALSO LOCALS ALSO DEFINITIONS
 
     \ compile the code to set up the locals at run-time
     \ tot args
-    [COMPILE] START-LOCALS
+    POSTPONE START-LOCALS
     SWAP OVER -   \ args ret
     ?DUP 0> IF
-	POSTPONE LITERAL [COMPILE] >LOCAL-RETURNS
+	POSTPONE LITERAL POSTPONE >LOCAL-RETURNS
     THEN
     ?DUP 0> IF
-	POSTPONE LITERAL [COMPILE] >LOCALS
+	POSTPONE LITERAL POSTPONE >LOCALS
     THEN ; IMMEDIATE
 

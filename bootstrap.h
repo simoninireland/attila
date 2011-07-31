@@ -134,5 +134,6 @@ extern CELLPTR user_variable( int n );
 
 // Debugging
 #define DEBUG( xt ) show_execute(xt)
+#define MESSAGE( str ) STRING(str); COMPILE("TYPE"); LITERAL(10); COMPILE("EMIT")
 
 #endif

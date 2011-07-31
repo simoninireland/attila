@@ -56,5 +56,5 @@
 \ Compile the (DOES>) behaviour, leaving the newly-defined word's xt on the
 \ stack for it to use in re-directing that word's run-time behaviour
 : DOES> \ ( -- )
-    [COMPILE] LASTXT
-    [COMPILE] (DOES>) ; IMMEDIATE
+    POSTPONE LASTXT
+    POSTPONE (DOES>) ; IMMEDIATE

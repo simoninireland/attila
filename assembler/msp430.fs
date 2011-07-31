@@ -69,34 +69,14 @@
 
 \ ---------- Forming instructions ----------
 
-\ Instruction fields
-VARIABLE OPCODE-BITS
-VARIABLE WIDTH-BITS
-VARIABLE SOURCE-ADDRESSING-BITS
-VARIABLE DESTINATION-ADDRESSING-BITS
-VARIABLE SOURCE-BITS
-VARIABLE DESTINATION-BITS
-VARIABLE CONDITION-BITS
-VARIABLE PC-OFFSET-BITS
+\ Instruction bits
 VARIABLE INSTRUCTION-BITS
 
-\ Stores and fetches
-: OPCODE! OPCODE-BITS ! ;
-: OPCODE@ OPCODE-BITS @ ;
-: WIDTH! WIDTH-BITS ! ;
-: WIDTH@ WIDTH-BITS @ ;
-: SOURCE-ADDRESSING! SOURCE-ADDRESSING-BITS ! ;
-: SOURCE-ADDRESSING@ SOURCE-ADDRESSING-BITS @ ;
-: DESTINATION-ADDRESSING! DESTINATION-ADDRESSING-BITS ! ;
-: DESTINATION-ADDRESSING@ DESTINATION-ADDRESSING-BITS @ ;
-: SOURCE! SOURCE-BITS ! ;
-: SOURCE@ SOURCE-BITS @ ;
-: DESTINATION! DESTINATION-BITS ! ;
-: DESTINATION@ DESTINATION-BITS @ ;
-: CONDITION! CONDITION-BITS ! ;
-: CONDITION@ CONDITION-BITS @ ;
-: PC-OFFSET! PC-OFFSET-BITS ! ;
-: PC-OFFSET@ PC-OFFSET-BITS @ ;
+\ Instructions and offset compilation -- currently debugging mode
+: INSTRUCTION, ( -- )
+    INSTRUCTION-BITS @ .BIN16 SPACE ;
+: OFFSET, ( off -- )
+    . SPACE ;
 
 \ Instruction creation
 : NEW-INSTRUCTION 0 INSTRUCTION-BITS ! ;
@@ -104,64 +84,99 @@ VARIABLE INSTRUCTION-BITS
     INSTRUCTION-BITS BF! ;
 
 \ One-operand instructions pattern
-: ONE-OPERAND-INSTRUCTION ( -- )
+: ONE-OPERAND-INSTRUCTION ( doff da d w opcode -- )
     NEW-INSTRUCTION
-    B 000100                 6 15 INSTRUCTION-FIELD!
-    OPCODE@                  3  9 INSTRUCTION-FIELD!
-    WIDTH@                   1  6 INSTRUCTION-FIELD!
-    DESTINATION-ADDRESSING@  2  5 INSTRUCTION-FIELD!
-    DESTINATION@             4  3 INSTRUCTION-FIELD!
-    INSTRUCTION-BITS @ ;
+    B 000100       6 15 INSTRUCTION-FIELD!
+    ( opcode )     3  9 INSTRUCTION-FIELD!
+    ( width )      1  6 INSTRUCTION-FIELD!
+    ( d )          4  3 INSTRUCTION-FIELD!
+    ( da ) DUP     2  5 INSTRUCTION-FIELD!
+    INSTRUCTION,
+
+    \ add any offset
+    B 1 = IF
+	OFFSET,
+    ELSE
+	DROP
+    THEN ;
 
 \ Two-operand instructions pattern
-: TWO-OPERAND-INSTRUCTION ( -- )
+: TWO-OPERAND-INSTRUCTION ( soff sa s doff da d w opcode -- )
     NEW-INSTRUCTION
-    OPCODE@                  4 15 INSTRUCTION-FIELD!
-    SOURCE@                  4 11 INSTRUCTION-FIELD!
-    DESTINATION-ADDRESSING@  1  7 INSTRUCTION-FIELD!
-    WIDTH@                   1  6 INSTRUCTION-FIELD!
-    SOURCE-ADDRESSING@       2  5 INSTRUCTION-FIELD!
-    DESTINATION@             4  3 INSTRUCTION-FIELD!
-    INSTRUCTION-BITS @ ;
+    ( opcode)         4 15 INSTRUCTION-FIELD!
+    ( w )             1  6 INSTRUCTION-FIELD!
+    ( d )             4  3 INSTRUCTION-FIELD!
+    ( da ) DUP >R     1  7 INSTRUCTION-FIELD!
+    ( doff ) 3 ROLL
+    ( s )             4 11 INSTRUCTION-FIELD!
+    ( sa ) DUP        2  5 INSTRUCTION-FIELD!
+    INSTRUCTION,
 
-\ PC-relative jumpinstructions pattern
-: JUMP-INSTRUCTION ( -- )
+    \ add any offsets
+    B 01 = IF
+	OFFSET,
+    ELSE
+	DROP
+    THEN
+    R> B 1 = IF
+	OFFSET,
+    ELSE
+	DROP
+    THEN ;
+
+\ PC-relative jump instructions pattern
+: JUMP-INSTRUCTION ( pcoff cond -- )
     NEW-INSTRUCTION
-    B 001                    3 15 INSTRUCTION-FIELD!
-    CONDITION@               3 12 INSTRUCTION-FIELD!
-    PC-OFFSET@              10  9 INSTRUCTION-FIELD!
-    INSTRUCTION-BITS @ ;
+    B 001        3 15 INSTRUCTION-FIELD!
+    ( cond )     3 12 INSTRUCTION-FIELD!
+    ( pcoff )   10  9 INSTRUCTION-FIELD!
+    INSTRUCTION, ;
 
 
 \ ---------- Forming registers and addressing modes ----------
 
-\ Create a direct register accessor
+\ Create a direct register accessor, e.g. R1
+\ Value taken from the register
 : (REGISTER-DIRECT) ( r addr n -- )
     (CREATE) ,
-  DOES>
-    B 00 SWAP @ ;
+  DOES> ( -- 0 a r )
+    0 B 00 -ROT @ ;
 
-\ Create an indirect register accessor
+\ Create a register indexed register accessor e.g. (+R1)
+\ Value taken from the memory addressed by the value the register plus the offset
+: (REGISTER-INDEXED) ( r addr n -- )
+    CLEAR-SCRATCH [CHAR] ( HOLD [CHAR] + HOLD SHOLD [CHAR] ) HOLD SCRATCH> (CREATE) ,
+  DOES> ( -- a r ) \ expecting an offset on the stack immediately before
+    B 01 SWAP @ ;
+
+\ Create an indirect register accessor, e.g. @R1
+\ Value taken from the memory addresses by the value in the register
 : (REGISTER-INDIRECT) ( r addr n -- )
     CLEAR-SCRATCH [CHAR] @ HOLD SHOLD SCRATCH> (CREATE) ,
   DOES>
-    B 10 SWAP @ ;
+    0 B 10 -ROT @ ;
 
-\ Create an indirect register with post-increment accessor
+\ Create an indirect register with post-increment accessor, e.g. @R1+
+\ Value taken from the memory addressed by the value in the register,
+\ with the register then being incremented by 1 (byte) or 2 (word)
 : (REGISTER-INDIRECT-POSTINCREMENT) ( r addr n -- )
     CLEAR-SCRATCH [CHAR] @ HOLD SHOLD [CHAR] + HOLD SCRATCH> (CREATE) ,
-  DOES>
-    B 11 SWAP @ ;
+  DOES> ( -- 0 a r )
+    0 B 11 -ROT @ ;
 
 \ Duplicate the top three elements -- 1 1/2 doubles :-)
 : 3/2DUP ( a b c -- a b c a b c )
     2 PICK 2 PICK 2 PICK ;
 
+\ Swap two 3/2 numbers
+: 3/2SWAP ( a b c d e f -- d e f a b c )
+    5 -ROLL 5 -ROLL 5 -ROLL ;
+
 \ Create all register accessors and addressing modes
 : CREATE-REGISTER ( n "reg" -- )
     PARSE-WORD
     3/2DUP (REGISTER-DIRECT)
-    \ 3/2DUP (REGISTER-INDEXED)
+    3/2DUP (REGISTER-INDEXED)
     3/2DUP (REGISTER-INDIRECT)
     (REGISTER-INDIRECT-POSTINCREMENT) ;
     
@@ -194,33 +209,125 @@ VARIABLE INSTRUCTION-BITS
 0 CREATE-REGISTER PC     \ program counter
 1 CREATE-REGISTER SP     \ stack pointer
 2 CREATE-REGISTER SR     \ status register
-3 CREATE-REGISTER ZR     \ zero register
+
+\ Status bits
+0 CONSTANT C             \ carry
+1 CONSTANT Z             \ zero
+2 CONSTANT N             \ negative
+3 CONSTANT GIE           \ interupt enable
+4 CONSTANT CPUOFF
+5 CONSTANT OSCOFF
+6 CONSTANT SCG0
+7 CONSTANT SCG1
+8 CONSTANT V            \ overflow
 
 
 \ ---------- The instructions ----------
 
-\ Rotate right through carry
-: RRC ( da d -- )
-    B 000 OPCODE!
-    .B WIDTH!
-    DESTINATION!
-    DESTINATION-ADDRESSING!
-    ONE-OPERAND-INSTRUCTION ;
+\ Add src to dest
+: ADD
+    B 0101 TWO-OPERAND-INSTRUCTION ;
 
-\ Jump if last operation not zero
-: JNZ ( offset -- )
-    B 000 CONDITION!
-    PC-OFFSET!
-    JUMP-INSTRUCTION ;
+\ Add src to dest with carry
+: ADDC
+    B 0110 TWO-OPERAND-INSTRUCTION ;
+
+\ AND src with dest
+: AND
+    B 1111 TWO-OPERAND-INSTRUCTION ;
+
+\ Clear src's bit in dest
+: BIC
+    B 1100 TWO-OPERAND-INSTRUCTION ;
+
+\ Set src's bit in dest
+: BIS
+    B 1101 TWO-OPERAND-INSTRUCTION ;
+
+\ Test src's bit in dest, setting flags for comparison
+: BIT
+    B 1011 TWO-OPERAND-INSTRUCTION ;
+
+\ Make a subroutine call, pushing PC
+: CALL
+    .W B 101 ONE-OPERAND-INSTRUCTION ;
+
+\ Subtract src from dest and set flags for comparison 
+: CMP
+    B 1001 TWO-OPERAND-INSTRUCTION ; \ CHECK: wrong opcode?
+
+\ Add src to dest with carry, binary-coded decimal
+: DADD
+    B 1010 TWO-OPERAND-INSTRUCTION ;
+
+\ Jumps
+: JNZ B 000 JUMP-INSTRUCTION ; \ not zero
+: JNE B 000 JUMP-INSTRUCTION ; \ not equal
+: JEQ B 001 JUMP-INSTRUCTION ; \ equal
+: JZ  B 001 JUMP-INSTRUCTION ; \ zero
+: JNC B 010 JUMP-INSTRUCTION ; \ no carry
+: JLO B 010 JUMP-INSTRUCTION ; \ unsigned <
+: JC  B 011 JUMP-INSTRUCTION ; \ carry
+: JHS B 011 JUMP-INSTRUCTION ; \ unsigned >=
+: JN  B 100 JUMP-INSTRUCTION ; \ negative
+: JGE B 101 JUMP-INSTRUCTION ; \ signed >=
+: JL  B 110 JUMP-INSTRUCTION ; \ signed <
+: JMP B 111 JUMP-INSTRUCTION ; \ unconditionally
 
 \ Move src to dest, byte or word width
-: MOV ( sa s da d w -- )
-    B 0100 OPCODE!
-    WIDTH!
-    DESTINATION!
-    DESTINATION-ADDRESSING!
-    SOURCE!
-    SOURCE-ADDRESSING!
-    TWO-OPERAND-INSTRUCTION ;
+: MOV
+    B 0100 TWO-OPERAND-INSTRUCTION ;
 
-    
+\ Push operand onto the stack
+: PUSH
+    B 100 ONE-OPERAND-INSTRUCTION ;
+
+\ Return from interrupt
+: RETI
+    R1 \ unused
+    .W \ unused
+    B 110 ONE-OPERAND-INSTRUCTION ;
+
+\ 8-bit arithmetic right-shift
+: RRA
+    B 010 ONE-OPERAND-INSTRUCTION ;
+
+\ Rotate right through carry
+: RRC
+    B 000 ONE-OPERAND-INSTRUCTION ;
+
+\ Subtract src from dest 
+: SUB
+    B 1001 TWO-OPERAND-INSTRUCTION ;
+
+\ Subtract src from dest and add carry 
+: SUBC
+    B 0111 TWO-OPERAND-INSTRUCTION ;
+
+\ Swap 8-bit register halves
+: SWP.B
+    .B B 001 ONE-OPERAND-INSTRUCTION ;
+
+\ Sign-extend 8 to 16 bits
+: SXT.W
+    .W B 011 ONE-OPERAND-INSTRUCTION ;
+
+\ XOR src with dest
+: XOR
+    B 1110 TWO-OPERAND-INSTRUCTION ;
+
+
+\ ---------- Emulated instructions ----------
+
+\ No-op
+: NOP R3 R3 .W MOV ;
+
+\ Pop the stack
+: POP @SP+ 3/2SWAP .W MOV ; 
+
+\ Branch relative
+: BR PC MOV ;
+
+\ Return from subroutine
+: RET @SP+ PC .W MOV ;
+

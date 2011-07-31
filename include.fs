@@ -108,4 +108,4 @@ DATA INCLUDE-FILENAME 256 ALLOT
 
 \ Include the following file
 : INCLUDE \ ( "filename" -- )
-    PARSE-WORD INCLUDED ;
+    PARSE-WORD INCLUDED ; IMMEDIATE

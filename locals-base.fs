@@ -111,7 +111,7 @@ VARIABLE LOCALS-MARKER
     (CREATE) 0 ,                  \ create the symbol
     LASTXT DUP (IMMEDIATE)        \ make it IMMEDIATE
     DUP (DOES>)
-    @ POSTPONE LITERAL [COMPILE] @LOCAL ;
+    @ POSTPONE LITERAL POSTPONE @LOCAL ;
 
 \ Test whether the gven word identifies a local
 \ sd: this will also identify | and ; as locals, which might be undesirable
@@ -127,7 +127,7 @@ VARIABLE LOCALS-MARKER
 : TO \ ( v "name" -- )
     PARSE-WORD 2DUP (LOCAL?) ?DUP IF
 	-ROT 2DROP
-	>BODY @ POSTPONE LITERAL [COMPILE] !LOCAL
+	>BODY @ POSTPONE LITERAL POSTPONE !LOCAL
     ELSE
 	2DUP FIND IF
 	    -ROT 2DROP POSTPONE (TO)

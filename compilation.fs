@@ -42,22 +42,22 @@
 
 \ Compile the top of the stack as a literal
 : LITERAL \ ( n -- )
-    [COMPILE] (LITERAL)
+    COMPILE (LITERAL)
     COMPILE, ; IMMEDIATE
 
 \ Compile the address on the top of the stack as a literal
 : ALITERAL \ ( addr -- )
-    [COMPILE] (LITERAL)
+    COMPILE (LITERAL)
     ACOMPILE, ; IMMEDIATE
 
 \ Compile the xt on the top of the stack as a literal
 : XTLITERAL \ ( xt -- )
-    [COMPILE] (LITERAL)
+    COMPILE (LITERAL)
     XTCOMPILE, ; IMMEDIATE
 
 \ Compile the string on the tp of the stack as a literal
 : SLITERAL \ ( addr len -- )
-    [COMPILE] (SLITERAL)
+    COMPILE (SLITERAL)
     SCOMPILE, ; IMMEDIATE
 
 \ Read a "-delimited string form the input and either leave it on the stack (when
@@ -100,22 +100,31 @@ DATA (FIND-BEHAVIOUR) XT,
 : ' \ ( "name" -- xt )
     PARSE-WORD (') ;
 
-\ Compile the execution semantics of an immediate word
-: POSTPONE \ ( "name" -- )
+\ Force compilation of next word, whether it's IMMEDIATE or not 
+: [COMPILE] \ ( "name" -- )
     ' CTCOMPILE, ; IMMEDIATE
 
 \ Grab the xt of the next word in the input at compile time and leave
 \ it on the stack at run-time
 : ['] \ ( "name" -- )
-    ' POSTPONE XTLITERAL ; IMMEDIATE
+    ' [COMPILE] XTLITERAL ; IMMEDIATE
+
+\ Compile the next word in the input stream when the current definition is executed
+: COMPILE [COMPILE] ['] ['] CTCOMPILE, CTCOMPILE, ; IMMEDIATE
+
+\ Compile the compilation semantics of a word
+: POSTPONE \ ( "name" -- )
+    ' DUP IMMEDIATE? IF
+	\ immediate word, compile it into the current definition
+	CTCOMPILE,
+    ELSE
+	\ non-immediate word, compile it when the current definition is executed
+	[COMPILE] XTLITERAL
+	['] CTCOMPILE, CTCOMPILE,
+    THEN ; IMMEDIATE
 
 
 \ ---------- Compilation ----------
-
-\ At run-time, compile the next word that was in the input source at compile time
-: [COMPILE] \ ( "word" -- )
-    POSTPONE [']
-    ['] CTCOMPILE, CTCOMPILE, ; IMMEDIATE
 
 \ Extract the first character of the next word in the input stream, leaving it
 \ on the stack or compiling it as a literal

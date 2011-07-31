@@ -33,19 +33,19 @@
 
 \ Unconditional branch back to previous BEGIN
 : AGAIN \ ( -- )
-    [COMPILE] (BRANCH) >BEGIN
+    POSTPONE (BRANCH) >BEGIN
     ENDS>
     (CS-END) ; IMMEDIATE
 
 \ Test the top of the stack and repeat until true
 : UNTIL \ ( startaddr -- )
-    [COMPILE] (?BRANCH) >BEGIN
+    POSTPONE (?BRANCH) >BEGIN
     ENDS>
     (CS-END) ; IMMEDIATE
 
 \ Test the top of the stack and escape if false
 : WHILE \ ( -- )
-    [COMPILE] (?BRANCH) >END ; IMMEDIATE
+    POSTPONE (?BRANCH) >END ; IMMEDIATE
 
 \ Complete a while loop
 : REPEAT \ ( -- )

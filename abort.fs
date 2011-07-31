@@ -26,13 +26,24 @@
 : ABORT \ ( addr n -- )
     (ABORT) @ EXECUTE ;
 
-\ Abort with an inline message
-: ABORT" \ ( "message" -- )
-    [CHAR] " PARSE
-    INTERPRETING? IF
+\ Conditionally abort with a message
+: ?ABORT ( addr n f -- )
+    IF
 	ABORT
     ELSE
-	POSTPONE SLITERAL [COMPILE] ABORT
+	2DROP
+    THEN ;
+
+\ Conditionally abort with an inline message
+\ sd: the naming is standard, if a little inconsistent
+\ sd: would be more compact if ?ABORT had stack picture ( f addr n ),
+\ but less logical in terms of that word itself
+: ABORT" \ ( f "message" -- )
+    [CHAR] " PARSE
+    INTERPRETING? IF
+	ROT ?ABORT
+    ELSE
+	POSTPONE SLITERAL POSTPONE ROT POSTPONE ?ABORT
     THEN ; IMMEDIATE
 
 

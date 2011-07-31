@@ -37,7 +37,7 @@
 : REMOVE-ROW-VALUES ( r sud ss -- ss' )
     GRID-SIZE 0 DO
 	\ get the column value
-	>R 2DUP R> ROT   ( r sud ss r sud )
+	>R 2DUP R> -ROT  ( r sud ss r sud )
 	I SWAP SUDOKU@   ( r sud ss v )
 	SWAP SMALLSET-REMOVE
     LOOP
@@ -47,7 +47,7 @@
 : REMOVE-COLUMN-VALUES ( c sud ss -- ss' )
     GRID-SIZE 0 DO
 	\ get the row value
-	>R 2DUP R> ROT   ( c sud ss c sud )
+	>R 2DUP R> -ROT  ( c sud ss c sud )
 	I ROT SUDOKU@    ( c sud ss v )
 	SWAP SMALLSET-REMOVE
     LOOP
@@ -71,8 +71,8 @@
 : POSSIBLE-VALUES ( r c sud -- ss )
     >R
     FULL-SMALLSET    ( r c ss )
-    2 PICK R@ -ROT REMOVE-ROW-VALUES
-    OVER   R@ -ROT REMOVE-COLUMN-VALUES
+    2 PICK R@ ROT REMOVE-ROW-VALUES
+    OVER   R@ ROT REMOVE-COLUMN-VALUES
     >R SUB-SQUARE-OF R> R> SWAP REMOVE-SQUARE-VALUES ;
 
 \ Print the possible values
@@ -89,7 +89,7 @@
 
 \ Helper functions
 : 3DUP ( a b c -- a b c a b c )
-    >R 2DUP R@ ROT R> ;
+    >R 2DUP R@ -ROT R> ;
 : 3DROP ( a b c -- )
     DROP 2DROP ;
 : NEXT-SQUARE ( r c -- r' c' )
@@ -111,7 +111,7 @@
 		GRID-SIZE 1+ 1 DO       ( r c sud pss )
 		    I OVER SMALLSET-CONTAINS? IF
 			>R 3DUP R> 3 ROLL
-			I 3 ROLL SUDOKU!
+			I 3 -ROLL SUDOKU!
 			>R 3DUP R> 3 ROLL
 			>R NEXT-SQUARE R> RECURSE IF
 			    \ solved with this value, succeed
@@ -123,7 +123,7 @@
 		\ if we get here, we didn't find a solution, so
 		\ re-set the cell to empty and fail
 		DROP
-		NP 3 ROLL SUDOKU!
+		NP 3 -ROLL SUDOKU!
 		FALSE EXIT
 	    THEN
 
@@ -138,7 +138,7 @@
 : SOLVE-SUDOKU ( sud -- f )
     DUP CHECK-SUDOKU IF
 	\ puzzle is initially valid, solve
-	0 0 -ROT (SOLVE-SUDOKU)
+	0 0 ROT (SOLVE-SUDOKU)
     ELSE
 	\ invalid fail
 	DROP FALSE
