@@ -53,16 +53,6 @@
 : >STATUS \ ( xt -- addr )
     /CELL 2 * - 1+ ;
 
-\ Convert an xt to a name string. addr will be CALIGNED
-: >NAME \ ( xt -- addr namelen )
-    >LFA /CELL - DUP C@
-    DUP >R
-    -
-    DUP /CELL /MOD DROP 0<> IF
-        /CELL -
-    THEN CALIGN                \ ensure we're aligned on the previous cell boundary
-    R> ;
-
 \ Convert xt to indirect body (DOES> behaviour) if present
 \ (We don't check whether there actually *is* an IBA)
 : >IBA \ ( xt -- iba )
