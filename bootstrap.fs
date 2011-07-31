@@ -838,6 +838,20 @@ C: . dot ( n -- )
   POP_CELL();
 ;C
 
+\ Print the top number on the stack in hex
+C: .HEX ( n -- )
+  int output_sink;
+  char buf[256];
+
+  output_sink = (int) (*(user_variable(USER_OUTPUTSINK)));
+  sprintf(buf, "0x%lx", n);
+  PUSH_CELL(buf);
+  PUSH_CELL(strlen(buf));
+  PUSH_CELL(output_sink);
+  CALL(prim_write_file);
+  POP_CELL();
+;C
+
 \ Print the whole stack
 C: .S prim_dot_s ( -- )
     int i, n;
