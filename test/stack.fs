@@ -39,14 +39,22 @@ TESTING" Dropping"
 { 1 2 2DROP -> }
 
 TESTING" Rot'ting and rolling"
-{ 1 2 3 ROT     -> 2 3 1 }
-{ 1 2 3 -ROT    -> 3 1 2 }
-{ 1 0 ROLL      -> 1 NOOP }
-{ 1 2 1 ROLL    -> 1 2 SWAP }
-{ 1 2 3 2 ROLL  -> 1 2 3 ROT }
-{ 1 0 -ROLL     -> 1 NOOP }
-{ 1 2 1 -ROLL   -> 1 2 SWAP }
-{ 1 2 3 2 -ROLL -> 1 2 3 -ROT }
+{ 1 2 3 ROT            -> 2 3 1 }
+{ 1 2 3 -ROT           -> 3 1 2 }
+{ 1 2 3 ROT ROT        -> 1 2 3 -ROT }
+{ 1 2 3 -ROT -ROT      -> 1 2 3 ROT }
+{ 1 2 3 ROT ROT ROT    -> 1 2 3 }
+{ 1 2 3 -ROT -ROT -ROT -> 1 2 3 }
+{ 1 2 3 ROT -ROT       -> 1 2 3 }
+{ 1 2 3 -ROT ROT       -> 1 2 3 }
+{ 1 2 3 4 ROT          -> 1 3 4 2 }
+{ 1 2 3 4 -ROT         -> 1 4 2 3 }
+{ 1 0 ROLL             -> 1 NOOP }
+{ 1 2 1 ROLL           -> 1 2 SWAP }
+{ 1 2 3 2 ROLL         -> 1 2 3 ROT }
+{ 1 0 -ROLL            -> 1 NOOP }
+{ 1 2 1 -ROLL          -> 1 2 SWAP }
+{ 1 2 3 2 -ROLL        -> 1 2 3 -ROT }
 
 TESTING" Nipping and tucking"
 { 1 2 NIP  -> 2 }
