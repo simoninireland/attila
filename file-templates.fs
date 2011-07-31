@@ -30,7 +30,7 @@
     BEGIN
 	PARSE-WORD
 	2DUP S" FROM-TEMPLATE>" S=CI DUP IF
-	    ROT 2DROP
+	    -ROT 2DROP
 	THEN NOT
     WHILE
 	    2DUP S" [" S= IF
@@ -48,7 +48,7 @@
 			." evaluating" SPACE 2DUP TYPE CR 
 			2DUP FIND IF
 			    ." found"
-			    ROT 2DROP
+			    -ROT 2DROP
 			    INTERPRETING? IF
 				.s EXECUTE
 			    ELSE
@@ -56,7 +56,7 @@
 			    THEN
 			ELSE
 			    2DUP NUMBER? IF
-				ROT 2DROP
+				-ROT 2DROP
 				INTERPRETING? NOT IF
 				    POSTPONE LITERAL
 				THEN

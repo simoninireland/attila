@@ -118,7 +118,7 @@ VARIABLE (SCOMPARER)
     ELSE
 	DROP FALSE
     THEN
-    ROT 2DROP ;
+    -ROT 2DROP ;
 
 \ Check for string equality
 : S= ['] C= (SCOMPARE) ;
@@ -135,7 +135,7 @@ VARIABLE (SCOMPARER)
 	2DUP CHARS + 1 CHARS - SWAP
 	2/ 0 DO                   \ start end
 	    2DUP 2DUP C@ SWAP C@  \ start end start end ce cs
-	    -ROT C!               \ start end start ce
+	    ROT C!                \ start end start ce
 	    SWAP C!               \ start end
 	    1 CHARS - SWAP 1 CHARS + SWAP
 	LOOP
@@ -159,8 +159,8 @@ VARIABLE (SCOMPARER)
 \ Find the last index of the given character in a string, returning
 \ its index or -1 if not found
 : RINDEX \ ( addr n c -- i )
-    ROT                                  \ c addr n
-    1- DUP ROT + SWAP                    \ c addr' n
+    -ROT                                 \ c addr n
+    1- DUP -ROT + SWAP                   \ c addr' n
     BEGIN
 	DUP 0>=
     WHILE ( c addr' n )
@@ -171,7 +171,7 @@ VARIABLE (SCOMPARER)
 		1- SWAP /CHAR - SWAP
 	    THEN
     REPEAT
-    ROT 2DROP ;
+    -ROT 2DROP ;
 
 \ Split a string at each delimiter character, leaving a list of
 \ addr n pairs and a count on the stack
@@ -184,7 +184,7 @@ VARIABLE (SCOMPARER)
 	    2DUP - 1- NIP   ( c m addr n sl ) 
 	    >R 2DUP         ( c m addr n addr n )
 	    + R@ - R@       ( c m addr n addr' sl )
-	    5 ROLL 5 ROLL   ( addr' sl c m addr n )
+	    5 -ROLL 5 -ROLL ( addr' sl c m addr n )
 	    R> - 1-         ( addr' sl c m addr n' )
 	    >R >R 1+ R> R>
     REPEAT
@@ -200,7 +200,7 @@ VARIABLE (SCOMPARER)
     THEN
     5 PICK 5 PICK 0 DO
 	DUP C@
-	5 PICK 5 PICK -ROT INDEX
+	5 PICK 5 PICK ROT INDEX
 	DUP 0 >= IF
 	    CHARS 3 PICK + C@ OVER C!
 	ELSE

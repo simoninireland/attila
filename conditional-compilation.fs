@@ -36,7 +36,7 @@
 		S" Nested [IF] not supported" ABORT
 	    THEN
 	    2DUP S" [ELSE]" NAMES-MATCH?
-	    ROT  S" [THEN]" NAMES-MATCH? OR 
+	    -ROT  S" [THEN]" NAMES-MATCH? OR 
 	UNTIL		
     THEN ; IMMEDIATE
 

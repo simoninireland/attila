@@ -26,7 +26,7 @@
 : FIND-IN-WORDLIST \ ( addr n wid -- xt )
     >R 2DUP R> SEARCH-WORDLIST
     0<> IF
-	ROT 2DROP
+	-ROT 2DROP
     ELSE
 	TYPE SPACE
 	S" not found in word list" ABORT
@@ -34,7 +34,7 @@
 
 \ Immediate look-up in a specific wordlist
 : ['WORDLIST] \ ( wid "name" -- xt )
-    PARSE-WORD -ROT FIND-IN-WORDLIST ; IMMEDIATE
+    PARSE-WORD ROT FIND-IN-WORDLIST ; IMMEDIATE
 
 \ Look-up and execute/compile a word from (only) the given word list
 \ sd: This may be a common pattern: should it be moved into wordlists.fs?

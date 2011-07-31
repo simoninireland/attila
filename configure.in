@@ -19,7 +19,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 # Autoconf and Automake magic
-AC_INIT([attila],[1.1],[bugs@threaded-interpreter.org],[attila],[http://www.threaded-interpreter.org])
+AC_INIT([attila],[1.2],[bugs@threaded-interpreter.org],[attila],[http://www.threaded-interpreter.org])
 AC_PREREQ(2.54)
 AM_PROG_CC_STDC
 AM_INIT_AUTOMAKE

@@ -136,7 +136,7 @@ DEFER EMIT-CFA
 
 \ Incrementing a location in one operation
 : +! ( n taddr -- )
-    DUP ROT
+    DUP -ROT
     @ +
     SWAP ! ;
 
@@ -146,11 +146,11 @@ DEFER EMIT-CFA
 
 \ Attila addresses, stored as offsets within the image
 : A!
-    DUP ROT !
+    DUP -ROT !
     ['] EMIT-ADDRESS SWAP E! ; 
 : A@ @ ;
 : A+! ( n taddr -- )
-    DUP ROT
+    DUP -ROT
     @ +
     SWAP A! ;
 
@@ -161,7 +161,7 @@ DEFER EMIT-CFA
 \ CFAs, stored as pointers to host-side counted strings
 : (CFA@) T> [FORTH] @ ;
 : (CFA!) 
-    DUP ROT T> [FORTH] !
+    DUP -ROT T> [FORTH] !
     ['] EMIT-CFA SWAP E! ;
 
 

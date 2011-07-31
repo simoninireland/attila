@@ -36,7 +36,7 @@
     BEGIN
 	?DUP 0>
     WHILE
-	    ROT ADD-INCLUDE-PATH
+	    -ROT ADD-INCLUDE-PATH
 	    1-
     REPEAT ;
 

@@ -65,8 +65,8 @@ ALSO LOCALS ALSO DEFINITIONS
     
     \ patch each local with its run-time offset on the locals stack
     DUP 0 DO
-	\ DUP I - -ROT >BODY !
-	I 1+ -ROT >BODY !
+	\ DUP I - ROT >BODY !
+	I 1+ ROT >BODY !
     LOOP
 
     \ leave the locals vocabulary on the top of the search order, restoring

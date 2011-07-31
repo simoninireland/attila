@@ -40,7 +40,7 @@
     2DUP R/O OPEN-FILE 0<> IF
 	DROP TYPE 32 EMIT ( SPACE ) S" can't be loaded" ABORT
     ELSE
-	ROT 2DROP
+	-ROT 2DROP
 	(LOAD)
     THEN ;
 

@@ -147,7 +147,7 @@ init_dictionary() {
   COMPILE(">STATUS");
   COMPILE("DUP");
   COMPILE("C@");
-  COMPILE("-ROT");
+  COMPILE("ROT");
   COMPILE("OR");
   COMPILE("SWAP");
   COMPILE("C!");
@@ -160,7 +160,7 @@ init_dictionary() {
   COMPILE(">STATUS");
   COMPILE("DUP");
   COMPILE("C@");
-  COMPILE("-ROT");
+  COMPILE("ROT");
   COMPILE("INVERT");
   COMPILE("AND");
   COMPILE("SWAP");
@@ -191,7 +191,7 @@ init_dictionary() {
   COMPILE(">STATUS");
   COMPILE("DUP");
   COMPILE("C@");
-  COMPILE("-ROT");
+  COMPILE("ROT");
   COMPILE("OR");
   COMPILE("SWAP");
   COMPILE("C!");
@@ -237,7 +237,7 @@ init_dictionary() {
     STRING("?");
     COMPILE("ABORT");
   COMPILE_ELSE(if0,th0,el0);
-    COMPILE("ROT");
+    COMPILE("-ROT");
     COMPILE("2DROP");
   COMPILE_ELSETHEN(if0,th0,el0);
   NEXT();
@@ -335,10 +335,15 @@ init_dictionary() {
   // the colon definer
   DEFINE(":");
   COMPILE("PARSE-WORD");
-  // COMPILE("2DUP");
-  // STRING(": ");   COMPILE("TYPE");
-  // COMPILE("TYPE");
-  // LITERAL(10);   COMPILE("EMIT");
+ 
+  // uncomment to trace words being defined
+  /*
+  COMPILE("2DUP");
+  STRING(": ");   COMPILE("TYPE");
+  COMPILE("TYPE");
+  LITERAL(10);   COMPILE("EMIT");
+  */
+
   LITERAL(&docolon);
   COMPILE("(WORD)");
   COMPILE("START-DEFINITION");
@@ -421,7 +426,7 @@ init_dictionary() {
       COMPILE("2DUP");            // addr n addr n
       COMPILE("FIND");            // addr n 0 | addr n xt f
       COMPILE_IF(if1,th1,el1);    // addr n xt
-        COMPILE("ROT");
+        COMPILE("-ROT");
         COMPILE("2DROP");
         COMPILE("INTERPRETING?"); // xt interpret?
         COMPILE("OVER");          // xt interpret? xt
@@ -436,7 +441,7 @@ init_dictionary() {
         COMPILE("2DUP");          // addr n addr n
         COMPILE("NUMBER?");       // addr n v f
         COMPILE_IF(if3,th3,el3);
-          COMPILE("ROT");         // v addr n
+          COMPILE("-ROT");         // v addr n
 	  COMPILE("2DROP");       // v
           COMPILE("INTERPRETING?");  // v interpret?
           COMPILE("NOT");         // v compile?
@@ -482,7 +487,7 @@ init_dictionary() {
   COMPILE("EXECUTE");
   COMPILE("R>"); COMPILE("R>"); COMPILE("R>");
 
-  COMPILE("-ROT");              // input ofh fh
+  COMPILE("ROT");              // input ofh fh
   COMPILE("DROP");              // input ofh
   COMPILE("SWAP");              // ofh input
   COMPILE("!");                 //
@@ -501,7 +506,7 @@ init_dictionary() {
     STRING("not accessible");
     COMPILE("ABORT");
   COMPILE_ELSE(if8, th8, el8);
-    COMPILE("ROT");
+    COMPILE("-ROT");
     COMPILE("2DROP");
     COMPILE("DUP");
     COMPILE("(LOAD)");

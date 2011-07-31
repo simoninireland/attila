@@ -93,7 +93,7 @@ DATA (FIND-BEHAVIOUR) XT,
     2DUP FIND 0= IF
 	TYPE S" ?" ( ABORT ) (ABORT) @ EXECUTE
     ELSE
-	ROT 2DROP
+	-ROT 2DROP
     THEN ;
 
 \ Look up the next word in the input stream and return its xt

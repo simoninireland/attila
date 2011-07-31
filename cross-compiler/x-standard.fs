@@ -102,7 +102,7 @@ cross-compiler>
     BEGIN
 	?DUP 0>
     WHILE
-	    ROT [CROSS-COMPILER] ADD-SYSTEM-INCLUDE-PATH
+	    -ROT [CROSS-COMPILER] ADD-SYSTEM-INCLUDE-PATH
 	    1-
     REPEAT ;
 cross-compiler>

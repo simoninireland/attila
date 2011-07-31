@@ -22,7 +22,7 @@
 
 \ Set up the loop, remembering the limit and initial indices
 : (DO) \ ( limit initial -- )
-    R> ROT             \ ret limit initial
+    R> -ROT             \ ret limit initial
     SWAP >R >R
     >R ;
 
@@ -30,8 +30,8 @@
 : (+LOOP) \ ( inc -- f )
     R> SWAP            \ ret inc
     1 RPICK R>         \ ret inc limit i
-    -ROT +             \ ret limit i'
-    DUP -ROT < IF      \ ret i'
+    ROT +              \ ret limit i'
+    DUP ROT < IF       \ ret i'
         >R >R 0
     ELSE
         R> 2DROP >R 1

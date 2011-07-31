@@ -39,8 +39,8 @@ TESTING" Dropping"
 { 1 2 2DROP -> }
 
 TESTING" Rot'ting and rolling"
-{ 1 2 3 ROT     -> 3 1 2 }
-{ 1 2 3 -ROT    -> 2 3 1 }
+{ 1 2 3 ROT     -> 2 3 1 }
+{ 1 2 3 -ROT    -> 3 1 2 }
 { 1 0 ROLL      -> 1 NOOP }
 { 1 2 1 ROLL    -> 1 2 SWAP }
 { 1 2 3 2 ROLL  -> 1 2 3 ROT }

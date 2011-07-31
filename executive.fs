@@ -61,7 +61,7 @@ HANG-ON PARSE-WORD-HOOK
 \ Numbers, left on stack or compiled as literals
 :NONAME ( addr n -- -1 | addr n 0 )
     2DUP NUMBER? IF
-	ROT 2DROP
+	-ROT 2DROP
 	INTERPRETING? NOT IF
 	    POSTPONE LITERAL
 	THEN

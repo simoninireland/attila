@@ -43,7 +43,7 @@
 \ Re-map a deferred word from the input stream
 : IS \ ( xt "name" -- )
     PARSE-WORD 2DUP FIND IF
-	ROT 2DROP (IS)
+	-ROT 2DROP (IS)
     ELSE
 	TYPE S" ?" ABORT
     THEN ;

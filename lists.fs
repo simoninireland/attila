@@ -70,7 +70,7 @@
 
 \ Lists of (constant) strings
 : STRING-ELEMENT \ ( addr n -- elem )
-    (LIST-ELEMENT) ROT S, ;
+    (LIST-ELEMENT) -ROT S, ;
 : STRING-ELEMENT@ \ ( elem -- addr n )
     ELEMENT-VALUE COUNT ;
 
@@ -146,7 +146,7 @@
 \ expected to have stack effect ( accbefore vaddr -- accafter ) and is passed
 \ an accululator and an element's value address up the list from right to left
 : FOLDR \ ( xt acc elem -- facc )
-    -ROT >R
+    ROT >R
     BEGIN
 	?DUP 0<>
     WHILE
@@ -159,7 +159,7 @@
 \ expected to have stack effect ( accbefore vaddr -- accafter ) and is passed
 \ an accululator and an element's value address down the list from left to right
 : FOLDL \ ( xt acc elem -- facc )
-    -ROT >R
+    ROT >R
     BEGIN
 	?DUP 0<>
     WHILE

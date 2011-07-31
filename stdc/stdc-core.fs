@@ -62,29 +62,17 @@ C: SWAP ( a b -- b a )
 C: OVER ( a b -- a b a )
 ;C
 
-\ Rotate the top three stack items clockwise
-C: ROT ( a b c -- c a b )
-;C
-
 \ Rotate the top three stack items counter-clockwise
-C: -ROT ( a b c -- b c a )
+C: ROT ( a b c -- b c a )
 ;C
 
-\ Roll the stack clockwise. 0 ROLL is a no-op; 1 ROLL is SWAP;
-\ 2 ROLL is ROT
-C: ROLL ( n -- )
-  CELL t;
-  int i;
-
-  t = *(DATA_STACK_ITEM(0));
-  for(i = 0; i < n; i++)
-    *(DATA_STACK_ITEM(i)) = *(DATA_STACK_ITEM(i + 1));
-  *(DATA_STACK_ITEM(n)) = t;
+\ Rotate the top three stack items clockwise
+C: -ROT ( a b c -- c a b )
 ;C
 
 \ Roll the stack counter-clockwise. 0 ROLL is a no-op; 1 ROLL is SWAP;
-\ 2 ROLL is -ROT
-C: -ROLL ( n -- )
+\ 2 ROLL is ROT
+C: ROLL ( n -- )
   CELL b;
   int i;
 
@@ -92,6 +80,18 @@ C: -ROLL ( n -- )
   for(i = n; i > 0; i--) 
     *(DATA_STACK_ITEM(i)) = *(DATA_STACK_ITEM(i - 1));
   *(DATA_STACK_ITEM(0)) = b;
+;C
+
+\ Roll the stack clockwise. 0 -ROLL is a no-op; 1 -ROLL is SWAP;
+\ 2 -ROLL is -ROT
+C: -ROLL ( n -- )
+  CELL b;
+  int i;
+
+  b = *(DATA_STACK_ITEM(0));
+  for(i = 1; i <= n; i++)
+    *(DATA_STACK_ITEM(i - 1)) = *(DATA_STACK_ITEM(i));
+  *(DATA_STACK_ITEM(n)) = b;
 ;C
 
 \ Copy the n'th stack item to the top, counting from 0 not

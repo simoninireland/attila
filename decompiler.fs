@@ -104,7 +104,7 @@ DUP ' (BRANCH)  ADD-SPECIAL-WORD
 	    DUP XT@ 3 PICK = IF
 		\ xts match, return the display word
 		/CELL + XT@
-		ROT 2DROP
+		-ROT 2DROP
 		EXIT
 	    ELSE
 		DROP

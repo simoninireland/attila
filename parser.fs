@@ -74,7 +74,7 @@
     0 SWAP
     0 DO ( c addr i )
 	2DUP + C@ 3 PICK C= IF
-	    -ROT DROP
+	    ROT DROP
 	    1 >IN +!              \ consume the delimiter, but without
 	                          \ adding it to the string returned
 	    EXIT
@@ -152,12 +152,12 @@ DATA DIGITS S" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" S,
 \ leading sign
 : NUMBER? ( addr n -- i -1 | 0 )
     \ turn an (optional) sign into a multiplier
-    1 ROT \ multiplier
+    1 -ROT \ multiplier
     OVER C@ SIGN? IF
 	\ got a sign, deal with it
 	OVER C@ [CHAR] - C= IF
 	    \ negate the multiplier for a minus sign
-	    -ROT NEGATE ROT
+	    ROT NEGATE -ROT
 	THEN
 	\ move past the sign
 	1- SWAP /CHAR + SWAP

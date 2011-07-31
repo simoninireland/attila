@@ -63,10 +63,10 @@
 	BEGIN
 	    ?DUP 0>
 	WHILE
-		ROT
+		-ROT
 		OVER C@ >UC OVER C@ >UC C= IF
 		    /CHAR + SWAP /CHAR +
-		    -ROT 1-
+		    ROT 1-
 		ELSE
 		    2DROP DROP FALSE EXIT
 		THEN
@@ -86,7 +86,7 @@
 	    DUP HIDDEN? NOT IF
 		DUP >NAME
 		4 PICK 4 PICK NAMES-MATCH? IF
-		    ROT 2DROP
+		    -ROT 2DROP
 		    1 OVER IMMEDIATE? IF
 			NEGATE
 		    THEN
@@ -95,5 +95,5 @@
 	    THEN
 	    >LFA @
     REPEAT
-    ROT 2DROP ;
+    -ROT 2DROP ;
 	    

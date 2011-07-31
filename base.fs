@@ -43,7 +43,7 @@
 
 \ Add a and b modulo c
 : +MOD \ ( a b c -- (a+b)%c
-    ROT + SWAP MOD ;
+    -ROT + SWAP MOD ;
 
 \ ---------- Block sizes ----------
 
@@ -69,7 +69,7 @@
 \ Fill an n-byte block of memory with a given byte value (usually 0). Safe
 \ for zero and negative amounts
 : FILL ( addr n v -- )
-    ROT 1- BEGIN
+    -ROT 1- BEGIN
 	DUP 0 >=
     WHILE
 	    >R 2DUP R@ + C!

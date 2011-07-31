@@ -44,7 +44,7 @@
 \ Look up a word in the target, failing if we don't find it
 : (') \ ( addr n -- txt )
     2DUP [cross-compiler] FIND IF
-	ROT 2DROP
+	-ROT 2DROP
     ELSE
 	TYPE S" ?" ABORT
     THEN ;
@@ -59,7 +59,7 @@
     PARSE-WORD
     [CROSS-COMPILER] CROSS-COMPILING? IF
 	2DUP [CROSS-COMPILER] FIND IF
-	    ROT 2DROP
+	    -ROT 2DROP
 	    S" (LITERAL)" [CROSS-COMPILER] (') [CROSS] CTCOMPILE, [CROSS] XTCOMPILE,
 	ELSE
 	    TYPE S" not found on target" ABORT
@@ -75,7 +75,7 @@
     PARSE-WORD
     [CROSS-COMPILER] CROSS-COMPILING? IF
 	2DUP [CROSS-COMPILER] FIND IF
-	    ROT 2DROP
+	    -ROT 2DROP
 	    S" (LITERAL)" [CROSS-COMPILER] (') [CROSS] CTCOMPILE,
 	    [CROSS] XTCOMPILE,
 	    S" CTCOMPILE," [CROSS-COMPILER] (') [CROSS] CTCOMPILE,
@@ -130,13 +130,13 @@
 	    INTERPRETING? IF
 		2DUP FIND IF
 		    \ found, execute
-		    ROT 2DROP
+		    -ROT 2DROP
 		    EXECUTE
 		ELSE
 		    \ no found, is it a number?
 		    2DUP NUMBER? IF
 			\ a number, leave on the stack
-			ROT 2DROP
+			-ROT 2DROP
 		    ELSE
 			\ not a number, fail
 			TYPE [FORTH] S" ?" ABORT
@@ -147,7 +147,7 @@
 		    2DUP [CROSS-COMPILER] FIND CASE
 			1 OF
 			    \ found, compile
-			    ROT 2DROP
+			    -ROT 2DROP
 			    [CROSS] CTCOMPILE,
 			ENDOF
 			1 NEGATE OF
@@ -159,7 +159,7 @@
 				    TYPE SPACE [FORTH] S" is shadowed but not IMMEDIATE on host" ABORT
 				ENDOF
 				1 NEGATE OF
-				    ROT 2DROP
+				    -ROT 2DROP
 				    EXECUTE
 				ENDOF
 				0 OF
@@ -177,13 +177,13 @@
 				ENDOF
 				1 NEGATE OF
 				    \ found an immediate, execute
-				    ROT 2DROP
+				    -ROT 2DROP
 				    EXECUTE
 				ENDOF
 				0 OF
 				    \ not found, is it a number?
 				    2DUP NUMBER? IF
-					ROT 2DROP
+					-ROT 2DROP
 					[ 'CROSS-COMPILER LITERAL [FORTH] CTCOMPILE, ]
 				    ELSE
 					\ not a number, fail
@@ -197,18 +197,18 @@
 		    2DUP FIND CASE
 			1 OF
 			    \ found, compile
-			    ROT 2DROP
+			    -ROT 2DROP
 			    [FORTH] CTCOMPILE,
 			ENDOF
 			1 NEGATE OF
-			    ROT 2DROP
+			    -ROT 2DROP
 			    EXECUTE
 			ENDOF
 			0 OF
 			    \ not found, is it a number?
 			    2DUP NUMBER? IF
 				\ number, compile as literal
-				ROT 2DROP
+				-ROT 2DROP
 				POSTPONE LITERAL
 			    ELSE
 				\ not a number, fail
@@ -305,7 +305,7 @@ WORDLISTS>
 \ Include using the host's include operations wrapped-up with a new executive
 \ sd: not really safe....
 : INCLUDED ( addr n -- )
-    EXECUTIVE @ ROT
+    EXECUTIVE @ -ROT
     [ 'CROSS-COMPILER CROSS-OUTER ] LITERAL EXECUTIVE !
     ." (include " 2DUP TYPE ." )" CR 
     INCLUDED

@@ -72,7 +72,7 @@
 
 \ Push an element from the data stack to the given stack
 : >ST \ ( v st  -- )
-    DUP ROT ST-OVERFLOW? IF
+    DUP -ROT ST-OVERFLOW? IF
 	S" >ST Stack overflow" ABORT
     THEN
     OVER ST>TOPADDR !
@@ -84,7 +84,7 @@
 	S" ST> Stack underflow" ABORT
     THEN
     DUP ST>TOPADDR 1 CELLS - @
-    1 NEGATE -ROT +STN ;
+    1 NEGATE ROT +STN ;
 
 \ Peek at the top entry of the given stack
 : ST@ \ ( st -- v )
@@ -113,7 +113,7 @@
 \ Drop n items, or empty the stack, whichever is smaller
 : ST-NDROP \ ( n st -- )
     OVER 0> IF
-        DUP #ST -ROT MIN
+        DUP #ST ROT MIN
         NEGATE SWAP +STN
     ELSE
         2DROP
@@ -136,5 +136,5 @@
 	    1- 2 RPICK ST-PICK
 	    R> 1- >R
     REPEAT
-    R> R> R> -ROT 2DROP ;
+    R> R> R> ROT 2DROP ;
 

@@ -37,7 +37,7 @@ RECORD: LOCATOR
 \ Create a locator for the given target xt, leaving it on the stack
 \ afterwards for convenience
 : CREATE-WORD-LOCATOR \ ( addr n txt -- txt )
-    ROT ['] LOCATOR ROT (CREATE-RECORD)
+    -ROT ['] LOCATOR -ROT (CREATE-RECORD)
     DUP LASTXT EXECUTE TARGET-XT ! ;
 
 

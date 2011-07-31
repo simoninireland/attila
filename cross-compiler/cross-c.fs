@@ -38,7 +38,7 @@
     BEGIN
 	DUP 0<>
     WHILE
-	    DUP 2OVER -ROT     \ addr n elem addr n elem
+	    DUP 2OVER ROT     \ addr n elem addr n elem
 	    STRING-ELEMENT@ S=
 	    2 PICK 0= OR IF
 		DROP TRUE LEAVE
@@ -46,7 +46,7 @@
 		<ELEMENT
 	    THEN
     REPEAT
-    ROT 2DROP ;
+    -ROT 2DROP ;
 
 \ Append a newline to a zstring
 : Z+NL \ ( zaddr -- )
@@ -58,7 +58,7 @@
 \ given terminator into the given zstring
 \ sd: should perhaps be <<Z, by analogy with Perl's naming convention?
 : >>Z ( addr n zs -- zs )
-    DUP NULLSTRING -ROT S>Z    \ zero the string
+    DUP NULLSTRING ROT S>Z    \ zero the string
     BEGIN
 	DUP
 	REFILL IF
@@ -78,7 +78,7 @@
 	    \ accumulate the line into the zstring
 	    Z+S DUP Z+NL
     REPEAT
-    ROT 2DROP ;
+    -ROT 2DROP ;
 
 
 \ ---------- Primitive and block name generator ----------
@@ -124,7 +124,7 @@ DATA (PRIMTEXT) PRIMTEXT-SIZE ALLOT
 : C:
     PRIMTEXT-SIZE (ALLOT)                  \ probably enough
     PARSE-WORD
-    ALIGNED HERE ROT S,                    \ primitive's Forth-level name: ( naddr )
+    ALIGNED HERE -ROT S,                   \ primitive's Forth-level name: ( naddr )
 
     PARSE-WORD S" (" S=CI? IF              \ compile primitive's primitive name
 	2DROP PRIMNAME                     \ create a primitive name
@@ -132,7 +132,7 @@ DATA (PRIMTEXT) PRIMTEXT-SIZE ALLOT
 	PARSE-WORD 2DROP                   \ consume the open bracket
     THEN
 
-    ALIGNED HERE ROT S,                    \ store primitive's C-level name: ( naddr paddr )
+    ALIGNED HERE -ROT S,                   \ store primitive's C-level name: ( naddr paddr )
 
     NULLSTRING STRING-ELEMENT              \ compile the parameters list
     BEGIN

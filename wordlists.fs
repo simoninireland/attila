@@ -190,7 +190,7 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
 	DUP 0>
     WHILE
 	    1- SWAP
-	    WORD-TO-FIND 2@ -ROT SEARCH-WORDLIST
+	    WORD-TO-FIND 2@ ROT SEARCH-WORDLIST
 	    ?DUP IF
 		>R >R
 		?DUP 0> IF
@@ -277,7 +277,7 @@ DATA WORD-TO-FIND 2 CELLS ALLOT
 \ and so will show up correctly when using ORDER 
 : VOCABULARY \ ( "name" -- )
     PARSE-WORD 2DUP (NAMED-WORDLIST)
-    ROT (VOCABULARY) ;
+    -ROT (VOCABULARY) ;
 
 \ Vocabulary words wrapped-around the ROOT and FORTH wordlists
 ROOT-WORDLIST  PARSE-WORD ROOT  (VOCABULARY)

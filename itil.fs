@@ -63,7 +63,7 @@
 \ Mask-in the given mask to the status of a word
 : SET-STATUS \ ( f txt -- )
     >STATUS DUP C@
-    -ROT OR
+    ROT OR
     SWAP C! ;
 
 \ Get the status of the given word

@@ -33,11 +33,11 @@
     
 \ Add element b to ss1 to give ss2
 : SMALLSET-ADD ( b ss1 -- ss2 )
-    1 -ROT LSHIFT OR ;
+    1 ROT LSHIFT OR ;
     
 \ Remove element b from ss1 to give ss2
 : SMALLSET-REMOVE ( b ss1 -- ss2 )
-    1 -ROT LSHIFT INVERT AND ;
+    1 ROT LSHIFT INVERT AND ;
 
 \ Check whether ss1 contains element b
 : SMALLSET-CONTAINS? ( b ss1 -- f )

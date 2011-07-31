@@ -67,7 +67,7 @@
 	    ELSE
 		(CREATE-LOCAL)
 		DUP RETURN-LOCALS-STACK >ST
-		ROT 1+
+		-ROT 1+
 	    THEN
     REPEAT ;
 : (CREATE-LOCALS) \ ( -- ... na n )
@@ -130,7 +130,7 @@ ALSO LOCALS ALSO DEFINITIONS
     \ patch each local with its run-time offset on the locals stack
     SWAP >R DUP 0> IF
 	DUP 0 DO
-	    DUP I - -ROT >BODY !
+	    DUP I - ROT >BODY !
 	LOOP
     THEN
     R>

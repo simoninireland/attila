@@ -57,7 +57,7 @@
 	DROP
 	TYPE 32 EMIT S" cannot be re-directed to" ABORT
     ELSE
-	ROT 2DROP (<TO)
+	-ROT 2DROP (<TO)
     THEN ;
 
 \ Restore previous output stream, closing the temporary replacement
@@ -74,7 +74,7 @@
 	DROP
 	TYPE 32 EMIT S" cannot be re-directed from" ABORT
     ELSE
-	ROT 2DROP (<FROM)
+	-ROT 2DROP (<FROM)
     THEN ;
 
 \ Restore previous input stream, closing the temporary replacement

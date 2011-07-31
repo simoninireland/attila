@@ -80,13 +80,13 @@
 \ Mask-in the given mask to the status of a word
 : SET-STATUS \ ( f xt -- )
     >STATUS DUP C@
-    -ROT OR
+    ROT OR
     SWAP C! ;
 
 \ Mask-out the given mask to the status of a word
 : CLEAR-STATUS \ ( f xt -- )
     >STATUS DUP C@
-    -ROT INVERT AND
+    ROT INVERT AND
     SWAP C! ;
 
 \ Get the status of the given word

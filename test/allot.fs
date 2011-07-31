@@ -162,7 +162,7 @@ ALIGNED
   2@ -> 2 1 }
 { HERE
   1 , 2 ,
-  DUP 3 4 -ROT 2!
+  DUP 3 4 ROT 2!
   2@ -> 3 4 }
 
 { HERE
@@ -185,7 +185,7 @@ BLOCK1  8 CELLS + CONSTANT BLOCK3
 \ Move an m-sized number range into a block
 : BLOCK-SETUP ( n0 n1 n2 ... nm-1 m addr -- )
     OVER 0 DO
-	OVER I - 1+ -ROLL
+	OVER I - 1+ ROLL
 	OVER I CELLS + !
     LOOP
     2DROP ;
@@ -193,7 +193,7 @@ BLOCK1  8 CELLS + CONSTANT BLOCK3
 \ Check a block contains the given m-sized number range
 : BLOCK-TEST ( n0 n1 n2 ... nm-1 m addr -- f )
     OVER 0 DO
-	OVER I - 1+ -ROLL
+	OVER I - 1+ ROLL
 	OVER I CELLS + @ <> IF
 	    DROP
 	    I - 1- NDROP

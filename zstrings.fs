@@ -57,7 +57,7 @@
 \ enough memory
 : Z+S \ ( zaddr addr n -- )
     >R >R ZCOUNT R> R>        \ zaddr zn addr n
-    DUP ROT                   \ zaddr zn n addr n
+    DUP -ROT                  \ zaddr zn n addr n
     4 PICK Z> SWAP CMOVE      \ zaddr zn n
     + + NULLCHAR SWAP C! ;
 

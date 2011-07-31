@@ -39,7 +39,7 @@
 	\ check for error or eof
 	DUP 0< IF
 	    \ read error, exit
-	    4 ROLL 4 ROLL DROP 2DROP EXIT
+	    4 -ROLL 4 -ROLL DROP 2DROP EXIT
 	ELSE
 	    OVER 0< IF
 		\ eof, return 0 0
@@ -47,7 +47,7 @@
 	    ELSE
 		OVER 0> IF
 		    \ characters, succeed
-		    4 ROLL 4 ROLL DROP 2DROP  EXIT
+		    4 -ROLL 4 -ROLL DROP 2DROP  EXIT
 		ELSE
 		    \ no characters, loop
 		    2DROP

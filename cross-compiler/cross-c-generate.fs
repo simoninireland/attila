@@ -142,7 +142,7 @@
 	DROP
 	TYPE SPACE S" cannot be opened" ABORT
     ELSE
-	ROT 2DROP
+	-ROT 2DROP
 	(<TO)
 	GENERATE-IMAGE
 	TO>
