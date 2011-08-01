@@ -69,25 +69,6 @@
 	[ 'CROSS-COMPILER (') ] LITERAL [FORTH] CTCOMPILE,
     THEN ; IMMEDIATE
 
-\ Compile the code needed to cross-compile at run-time the next
-\ word in the input stream
-: COMPILE \ ( "name" -- )
-    PARSE-WORD
-    [CROSS-COMPILER] CROSS-COMPILING? IF
-	2DUP [CROSS-COMPILER] FIND IF
-	    -ROT 2DROP
-	    S" (LITERAL)" [CROSS-COMPILER] (') [CROSS] CTCOMPILE,
-	    [CROSS] XTCOMPILE,
-	    S" CTCOMPILE," [CROSS-COMPILER] (') [CROSS] CTCOMPILE,
-	ELSE
-	    TYPE S" not found on target" ABORT
-	THEN
-    ELSE
-	POSTPONE SLITERAL
-	[ 'CROSS-COMPILER (') ] LITERAL [FORTH] CTCOMPILE,
-	[ 'CROSS CTCOMPILE,   ] LITERAL [FORTH] CTCOMPILE,
-    THEN ; IMMEDIATE
-
 \ Cross-compile the next work in the input stream, IMMEDIATE or not
 : [COMPILE] ( "name" -- )
     [CROSS-COMPILER] ' CTCOMPILE, ; [FORTH] IMMEDIATE
