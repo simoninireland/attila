@@ -53,7 +53,7 @@
     BEGIN
 	?DUP
     WHILE
-	    COMPILE RDROP
+	    POSTPONE RDROP
 	    1-
     REPEAT ;
 
