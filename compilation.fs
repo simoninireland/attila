@@ -38,42 +38,7 @@
     STATE @ INTERPRETATION-STATE = ;
 
 
-\ ---------- Literals ----------
-
-\ Compile the top of the stack as a literal
-: LITERAL \ ( n -- )
-    COMPILE (LITERAL)
-    COMPILE, ; IMMEDIATE
-
-\ Compile the address on the top of the stack as a literal
-: ALITERAL \ ( addr -- )
-    COMPILE (LITERAL)
-    ACOMPILE, ; IMMEDIATE
-
-\ Compile the xt on the top of the stack as a literal
-: XTLITERAL \ ( xt -- )
-    COMPILE (LITERAL)
-    XTCOMPILE, ; IMMEDIATE
-
-\ Compile the string on the tp of the stack as a literal
-: SLITERAL \ ( addr len -- )
-    COMPILE (SLITERAL)
-    SCOMPILE, ; IMMEDIATE
-
-\ Read a "-delimited string form the input and either leave it on the stack (when
-\ interpreting) or compile it as a literal (when compiling). In interpretation mode
-\ the string will be destroyed when a new line is read, so it needs to be used immediately
-: S" \ ( "string" -- )
-    32 CONSUME \ spaces
-    [CHAR] " PARSE
-    STATE @ INTERPRETATION-STATE = IF
-	\ leave the string on the stack
-    ELSE
-	POSTPONE SLITERAL \ compile the string as a string literal
-    THEN ; IMMEDIATE
-
-
-\ ---------- Word finding ----------
+\ ---------- Word finding, compilation control and literals ----------
 
 \ Flat finder, the default behaviour wrapped around whatever the underlying word list
 \ management function is
@@ -100,19 +65,24 @@ DATA (FIND-BEHAVIOUR) XT,
 : ' \ ( "name" -- xt )
     PARSE-WORD (') ;
 
-\ Force compilation of next word, whether it's IMMEDIATE or not 
+\ Force compilation of the execution semantics of the next word,
+\ whether it's IMMEDIATE or not 
 : [COMPILE] \ ( "name" -- )
     ' CTCOMPILE, ; IMMEDIATE
+
+\ Compile the xt on the top of the stack as a literal
+: XTLITERAL \ ( xt -- )
+    [ ' (LITERAL) CTCOMPILE,
+      ' (LITERAL) XTCOMPILE, ]
+    CTCOMPILE,
+    XTCOMPILE, ; IMMEDIATE
 
 \ Grab the xt of the next word in the input at compile time and leave
 \ it on the stack at run-time
 : ['] \ ( "name" -- )
     ' [COMPILE] XTLITERAL ; IMMEDIATE
 
-\ Compile the next word in the input stream when the current definition is executed
-: COMPILE [COMPILE] ['] ['] CTCOMPILE, CTCOMPILE, ; IMMEDIATE
-
-\ Compile the compilation semantics of a word
+\ Compile the compilation semantics of the next word
 : POSTPONE \ ( "name" -- )
     ' DUP IMMEDIATE? IF
 	\ immediate word, compile it into the current definition
@@ -123,8 +93,32 @@ DATA (FIND-BEHAVIOUR) XT,
 	['] CTCOMPILE, CTCOMPILE,
     THEN ; IMMEDIATE
 
+\ Compile the value on the top of the stack as a literal
+: LITERAL \ ( n -- )
+    POSTPONE (LITERAL)
+    COMPILE, ; IMMEDIATE
 
-\ ---------- Compilation ----------
+\ Compile the address on the top of the stack as a literal
+: ALITERAL \ ( addr -- )
+    POSTPONE (LITERAL)
+    ACOMPILE, ; IMMEDIATE
+
+\ Compile the string on the tp of the stack as a literal
+: SLITERAL \ ( addr len -- )
+    POSTPONE (SLITERAL)
+    SCOMPILE, ; IMMEDIATE
+
+\ Read a "-delimited string form the input and either leave it on the stack (when
+\ interpreting) or compile it as a literal (when compiling). In interpretation mode
+\ the string will be destroyed when a new line is read, so it needs to be used immediately
+: S" \ ( "string" -- )
+    32 CONSUME \ spaces
+    [CHAR] " PARSE
+    STATE @ INTERPRETATION-STATE = IF
+	\ leave the string on the stack
+    ELSE
+	POSTPONE SLITERAL \ compile the string as a string literal
+    THEN ; IMMEDIATE
 
 \ Extract the first character of the next word in the input stream, leaving it
 \ on the stack or compiling it as a literal
