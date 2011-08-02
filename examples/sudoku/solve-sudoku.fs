@@ -41,17 +41,17 @@
 	I SWAP SUDOKU@   ( r sud ss v )
 	SWAP SMALLSET-REMOVE
     LOOP
-    ROT 2DROP ;	
+    -ROT 2DROP ;	
 
 \ Remove values present in the given column from the given small set
 : REMOVE-COLUMN-VALUES ( c sud ss -- ss' )
     GRID-SIZE 0 DO
 	\ get the row value
 	>R 2DUP R> -ROT  ( c sud ss c sud )
-	I ROT SUDOKU@    ( c sud ss v )
+	I -ROT SUDOKU@    ( c sud ss v )
 	SWAP SMALLSET-REMOVE
     LOOP
-    ROT 2DROP ;	
+    -ROT 2DROP ;	
 
 \ Remove values present in the given sub-square from the given small set
 : REMOVE-SQUARE-VALUES ( r c sud ss -- ss' )
@@ -110,9 +110,9 @@
 		3DUP POSSIBLE-VALUES
 		GRID-SIZE 1+ 1 DO       ( r c sud pss )
 		    I OVER SMALLSET-CONTAINS? IF
-			>R 3DUP R> 3 ROLL
-			I 3 -ROLL SUDOKU!
-			>R 3DUP R> 3 ROLL
+			>R 3DUP R> 3 -ROLL     ( r c sud pss r c sud )
+			I 3 -ROLL SUDOKU!      ( r c sud pss ) 
+			>R 3DUP R> 3 -ROLL     ( r c sud pss r c sud ) 
 			>R NEXT-SQUARE R> RECURSE IF
 			    \ solved with this value, succeed
 			    2DROP 2DROP TRUE EXIT

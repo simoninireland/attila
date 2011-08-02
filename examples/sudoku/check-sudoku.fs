@@ -46,7 +46,7 @@
 	\ get the column value
 	>R 2DUP R> -ROT        ( r sud ss r sud )
 	I SWAP SUDOKU@         ( r sud ss v )
-
+	
 	\ check validity
 	VALUE-CAN-APPEAR? NOT IF
 	    \ illegal value, fail
@@ -61,7 +61,7 @@
     GRID-SIZE 0 DO ( c sud ss )
 	\ get the row value
 	>R 2DUP R> -ROT        ( c sud ss c sud )
-	I ROT SUDOKU@          ( c sud ss v )
+	I -ROT SUDOKU@         ( c sud ss v )
 
 	\ check validity
 	VALUE-CAN-APPEAR? NOT IF
