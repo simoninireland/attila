@@ -89,6 +89,9 @@ INTERPRET/COMPILE ."
 	DROP 2DROP
     THEN ;
 
+\ Allow S! as a snyonym for SMOVE
+: S! ( addr1 n addr2 -- ) SMOVE ;
+
 \ Turn an address into a counted string. Safe for null strings
 : COUNT \ ( addr -- addr' len )
     DUP 0= IF
