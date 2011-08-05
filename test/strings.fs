@@ -102,6 +102,10 @@ DATA STRING1 20 CHARS ALLOT
   STRING1 C@
   STRING1 CHAR+ C@ -> 0 99 }
 
+\ Synonym
+{ S" goodbye" STRING1 S!
+ STRING1 COUNT S" goodbye" S= -> TRUE }
+
 
 TESTING" String concatenation"
 
