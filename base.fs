@@ -27,6 +27,12 @@
 \ but for efficiency it's probably better as a primitive. Still, the
 \ principle is clear
 
+\ ---------- Derived stack operators ----------
+
+\ Duplicate the top three stack elements
+: 3DUP \ ( a b c -- a b c a b c )
+    2 PICK 2 PICK 2 PICK ;
+
 \ ---------- Derived arithmetic operators ----------
 
 \ Divide a by b as integers
@@ -44,6 +50,7 @@
 \ Add a and b modulo c
 : +MOD \ ( a b c -- (a+b)%c
     -ROT + SWAP MOD ;
+
 
 \ ---------- Block sizes ----------
 
