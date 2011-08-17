@@ -285,14 +285,9 @@ C: INIT-INTERPRETER init ( -- )
   CALL(docolon);
 ;C
 
-\ Emergency abnormal exit
+\ Emergency exit -- use 0 DIE to exit normally
 C: DIE prim_die ( rc -- )
   if(rc != 0)
     printf("Exited abnormally with code %d", rc);
   exit(rc);
-;C
-
-\ Exit the interpreter normally
-C: BYE ( -- )
-  PUSH_CELL(0);   CALL(prim_die);
 ;C
