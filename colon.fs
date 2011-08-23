@@ -27,6 +27,8 @@ HOOK (START-DEFINITION)
 HOOK (END-DEFINITION) 
 
 \ Brackets to run the start and end hooks, ignoring any bailout status
+\ Hook words should have stack picture ( xt -- xt s ), and so have access
+\ to the xt of the word being defined
 : START-DEFINITION (START-DEFINITION) RUN-HOOK DROP ;
 : END-DEFINITION   (END-DEFINITION)   RUN-HOOK DROP ;
 
@@ -35,8 +37,9 @@ HOOK (END-DEFINITION)
 
 \ The colon-definer
 : : ( "name" -- xt )
-    START-DEFINITION
     PARSE-WORD ['] (:) CFA@ (WORD)
+    DUP (HIDE)                       \ word is invisible until closed successfully
+    START-DEFINITION                 \ run hook
     ] ;
 
 \ Complete a colon-definition
@@ -44,6 +47,7 @@ HOOK (END-DEFINITION)
                             \ shadow is used at the end of this definition
                             \ when cross-compiling
     ALIGNED NEXT,
-    END-DEFINITION
-    POSTPONE [ DROP ; ( IMMEDIATE )
+    END-DEFINITION          \ run hook as soon as definition completes
+    (UNHIDE)                \ reveal word for future finding
+    POSTPONE [ ; ( IMMEDIATE )
 
