@@ -61,3 +61,5 @@
     ['] INTERACTIVE-ABORT (ABORT)     !  \ abort handler
     0 ;
 
+\ Leave the system normally
+: BYE ( -- ) 0 DIE ;
