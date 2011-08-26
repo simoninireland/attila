@@ -33,6 +33,18 @@ CHEADER:
 #ifdef DEBUGGING
 static int indent;
 
+static int tracing_word( XT xt ) {
+   CELLPTR saddr;
+   CELL status;
+   XT _xt;
+
+   PUSH_CELL(xt);
+   CALL(xt_to_status);
+   saddr = (CELLPTR) POP_CELL();
+   status = *saddr;
+   return status & TRACE_MASK;
+}
+
 static void print_word_name( XT xt ) {
    static char trace[256];
    XT _xt;
@@ -40,33 +52,21 @@ static void print_word_name( XT xt ) {
    CELL n;
    BYTEPTR addr;
 
+   // grab the name
    PUSH_CELL(xt);
    CALL(xt_to_name);
    n = POP_CELL();
    addr = (BYTEPTR) POP_CELL();
    strncpy(trace, addr, n);   trace[n] = '\0';
+
+   // print the word, indented
+   printf("TRACE>");
    for(i = 0; i < indent; i++) printf(" ");
-      // printf("%x %s ", (CELL) (((BYTEPTR) xt - (BYTEPTR) image) / sizeof(CELL)), trace);
-      printf("%s ", trace);
-}
-
-static void print_data_stack() {
-   int i;
-   printf("( ");
-   for(i = DATA_STACK_DEPTH() - 1; i >= 0; i--)
-      printf("%d ", *(DATA_STACK_ITEM(i)));
-   printf(")");
-}
-
-static void print_return_stack() {
-   int i;
-   printf("( ");
-   for(i = RETURN_STACK_DEPTH() - 1; i >= 0; i--)
-      printf("%d ", *(RETURN_STACK_ITEM(i)));
-   printf(")");
+   printf("%s\n", trace);
 }
 #endif
 ;CHEADER
+
 
 \ ---------- The inner interpreter ---------- 
 
@@ -79,21 +79,21 @@ C: EXECUTE execute ( xt -- )
     PRIMITIVE prim;
 
     #ifdef DEBUGGING
-        // print word
 	int i;
-	if(xt == (XT) NULL) { 
-            indent -= 3;
+
+        if(xt == (XT) NULL) {
+            if(indent > 0) 
+                indent -= 3;
         } else {
-            // address image-offset: xt words-name data-stack R: return-stack
-            printf("%d (0x%x): %d ", (ip - 1), ((BYTEPTR) (ip - 1) - (BYTEPTR) image) / sizeof(CELL), xt);
-            print_word_name(xt);
-	    printf(" ");
-	    print_data_stack();
-            printf(" R: ");
-	    print_return_stack();
-	    printf("\n");
-            if((PRIMITIVE) (*((CELLPTR) xt)) == (PRIMITIVE) docolon)
-                indent += 3;
+	    // if the word we're looking at is traced and we're not currently
+	    // indented, indent us
+	    if((indent == 0) && tracing_word(xt))
+                indent = 3;
+            if(indent > 0) {
+                print_word_name(xt);
+                if((PRIMITIVE) (*((CELLPTR) xt)) == (PRIMITIVE) docolon)
+		    indent += 3;
+	    }
 	}
     #endif
 	
