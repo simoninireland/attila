@@ -129,11 +129,13 @@ forth = prelude.fs \
 	lists.fs \
 	records.fs \
 	smallsets.fs \
+	ring.fs \
 	evaluate.fs \
 	c.fs \
 	wordlists.fs \
 	dynamic-memory.fs \
 	decompiler.fs \
+	debugging.fs \
 	environment.fs \
 	funit.fs
 
@@ -216,7 +218,8 @@ test = 	test/core-system-tests.fs \
 	test/hooks.fs \
 	test/chains.fs \
 	test/parser.fs \
-	test/smallsets.fs
+	test/smallsets.fs \
+	test/ring.fs
 
 # Example programs 
 examples = \
