@@ -64,6 +64,7 @@ S" @PACKAGE_VERSION@" SCONSTANT VM-VERSION      \ VM version
 1 CONSTANT IMMEDIATE-MASK          \ IMMEDIATE words, executed even when compiling
 2 CONSTANT REDIRECTABLE-MASK       \ REDIRECTABLE words, amenable to DOES>
 4 CONSTANT HIDDEN-MASK             \ hidden words that FIND won't find
+8 CONSTANT TRACE-MASK              \ word is traced when executed
 
 \ States
 0 CONSTANT INTERPRETATION-STATE    \ interpretation state
@@ -85,8 +86,7 @@ S" @PACKAGE_VERSION@" SCONSTANT VM-VERSION      \ VM version
 12 USER TIB                   \ address of the base of the terminal input buffer
 13 USER >IN                   \ current input offset within the TIB
 14 USER LAST                  \ xt of the most-recently-defined word
-15 USER TRACE                 \ trace (debugging) flag
-16 USER CURRENT               \ the current wordlist receiving definitions
+15 USER CURRENT               \ the current wordlist receiving definitions
 
 \ Truth values
 0        CONSTANT FALSE
