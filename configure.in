@@ -27,8 +27,8 @@ AM_INIT_AUTOMAKE
 
 # ---------- Basic programs ----------
 
-# Uncomment if debugging
-# AC_DEFINE(DEBUGGING,[1])
+# Uncomment to include debugging support
+AC_DEFINE(DEBUGGING,[1])
 
 # Host compilation and installation
 IMAGE_NAME=host
