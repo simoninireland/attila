@@ -222,7 +222,8 @@ test = 	test/core-system-tests.fs \
 	test/ring.fs
 
 # Example programs 
-examples = \
+examples = $(sudoku)
+sudoku = \
 	examples/sudoku/sudoku.fs \
 	examples/sudoku/check-sudoku.fs \
 	examples/sudoku/read-sudoku.fs \
