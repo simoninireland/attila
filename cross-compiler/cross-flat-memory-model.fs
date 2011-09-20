@@ -103,7 +103,7 @@
 	    [FORTH] /CHAR +
 	LOOP
     THEN
-    DROP CALIGNED ;
+    DROP ;
 : SCOMPILE, \ ( addr n -- )
     DUP CCOMPILE, CSEQCOMPILE, ;
 : S, \ ( addr n -- )
