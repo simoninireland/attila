@@ -102,7 +102,7 @@
     R> <ELEMENT! ;             \ elem2 is elem1's previous
 : +ELEMENT \ ( elem1 elem2 -- )
     SWAP >R
-    DUP <ELEMENT R@ <ELEMENT!  \ elem1's next is elem2's next
+    DUP <ELEMENT R@ <ELEMENT!  \ elem1's previous is elem2's previous
     R@ OVER <ELEMENT!          \ elem1 is elem2's previous
     R> ELEMENT>! ;             \ elem2 is elem1's next
 
