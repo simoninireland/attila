@@ -38,6 +38,7 @@ testcases test/hooks.fs
 testcases test/chains.fs
 testcases test/parser.fs
 testcases test/smallsets.fs
+testcases test/records.fs
 testcases test/ring.fs
 
 TEST-CAMPAIGN-REPORT
