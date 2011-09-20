@@ -80,7 +80,6 @@ C: EXECUTE execute ( xt -- )
 
     #ifdef DEBUGGING
 	int i;
-
         if(xt == (XT) NULL) {
             if(indent > 0) 
                 indent -= 3;
@@ -174,7 +173,7 @@ C: (SLITERAL) ( -- s n )
     ip = (XTPTR) ((BYTEPTR) ip + n + 1);
     PUSH_CELL(ip);
     CALL(calign);
-    ip = POP_CELL();
+    ip = (XTPTR) POP_CELL();
 ;C
 
 
