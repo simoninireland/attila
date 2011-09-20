@@ -98,7 +98,7 @@
 \ Strings need to be copied from host memory, hence the explicit use of host C@ and CHARS
 : CSEQCOMPILE, \ ( addr n -- )
     ?DUP 0> IF
-	1+ 0 DO
+	0 DO
 	    DUP [FORTH] C@ CCOMPILE,
 	    [FORTH] /CHAR +
 	LOOP
