@@ -93,6 +93,8 @@ C: EXECUTE execute ( xt -- )
                 print_word_name(xt);
                 if((PRIMITIVE) (*((CELLPTR) xt)) == (PRIMITIVE) docolon)
 		    indent += 3;
+	        else
+		    indent = 0; // don't trace into non-colon definitions
 	    }
 	}
     #endif
