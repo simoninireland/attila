@@ -2,9 +2,15 @@ Attila history
 ==============
 
 release 1.1
-	- added rings, random numbers, millisecond-resolution timer
-	  primitives
+	- added rings, millisecond-resolution timer primitives
 	- fixed non-standard definitions of ROT, ROLL etc
+	- fixed non-standard definition of POSTPONE, got rid of COMPILE
+	- made words hidden unless successfully compiled
+	- confirmed cross-compilation to smaller image, turn-key
+	  (non-interactive) operation
+	- refactored interactive words to allow simpler creation of
+	  non-interactive images
+	- changed tracing support to be more useful
  
 release 1.0 (10Apr2011)
 	- version able to build itself completely
