@@ -55,16 +55,23 @@
     >BODY @ ;
 
 \ Return the size in bytes of the record
+\ sd: should we record the type, not the size?
 : RECORDSIZE ( rec -- bs )
     @ ;
+
+\ Create data space for a record. The record has no word header and
+\ so is unnamed, but can be used (for example) in arrays or lists
+: (CREATE-RECORD-DATA) ( recsize -- addr )
+    HERE SWAP
+    DUP ,               \ record the size...
+    1 CELLS - ALLOT ;   \ ...and allocate the space needed
 
 \ Create a record from a name and the xt of its type. This is functionally the behaviour
 \ performed by the record type word, but it can be called like this to create
 \ records for run-time-determined types
-: (CREATE-RECORD) ( rec addr n -- )
-    (DATA)                \ create the record
-    RECORDTYPESIZE DUP ,  \ record the size...
-    1 CELLS - ALLOT ;     \ ...and allocate the space needed
+: (CREATE-RECORD) ( xt addr n -- )
+    (DATA)                                     \ create the record
+    RECORDTYPESIZE (CREATE-RECORD-DATA) DROP ; \ ...and its data space
 
 \ Basic record type creator
 : (RECORD:) ( off addr n -- rectype off )
@@ -72,9 +79,8 @@
     TOP 0 ,           \ placeholder for size
     SWAP 1 CELLS +    \ initial offset within record, including space for size field
   DOES> ( "name" -- )
-    DATA              \ create the record
-    @ DUP ,           \ record the size...
-    1 CELLS - ALLOT ; \ ...and allocate the space needed
+    DATA                          \ create the record
+    @ (CREATE-RECORD-DATA) DROP ; \ ...and allocate its size
 
 \ Create a new record type with the given name
 : RECORD: ( "name" -- rectype off )
