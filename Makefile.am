@@ -54,6 +54,9 @@ nodist_bootattila_SOURCES = primitives.c
 attila_SOURCES = 
 nodist_attila_SOURCES = attila.c
 
+# Global compiler flags
+AM_CFLAGS = -g -Wno-macro-redefined
+
 
 # ----- The bootstrapped interpreter primitives file -----
 
@@ -241,7 +244,7 @@ nobase_dist_pkgdata_DATA = \
 	$(forth) \
 	$(runtime) $(crosscompiler) $(host) $(regular) \
 	$(test) $(examples)
-nobase_dist_doc_DATA = doc/attila.pdf
+nobase_dist_doc_DATA = 
 
 # Files to be cleaned
 DISTCLEANFILES = primitives.c attila.c target/host/x-host-initial.fs
